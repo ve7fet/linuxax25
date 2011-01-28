@@ -1,0 +1,59 @@
+ax25-apps (0.0.8)
+	* Fix numerous build warnings and errors on modern systems.
+	* Switch to more modern autoconf and automake to fix build issues on
+	  many modern systems.
+	* Fix various application crashes.
+	* Support for UNIX98 pseudo terminals.
+	* New option -S to silence call for use in shell scripts.
+	* Add support for building rpm packages.
+
+ax25-apps (0.0.7)
+	* Added opentrac to listen, Thanks to Scott Miller
+	* More autobreak nightmares
+
+ax25-apps (0.0.6)
+	* listen can decode INP Packets. Thanks to Jeroen Vreeken
+	* Added \n to flexdump after "Poll" and "data" - Alexandre Fornieles
+	* ax25ipd bug-fixes - Terry Dawson, Ray Wells, et.al.
+	* ssid correct matches in ax25ipd - Steve Fraser
+
+ax25-apps (0.0.5)
+	* New rosedump.c from Jean-Paul.
+	* Changes to ax25rtd from Hubert F5LCT for problems with
+	  kernel 2.2.13.
+	* Fix for ax25rtd in VC mode
+	* Patch from Hans to work better with newer GCCs
+	* doc dirs are now relocatable
+	* Added Jens patches
+	  - Adapted ax25rtd to new kernel-ax25. ax25-learn-only-mine has 
+	    to be set to "true" for all interfaces to work right now. 
+	    Note that this is only a temporary solution.
+	  - Made new-ax25-stack ready (listen, ax25rtd). Will still work 
+	    with old kernel-AX25 but need recompile.
+	* New program, ax25mond
+
+ -- Craig Small <csmall@small.dropbear.id.au> 
+
+ax25-apps 0.0.4 
+	* Added Tomi's patch so it correctly detects broken headers
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Mon, 23 Aug 1999 11:45:46 +1000
+
+ax25-apps 0.0.3
+	* Should now compile on libc5 (probably)
+	* Some nice formatting changes to listen
+	* Added Klaus Kudielka's ax25rtd patch
+	* Added some authors to AUTHORS
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Tue, 10 Aug 1999 10:06:56 +1000
+
+ax25-apps 0.0.2
+	* Fixed where to find config files
+	* Had another crack at working around broken headers
+
+ -- Craig Small <csmall@small.dropbear.id.au> 7 July 1999
+
+ax25-apps 0.0.1
+	* First public release
+
+ -- Craig Small <csmall@small.dropbear.id.au>
