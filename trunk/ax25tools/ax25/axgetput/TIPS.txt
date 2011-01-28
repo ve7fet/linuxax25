@@ -1,0 +1,3 @@
+- compressed download:
+  gzip -c foo.txt | bget foo.txt.gz
+  tar cjf - ~/foo ~/bar/ | bget my_data.tar.bz2

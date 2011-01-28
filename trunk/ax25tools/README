@@ -1,0 +1,13 @@
+AX25 Tools
+==========
+
+Note that kissattch has changed its command line format slight.  While the
+old format will work, the -i option is now, err, not optional.  This was
+done to stop the million or so emails we get on linux-hams email list
+saying why do people get axports unconfigured even after a kissattach 
+command.
+
+
+  - Craig Small <csmall@small.dropbear.id.au>
+
+

@@ -1,0 +1,38 @@
+.TH RXECHO 8 "15 October 1996" Linux "Linux System Managers Manual"
+.SH NAME
+rxecho \- Route AX.25 packets between ports transparently.
+.SH SYNOPSIS
+.B rxecho [-l] [-v]
+.SH DESCRIPTION
+.LP
+.B Rxecho
+copies AX.25 frames between interfaces without altering their contents. The
+purpose of this utility is to allow other AX.25 aware programs/computers to
+share the same AX.25 ports as the Linux kernel AX.25 code. It could be used
+to route packets out onto another serial port to allow another machine
+running DOS based programs to share the same radio ports as the Linux
+machine, or it could route packets out onto a pseudo-tty to another
+application on the same machine. The copying could even be to another
+radio port.
+.LP
+The copying of the packets is controlled by a configuration file
+rxecho.conf(5), which can be set up to selectively copy packets.
+.SH OPTIONS
+.TP 10
+.BI \-l
+Enables logging of errors to the system log, the default is off.
+.TP 10
+.BI \-v
+Display the version.
+.SH FILES
+.nf
+/etc/ax25/axports
+.br
+/etc/ax25/rxecho.conf
+.fi
+.SH "SEE ALSO"
+.BR axports (5),
+.BR rxecho.conf (5),
+.BR kissattach (8).
+.SH AUTHOR
+Tomi Manninen OH2BNS <oh2bns@sral.fi>

@@ -1,0 +1,34 @@
+README file for ttylinkd: The ttylink daemon, dated 5 Mar 1997
+
+This program allows you to recieve ttylink requests from NOS or other
+stations.  It uses the normal Un*x talk protocol for the sysop end and inetd
+for the user's end.
+
+As of 0.02, we now accept connections for Net/ROM and AX.25.
+As of 0.03, we now accept connections from ROSE (not tested!)
+
+USAGE
+=====
+When someone connects to the ttylink port of you system (usually port 87)
+the inetd program will spawn a ttylinkd process.  This process will send a
+welcome and then ask the user to type in their callsign.
+A talk invitation is then sent to the sysop with the given user name to
+reply.  If the sysop wants to talk to the user, they then use the talk
+command.
+Either party can finish the conversation in the usual way.
+
+
+BUGS / TO DO
+============
+- Get some real documentation on ntalkd to make sure that I am doing things
+	right.
+- Allow the sysop to be on another system (if users of ttylinkd want this).
+
+
+CREDITS
+=======
+This program and documentation Copyright (C) 1997 Craig Small VK2XLZ
+<csmall@small.dropbear.id.au>
+Please read the file ttylinkd.c for full notice.
+Thanks to Tomi Manninen OH2BNS for the AX.25 patches in 0.02
+Thanks to Tomi again for the short callsign fix in 0.03
