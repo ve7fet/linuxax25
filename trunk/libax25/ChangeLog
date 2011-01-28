@@ -1,3 +1,24 @@
+libax25 1.0.0 
+	* This is a custom release, not associated with the official source. 
+	* This library has been beta for so long, it is time to release version 1.0.0.
+	* Added missing compile flag for ax25io (-lz) in the ax25io/Makefile.am.
+	  Note that it HAS to be in the form libax25io_la_LIBADD for it to be
+	  picked up properly (found this out trying to make the Debian package).
+	* Removed etc files (moved them to ax25-tools where they belong
+	* Removed associated man pages to ax25-tools
+	* Made the libax25.spec file get processed by configure properly
+	* Reverted a couple of Bernard's patches in axutils.c back to what was 
+	  in CVS per discussions with Thomas Osterried
+	* Updated configure scripts for automake 1.10.1 and autoconf 2.61
+	* Fixed configure.ac to do a proper check for zlib.h (to build ax25io)
+	  and abort the configure if zlib is not found
+	* Cleaned up the Makefile.am
+	* Moved source files out of the root folder and in to /lib, /man, and /etc
+	* Added patch from Bernard Pidoux <f6bvp@free.fr> to axutils.c
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 27 Jan 2011 22:00:00 -0800
+
+libax25 0.0.12rc2
 	* ax25_ntoa() does no longer print a zero SSID.  This avoids addresses
 	  like AB3DEF-0 which is general convention anyway.
 

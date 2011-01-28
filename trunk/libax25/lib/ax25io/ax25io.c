@@ -6,8 +6,8 @@
 #include <string.h>
 #include <arpa/telnet.h>
 #include <netax25/ax25io.h>
-
-#include "config.h"
+#include <zlib.h>
+#include <config.h>
 
 static inline int send_iac_iac(ax25io *p);
 static inline int send_iac_cmd(ax25io *p, unsigned char cmd, unsigned char opt);
@@ -15,20 +15,12 @@ static inline int send_linemode(ax25io *p);
 
 static ax25io *Iolist = NULL;
 
-/* --------------------------------------------------------------------- */
-
-#ifdef HAVE_ZLIB_H
-#include <zlib.h>
-
 struct compr_s {
 	int z_error;		/* "(de)compression error" flag         */
 	unsigned char char_buf;	/* temporary character buffer           */
 	z_stream zin;		/* decompressor structure               */
 	z_stream zout;		/* compressor structure                 */
 };
-#endif
-
-/* --------------------------------------------------------------------- */
 
 ax25io *axio_init(int in, int out, int paclen, char *eol)
 {
