@@ -1,8 +1,14 @@
 AC_PREREQ(2.61)
-AC_INIT(ax25-tools, 1.0.0, linux-hams@vger.kernel.org)
+AC_INIT(ax25-tools, 1.0.1, linux-hams@vger.kernel.org)
 AC_CONFIG_SRCDIR([pathnames.h])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
+
+# Determine versions for package managers.
+basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
+AC_SUBST(BASEVERSION, [$basever])
+extraver=$(echo $PACKAGE_VERSION | sed -e 's@'$basever'@@' -e 's@^-@_@')
+AC_SUBST(EXTRAVERSION, [$extraver])
 
 # Checks for programs.
 AC_PROG_AWK
@@ -62,11 +68,6 @@ AC_FUNC_STAT
 AC_FUNC_STRTOD
 AC_FUNC_UTIME_NULL
 AC_CHECK_FUNCS([alarm atexit dup2 endgrent endpwent gethostbyname gethostname gettimeofday inet_ntoa memmove memset mkdir select socket strcasecmp strchr strdup strerror strncasecmp strrchr strspn strstr strtol strtoul uname utime])
-
-basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
-AC_SUBST(BASEVERSION, [$basever])
-extraver=$(echo $PACKAGE_VERSION | sed -e 's@@<:@^-@:>@*-@@' -e 's@-@_@')
-AC_SUBST(EXTRAVERSION, [$extraver])
 
 AC_CONFIG_FILES([netrom/Makefile tcpip/Makefile ax25/Makefile ax25/axgetput/Makefile Makefile rose/Makefile user_call/Makefile kiss/Makefile 6pack/Makefile hdlcutil/Makefile hdlcutil/fl/Makefile yamdrv/Makefile dmascc/Makefile doc/Makefile man/Makefile etc/Makefile ax25-tools.spec])
 AC_OUTPUT
