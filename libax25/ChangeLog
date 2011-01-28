@@ -1,0 +1,77 @@
+	* ax25_ntoa() does no longer print a zero SSID.  This avoids addresses
+	  like AB3DEF-0 which is general convention anyway.
+
+ -- Ralf Baechle DL5RB <ralf@linux-mips.org> Thu, 10 Sep 2009 18:52:00 +0200
+
+libax25 0.0.12
+	* Fix numerous warnings triggered by modern compilers
+	* Updated to recent autoconf and automake version to keep the code
+	  buildable on modern distributions.
+	* libax25 will again find AX.25 interfaces if if they do not have an
+	  IP address assigned.
+	* Add support for building rpm packages.
+
+ -- Ralf Baechle DL5RB <ralf@linux-mips.org> Sat, 6 Jun 2009 17:00:00 +0100
+
+libax25 0.0.11	
+	* libax25io handles nonblocking io correctly. (PE1RXQ)
+	  THIS BREAKS PRACTICLY EVERY APP USING THIS LIBRARY, FIX THEM!!!
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Fri, 21 Feb 2003 21:33:48 +1100
+
+libax25 0.0.10
+
+ 	* Fixed byte counting in flush_obuf() (PE1RXQ)
+ 	* Fixed buffer overflow in flush_obuf() (PE1RXQ)
+ 	* axio_flush() actually flushes the buffer (PE1RXQ)
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Fri, 29 Mar 2002 08:54:20 +1100
+
+libax25 0.0.9
+
+	* Updated config.guess and config.sub for hppa
+	* Updated stuff for new libtool
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Tue, 28 Aug 2001 10:20:18 +1000
+
+libax25 0.0.8
+	* Included ax25.h and rose.h for axlib.h Closes Debian bug #64102
+
+ -- Craig Small <csmall@small.dropbear.id.au>  NEVER RELEASED
+
+libax25 0.0.7
+	* Added Tomi's patch to fix glibc 2.0 includes
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Mon, 23 Aug 1999 11:23:40 +1000
+
+libax25 0.0.6
+	* Fixed pathnames.h typo
+	* Fixed instructions
+
+ -- Craig Small <csmall@small.dropbear.id.au>  , 19 Jul 1999
+
+libax25 0.0.5
+	* More patches from Tomi for ax25io stuff
+	* Cleaner way of naming config files
+	* The licence use is now obvious
+	* Added axports, rsports and nrports plus their man pages
+
+ -- Craig Small <csmall@small.dropbear.id.au>  ,  5 Jul 1999
+
+libax25 0.0.4
+	* Made some more functions use const args
+	* Split the libaxio library out
+ -- Craig Small <csmall@small.dropbear.id.au>  , 30 Apr 1999
+
+libax25 0.0.3
+	* Added Jean-Pauls ROSE patches
+	* Changed all the convert names to ntoa type names
+	* Added Tomi's axio stuff
+	* Started writing ax25.3 and rose.3
+ -- Craig Small <csmall@small.dropbear.id.au>  , 20 Apr 1999
+
+libax25 0.0.2
+	* Initial version from Terry Dawson's code, split from the old
+	  ax25-utils package.
+ -- Craig Small <csmall@small.dropbear.id.au>  ,  2 Apr 1999
+
