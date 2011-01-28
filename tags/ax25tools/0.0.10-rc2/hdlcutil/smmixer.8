@@ -1,0 +1,164 @@
+.\" Copyright 1996 Thomas Sailer (t.sailer@alumni.ethz.ch)
+.\" May be distributed under the GNU General Public License
+.\" "
+.TH SMMIXER 8 "1 October 1996" "Smmixer 0.1" "Linux Programmer's Manual"
+.SH NAME
+smmixer \- get/set Linux soundcard packet radio modem driver mixer
+.SH SYNOPSIS
+.B smmixer
+.B "[\-i device]"
+.BR "[ " params " ]"
+
+.SH DESCRIPTION
+.B smmixer
+displays and/or sets the input source and input and output levels of a
+soundcard modem port.
+
+.SH OPTIONS
+.B smmixer
+accepts the following option:
+
+.TP
+.B \-i
+The
+.I device
+argument specifies the soundcard modem device which should be configured or
+interrogated.  It will usually have the following form:
+.I sm[0-3].
+
+.SH PARAMETERS
+The
+.B AD1848 (WSS)
+mixer accepts the following parameters:
+.TP
+.B ol=val
+sets the level of the left output to the specified value. Legal values are from
+-100..0dB.
+.TP
+.B or=val
+sets the level of the right output to the specified value. Legal values are from
+-100..0dB.
+.TP
+.B o=val
+sets the level of both outputs to the specified value. Legal values are from
+-100..0dB.
+.TP
+.B il=val
+sets the level of the left input to the specified value. Legal values are from
+0..43dB.
+.TP
+.B ir=val
+sets the level of the right input to the specified value. Legal values are from
+0..43dB.
+.TP
+.B i=val
+sets the level of both inputs to the specified value. Legal values are from
+0..43dB.
+.TP
+.B sl=val
+sets the source of the left input to the specified value. Legal values are
+.I line, aux1, mic
+or
+.I dac.
+.TP
+.B sr=val
+sets the source of the right input to the specified value. Legal values are
+.I line, aux1, mic
+or
+.I dac.
+.TP
+.B s=val
+sets the source of both inputs to the specified value. Legal values are
+.I line, aux1, mic
+or
+.I dac.
+
+.in \n[IN]u
+The
+.B CT1335 (SB2.x)
+mixer accepts the following parameter:
+.TP
+.B o=val
+sets the output level to the specified value. Legal values are from -46..0dB.
+
+.in \n[IN]u
+The
+.B CT1345 (SBPro)
+mixer accepts the following parameters:
+.TP
+.B ol=val
+sets the level of the left output to the specified value. Legal values are from
+-46..0dB.
+.TP
+.B or=val
+sets the level of the right output to the specified value. Legal values are from
+-46..0dB.
+.TP
+.B o=val
+sets the level of both outputs to the specified value. Legal values are from
+-46..0dB.
+.TP
+.B s=val
+sets the input source to the specified value. Legal values are
+.I mic, cd
+or
+.I line.
+
+.in \n[IN]u
+The
+.B CT1745 (SB16, SB32 AWE)
+mixer accepts the following parameters:
+.TP
+.B ol=val
+sets the level of the left output to the specified value. Legal values are from
+-62..18dB.
+.TP
+.B or=val
+sets the level of the right output to the specified value. Legal values are from
+-62..18dB.
+.TP
+.B o=val
+sets the level of both outputs to the specified value. Legal values are from
+-62..18dB.
+.TP
+.B il=val
+sets the level of the left input to the specified value. Legal values are from
+-62..18dB.
+.TP
+.B ir=val
+sets the level of the right input to the specified value. Legal values are from
+-62..18dB.
+.TP
+.B i=val
+sets the level of both inputs to the specified value. Legal values are from
+-62..18dB.
+.TP
+.B s=val
+enables the specified value as a source. Legal values are
+.I line, line.l, line.r, midi, midi.l, midi.r, cd, cd.l, cd.r
+or
+.I mic.
+
+.SH CONSIDERATIONS
+It is important that the audio levels of your radio match those of the
+soundcard. To help achieve this, use the
+.I smdiag
+utility.
+
+This utility can only be used after the interface is started up, i.e. after
+ifconfig sm? up.
+
+The sound driver and the soundcard modem driver are mutually exclusive, i.e. they
+cannot both access the same soundcard at the same time. Even worse, the sound driver
+reserves the soundcard as soon as it gets loaded. The souncard modem driver however
+reserves the card only when the interface is started, i.e. during ifconfig if up.
+
+9600 baud may not currently work on SoundBlaster cards with DSP revision 4.x, i.e.
+SB16 and SB32 AWE. This is because they seem to not be fully backwards compatible.
+
+.SH "SEE ALSO"
+.BR smdiag " (8), " sethdlc " (8),"
+linux/drivers/net/soundmodem.c
+
+.SH AUTHOR
+smmixer was written by Thomas Sailer (t.sailer@alumni.ethz.ch).

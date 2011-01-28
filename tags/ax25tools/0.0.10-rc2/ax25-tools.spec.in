@@ -1,0 +1,82 @@
+Name:           ax25-tools
+Version:        @BASEVERSION@@EXTRAVERSION@
+Release:        1
+Summary:        Tools used to configure an ax.25 enabled computer
+
+Group:          Applications/Communications
+License:        GPLv2+
+URL:            http://www.linux-ax25.org/
+Source0:        http://www.linux-ax25.org/pub/%{name}/%{name}-@VERSION@.tar.gz
+BuildRoot:      %{_tmppath}/%{name}-@VERSION@-%{release}-root-%(%{__id_u} -n)
+
+%description
+ax25-tools is a collection of tools that are used to configure an ax.25 enabled
+computer. They will configure interfaces and assign callsigns to ports as well
+as Net/ROM and ROSE configuration.
+
+ * m6pack - handle multiple 6pack TNCs on a single interface
+ * ax25d - general purpose AX.25, NET/ROM and Rose daemon
+ * axctl - configure/Kill running AX.25 connections
+ * axparms - configure AX.25 interfaces
+ * axspawn - allow automatic login to a Linux system
+ * beacon - transmit periodic messages on an AX.25 port
+ * bpqparms - configure BPQ ethernet devices
+ * mheardd - display AX.25 calls recently heard
+ * rxecho - transparently route AX.25 packets between ports
+ * mheard - collect information about packet activity
+ * dmascc_cfg - configure dmascc devices
+ * sethdlc - get/set Linux HDLC packet radio modem driver port information
+ * smmixer - get/set Linux soundcard packet radio modem driver mixer
+ * smdiag - Linux soundcard packet radio modem driver diagnostics utility
+ * kissattach - Attach a KISS or 6PACK interface
+ * kissnetd - create a virtual network
+ * kissparms - configure KISS TNCs
+ * mkiss - attach multiple KISS interfaces
+ * net2kiss - convert a network AX.25 driver to a KISS stream on a pty
+ * netromd - send and receive NET/ROM routing messages
+ * nodesave - saves NET/ROM routing information
+ * nrattach - start a NET/ROM interface
+ * nrparms - configure a NET/ROM interface
+ * nrsdrv - KISS to NET/ROM serial converter
+ * rsattach - start a ROSE interface
+ * rsdwnlnk - user exit from the ROSE network
+ * rsmemsiz - monitor the ROSE subsystem
+ * rsusers.sh - monitor AX.25, NET/ROM and ROSE users
+ * rsparms - configure a ROSE interface
+ * rsuplnk - User entry into the ROSE network
+ * rip98d - RIP98 routing daemon
+ * ttylinkd - TTYlink daemon for AX.25, NET/ROM, ROSE and IP
+ * ax25_call - Make an AX.25 connection
+ * netrom_call - Make a NET/ROM connection
+ * rose_call - Make a ROSE connection
+ * tcp_call - Make a TCP connection
+ * yamcfg - configure a YAM interface
+
+%prep
+%setup -q -n %{name}-@VERSION@
+
+%build
+%configure
+make %{?_smp_mflags}
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
+
+#don't include these twice
+rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}/
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root,-)
+%doc AUTHORS ChangeLog COPYING README
+%doc yamdrv/README.yamdrv user_call/README.user_call tcpip/ttylinkd.README dmascc/README.dmascc
+%{_bindir}/*
+%{_sbindir}/*
+%{_mandir}/man?/*
+
+%changelog
+* Sat Jun 27 2009 Ralf Baechle <ralf@linux-mips.org>
+- Initial version

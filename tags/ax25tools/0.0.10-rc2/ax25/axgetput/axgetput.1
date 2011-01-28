@@ -1,0 +1,77 @@
+.TH AXGETPUT 1 "21 January 2007" Linux "Linux Programmer's Manual"
+.SH NAME
+axgetput \- upload or download files via AX.25 / axspawn Linux login session.
+.SH SYNOPSIS
+.B axgetput
+[-b \fIblocksize\fR] [-i] [-v] [-h] [?] \fIfilename\fR
+.br
+.B axgetput
+[-b \fIblocksize\fR] [-i] -s [-v] [-h] [?] [\fIfilename\fR]
+.LP
+.SH DESCRIPTION
+.TP
+\fB-b blocksize\fR
+Set the blocksize (frame length) of transmitted data.  Defaults to 256 bytes
+which matches typical AX.25 network confurations best.
+.TP
+\fB-i\fR
+Compute CRC checksum only.
+.TP
+\fB.B -s\fR
+Indicates input from a stream.  This option is available only if STDIN is a
+pipe.  The filename argument may be omitted if -s is given. The length of
+the file need not to be known.
+.TP
+\fB\-v\fR
+print version and exit.
+.TP
+\fB-h, ?\fR
+print usage and exit.
+.LP
+.B axgetput
+is the actual name of the program. You execute for e.g.
+.B bget
+or
+.B bput
+while axgetput is the common program to which bget and bput are linked to.
+axgetput autodetermines which operation mode the user desires.
+
+axgetput sets the pty to be 8bit clean (thus enables binary mode for the
+file transfer). It requires that the user is logged in through axspawn(8).
+
+.B I. #BIN Protocol
+
+.B bget
+is used for downloading a file on this system from the unix login shell
+via his ax25 session to his packet-radio terminal program. The download
+"protocol" is the "#BIN" standard known from packet radio mailboxes.
+
+.B bput
+does it the other way round: with this comand, the user may upload a
+file to this computer.
+
+The #BIN protocol provides a CRC consistency check after the file is
+transfered. The transfer of the file modification time is part of the
+#BIN protocol.
+
+.LP
+.B II. YAPP Protocol
+
+.B yget
+or
+.B yput
+is reserverd for the yapp protocol, which is not supported in this version.
+
+.LP
+.B II. DIDADIT Protocol
+
+.B rget
+or
+.B rput
+is reserverd for the didadit protocol, which is not supported in this version.
+.LP
+Anyone like to implement yapp and didadit protcols?
+.LP
+.SH AUTHOR
+Thomas Osterried  DL9SAU <thomas@x-berg.in-berlin.de>
+Ralf Baechle DL5RB <ralf@linux-mips.org>

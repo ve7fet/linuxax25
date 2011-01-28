@@ -1,0 +1,37 @@
+.TH BPQPARMS 8 "4 September 1996" Linux "Linux System Managers Manual"
+.SH NAME
+bpqparms \- Configure BPQ ethernet devices.
+.SH SYNOPSIS
+.B bpqparms device [-a ethaddr] [-d ethaddr] [-vV]
+.SH DESCRIPTION
+.LP
+.B Bpqparms
+allows the setting of the BPQ Ethernet options for a particular device. Each
+BPQ Ethernet device appears as a device named bpq0...bpqN which overlays the
+original Ethernet device, usually eth0...ethN. This device is an AX.25
+device driver and allows AX.25 frames to be transmitted over an Ethernet to
+another machine using the same protocol. The default for the device is to
+send and receive BPQ Ethernet packets to the broadcast address. This
+program replaces the previous \(lqaxparms -dev\(rq option.
+.SH OPTIONS
+.TP 15
+.BI "\-a ethaddr"
+Allows the setting of which ethernet address will be accepted by the BPQ
+Ethernet device.
+.TP 15
+.BI "\-d ethaddr"
+If specified on its own, will set the destination ethernet address will be
+used for transmitting and for receiving of BPQ ethernet packets. An address
+of \(lqbroadcast\(rq sets it to the ethernet broadcast address.
+.TP 15
+.BI \-v
+Displays the version number.
+.TP 15
+.BI \-V
+The original version messages.
+.SH "SEE ALSO"
+.BR ax25 (4),
+.BR axports (5),
+.BR ifconfig (8).
+.SH AUTHOR
+Joerg Reuter DL1BKE <jreuter@poboxes.com>

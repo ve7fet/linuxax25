@@ -1,0 +1,51 @@
+.TH NETROM 4 "25 July 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+AF_NETROM \- NET/ROM amateur packet radio protocol family
+.SH DESCRIPTION
+.LP
+.B NET/ROM
+is a protocol used extensively by radio amateurs. The Linux
+NET/ROM protocol family permits access to these protocols via
+the standard networking
+.B socket
+metaphor.
+.LP
+The NET/ROM protocol layer only supports connected mode. IP traffic may be
+stacked on top of NET/ROM frames using a non-standard extension to the
+NET/ROM protocol.
+.LP
+The only mode of operation is connected mode which is the mode used for a
+socket of type SOCK_SEQPACKET (stream sockets are not available in NET/ROM).
+This requires that the user ensures output data is suitably packetised, and
+that input data is read a packet at a time into a buffer of suitable size.
+.LP
+NET/ROM addresses consist of 6 ascii characters and a number called the
+SSID. These are encoded into a sockaddr_ax25 structure which is provided to
+the relevant system calls.
+.LP
+NET/ROM has some unusual properties. Notably in a multi-user system an AX.25
+address is often associated with a user, and some users may not have such an
+association. a set of ioctl calls are provided to manage an association
+table.
+.LP 
+NET/ROM supports the following socket options for SOL_NETROM. NETROM_T1 is
+the T1 timer in 1/10ths of a second, NETROM_T2 is the T2 timer in 1/10ths of
+a second. NETROM_N2, the retry counter is also configurable. There is no 'infinite
+retry' option supported however. It is possible for an application
+to request that the NET/ROM layer return the NET/ROM header as well as the
+application data, this is done via the NETROM_HDRINCL socket option.
+.SH "SEE ALSO"
+.BR call (1),
+.BR socket (2),
+.BR setsockopt(2),
+.BR getsockopt(2),
+.BR nrbroadcast (5),
+.BR nrports (5),
+.BR netromd (8),
+.BR noderest (8),
+.BR nodesave (8),
+.BR nrctl (8),
+.BR nrparms (8).
+.LP
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

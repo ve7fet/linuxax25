@@ -1,0 +1,282 @@
+.\" Copyright 1996 Thomas Sailer (t.sailer@alumni.ethz.ch)
+.\" May be distributed under the GNU General Public License
+.\"
+.\" portions from setserial.8 by Rickard E. Faith (faith@cs.unc.edu)
+.\" "
+.TH SETHDLC 8 "1 October 1996" "Sethdlc 0.1" "Linux Programmer's Manual"
+.SH NAME
+sethdlc \- get/set Linux HDLC packet radio modem driver port information
+.SH SYNOPSIS
+.B sethdlc
+.B "[ \-bdhs ]"
+.B "[\-i device]"
+
+.B "sethdlc [\-i device] -c"
+cal
+
+.B "sethdlc\ -p"
+.B "[\-i\ device]"
+.BR "[\ mode\ " mode "\ ]"
+.BR "[\ io\ " iobase "\ ]"
+.BR "[\ irq\ " irq "\ ]"
+.BR "[\ dma\ " dma "\ ]"
+.BR "[\ dma2\ " dma2 "\ ]"
+.BR "[\ serio\ " seriobase "\ ]"
+.BR "[\ pario\ " pariobase "\ ]"
+.BR "[\ midiio\ " midiiobase "\ ]"
+.BR "[\ options\ " options "\ ]"
+
+.B "sethdlc\ -a"
+.B "[\-i\ device]"
+.BR "[\ txd\ " txdelay "\ ]"
+.BR "[\ txtail\ " txtail "\ ]"
+.BR "[\ slot\ " slottime "\ ]"
+.BR "[\ ppersist\ " ppersistence "\ ]"
+.BR "[\ full\ ]"
+.BR "[\ half\ ]"
+
+
+.SH DESCRIPTION
+.B sethdlc
+is a program designed to set and/or report the configuration information
+associated with a soundcard radio modem port.  This information includes the
+modem type, what I/O port, IRQ and DMA channel a particular modem
+port is using, and where to output a transmitter keying (PTT) signal.
+
+With the
+.B \-p
+option,
+.B sethdlc
+sets and/or reports the port configuration.
+
+With the
+.B \-a
+option,
+.B sethdlc
+sets and/or reports the AX.25 channel access parameters. These parameters can also
+be set with the
+.I kissparms
+utility.
+
+With the
+.B \-c
+option,
+.B sethdlc
+instructs the driver to send a calibration pattern for
+.I cal
+seconds.
+
+Without the 
+.B \-p,
+.B \-a
+and
+.B \-c
+option,
+.B sethdlc
+will stay in the foreground and display received packets. The AX.25 header
+and eventually a FlexNet compressed header are decoded. CTRL-C terminates
+.B sethdlc.
+Specifying additional options, 
+.B sethdlc
+may display additional information.
+
+
+.SH OPTIONS
+.B sethdlc
+accepts the following options:
+
+.TP
+.B \-b
+Trace the bits at the output of the demodulator, after RX clock recovery. 
+This option is only available if \fBsethdlc\fP
+and the soundcard modem kernel driver is compiled with debugging support on.
+This is useful for driver debugging.
+.TP
+.B \-d
+Trace DCD, PTT and other status information on stdout. \fBsethdlc\fP
+displays two times per second a line containing these informations.
+.TP
+.B \-h
+Display an overview of the available command line parameters and exit.
+.TP
+.B \-i
+The
+.I device
+argument specifies the HDLC modem device which should be configured or
+interrogated.  It will usually have the following form:
+\fIbc[0-3]\fP for the baycom driver and
+\fIsm[0-3]\fP for the soundcard modem driver.
+.TP
+.B \-s
+Trace the bits at the demodulator output, \fIbefore\fP
+the RX clock recovery, to stdout. This option is only available the modem driver
+is compiled with debugging support on. It may not be available on some modem, such 
+as the \fIpar96\fP.
+
+.SH PARAMETERS
+The following parameters can be assigned to a soundcard radio modem port.
+
+All numerical parameter values are assumed to be in decimal unless preceeded by "0x".
+
+The
+.B mode
+parameter sets the type of hardware and the operating mode of the driver.
+\fIser12\fP and \fIpar96\fP are valid modes for the \fBbaycom\fP driver.
+A star "\fI*\fP" may be added to enable software DCD. The \fBmode\fP string
+format of the \fBsoundmodem\fP driver is as follows: \fIhw:mode\fP.
+\fIhw\fP may be either \fIsbc\fP, \fIwss\fP or \fIwssfdx\fP. The first
+one specifies SoundBlaster compatible soundcards, the second one
+WindowsSoundSystem compatible hardware, and the third one WSS fullduplex
+operation (which currently works with Crystal Semiconductor Chipsets
+CS423[126]). The \fImode\fP portion may be \fIafsk1200\fP or \fIfsk9600\fP.
+Optionally, the receive and transmit modes may be different
+(\fIhw:txmode.rxmode\fP).
+
+The
+.B ioport
+parameter sets the I/O port address. Typical values for the \fIser12\fP modem are
+0x3f8, 0x2f8, 0x3e8 or 0x2e8, for the \fIpar96\fP modem 0x378, 0x278 or 0x3bc, for
+the \fIsbc\fP modems 0x220 and for the \fIwss\fP modems 0x530, 0x608, 0xe80 or 0xf40.
+
+The
+.B irq
+parameter sets the hardware IRQ number. Typical values for the \fIser12\fP modem are
+4 and 3, for the \fIpar96\fP modem 7 or 5, for the \fIsbc\fP modems are 7 or 5 and for
+the \fIwss\fP modems, any free IRQ from the set 2, 7, 9, 10, 11 will do. The driver
+automatically configures the WSS soundcard to the correct IRQ.
+
+The
+.B dma
+parameter sets the hardware DMA number. Typical values for the \fIsbc\fP modems are
+1 or 0 and for the \fIwss\fP modems, any free DMA from 0 to 3 (except 2) will do.
+The driver automatically configures the WSS soundcard to the correct DMA.
+The Baycom modems do not need DMA.
+
+The
+.B dma2
+parameter sets the second hardware DMA number. This is only needed for
+full duplex operation with the \fBsoundmodem\fP driver.
+
+The
+.B seriobase
+parameter optionally sets the address of a serial port, where
+the driver will output a PTT signal at the TxD and RTS pins, and a DCD
+signal at the DTR pin. As Baycom modems do have their own PTT pin, this 
+parameter is not used by the Baycom modem driver.
+
+The
+.B pariobase
+parameter optionally sets the address of a LPT port where
+the driver will output a PTT signal on the DATA0 line and a DCD signal
+on the DATA1 line. As Baycom modems do have their own PTT pin, this 
+parameter is not used by the Baycom modem driver.
+
+The
+.B midiiobase
+parameter optionally sets the address of a MPU401 compatible
+MIDI port, where the driver will output a PTT signal. Since the MIDI port is
+effectively an UART and therefore cannot output a DC signal, the output must
+be fed through a retriggerable monoflop with a period of about 15ms. See
+.I http://www.ife.ee.ethz.ch/~sailer/pcf/ptt_circ/ptt.html
+for a sample schematic diagram. As Baycom modems do have their own PTT pin,
+this parameter is not used by the Baycom modem driver.
+
+The
+.B txdelay
+sets the transmitter keyup delay time. Unlike \fIkissparms\fP, the unit is
+\fItens of ms\fP. This is the time the transmitter needs to switch its PA
+on and for its frequency synthesizer to settle. Typical values for a handheld
+transceiver are 200ms (i.e. 20), and for a good crystal driven transceiver
+20ms (i.e. 2).
+
+The
+.B txtail
+sets the time PTT is held after the last packet. Unlike \fIkissparms\fP, the unit
+is \fItens of ms\fP. Do not set this value to 0. Most modems need some extra
+time to actually clock the last bits out to the transmitter.
+
+The
+.B slottime
+parameter specifies how often the channel access algorithm is executed.
+Unlike \fIkissparms\fP, the unit is \fItens of ms\fP. Unless you have very 
+specific requirements, set this to 100ms (i.e. 10).
+
+The
+.B ppersist
+sets how "eagerly" the station starts to transmit as soon as the channel
+gets free. The optimum value is 256 divided by the number of stations on the
+channel. (This should really be done automatically by the L2)
+
+.B full
+sets the modem to full duplex mode. Note that some modems do not actually support
+full duplex mode, in this case this parameter makes the modem start its transmission
+as soon as it gets packets from the upper layer, without waiting for the channel
+to become free. This is needed by some implementations of alternative channel
+access algorithms, e.g. \fIDAMA\fP.
+
+.B half
+sets the modem to half duplex mode.
+
+.SH CONSIDERATIONS OF CONFIGURING BAYCOM PORTS
+It is important to note that sethdlc merely tells the Linux kernel
+where it should expect to find the I/O port and IRQ lines of a
+particular serial port.  It does 
+.I not
+configure the hardware to use a
+particular I/O port.  In order to do that, you will need to physically
+program the serial board, usually by setting some jumpers or by
+switching some DIP switches.
+
+This section will provide some pointers in helping you decide how you
+would like to configure your baycom ports.
+
+The "standard MS-DOS" port associations are given below:
+
+.nf
+.RS
+COM1, port 0x3f8, irq 4
+COM2, port 0x2f8, irq 3
+COM3, port 0x3e8, irq 4
+COM4, port 0x2e8, irq 3
+LPT1, port 0x378, irq 7
+LPT1 (on hercules graphics adapter), port 0x3bc, irq 7
+LPT1, port 0x278, irq 5
+.RE
+.fi
+
+.SH CONSIDERATIONS OF CONFIGURING SOUNDCARD RADIO MODEM PORTS
+Some cards need to be initialized before they act as a WSS or SoundBlaster
+compatible card. This driver does \fInot\fP do this. You can use the standard
+linux sound driver, if compiled as a module. Just load the sound driver
+(insmod sound) and remove it again (rmmod sound). The card should then be
+configured for either soundblaster or WSS compatibility. If this does not work
+for some reason, you'll have to write your own soundcard configuration
+utility. This is not as complicated as it sounds; it can be done from
+user space (but requiring root privileges) using \fIioperm\fP and/or \fIiopl\fP.
+
+It is important that the audio levels of your radio match those of the
+soundcard. To help achieve this, there are two utilities: \fIsmdiag\fP
+and \fIsmmixer\fP. See their respective manpage.
+
+The sound driver and the soundcard modem driver are mutually exclusive, i.e. they
+cannot both access the same soundcard at the same time. Even worse, the sound driver
+reserves the soundcard as soon as it gets loaded. The souncard modem driver however
+reserves the card only when the interface is started, i.e. during ifconfig sm[0-3] up.
+
+9600 baud may not currently work on SoundBlaster cards with DSP revision 4.x, i.e.
+SB16 and SB32 AWE. This is because they seem to not be fully backwards compatible.
+
+.SH CAUTION
+CAUTION: Using an invalid port can lock up your machine.
+
+.SH "SEE ALSO"
+.nf
+.BR smdiag "\ (8), " smmixer "\ (8), " kissparms "\ (8),"
+linux/drivers/net/hdlcdrv.c,
+linux/drivers/net/baycom.c,
+linux/drivers/net/soundmodem.c
+.fi
+
+.SH AUTHOR
+sethdlc was written by Thomas Sailer, HB9JNX/AE4WA (t.sailer@alumni.ethz.ch).
+Inspired by setserial.

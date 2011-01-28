@@ -1,0 +1,123 @@
+.TH AXPARMS 8 "25 July 1997" Linux "Linux System Managers Manual"
+.SH NAME
+axparms \- Configure AX.25 interfaces.
+.SH SYNOPSIS
+.B axparms --assoc|--forward|--route|--setcall|--version ...
+.SH DESCRIPTION
+.LP
+The
+.B axparms
+command is designed to be a multi-function command that allows miscellaneous
+commands to be issued to the Linux AX.25 protocol layer. It includes the
+functionality of
+.B axassociate
+and
+.B axsetcall
+which this command superceedes. The different modes of the command are
+chosen by the first argument. Sunsequent arguments depend upon this argument
+and so no generalised command format can be given.
+.SH "--assoc Argument"
+.LP
+The format of this option is:
+.LP
+.nf
+.B axparms --assoc <callsign> <username>
+.br
+.B axparms --assoc <callsign> delete
+.br
+.B axparms --assoc policy [default|deny]
+.br
+.B axparms --assoc show
+.fi
+.LP
+This option mainpulates the kernel uid/callsign mapping table, allowing
+callsigns to be associated and dis-associated with a user. The
+.B policy
+option permits the superuser to have all other uid's either default to the
+actual port name, or to block traffic.
+.LP
+At power up the table is blank and the policy is 'default', which is thus
+backward compatible.
+.SH "--forward Argument"
+.LP
+Allows the use of many receivers with one transmitter, known as packet
+forwarding in many systems. The format of this command is:
+.LP
+.nf
+.B axparms --forward <portfrom> <portto>
+.br
+.B axparms --forward <portfrom> delete
+.fi
+.LP
+Any packets to be transmitted on port portfrom will be transmitted on port
+portto. This will stay in force until the second form of the command is
+issued which will remove the association.
+.SH "--route Argument"
+.LP
+This option allows the internal AX.25 routing table to be manipulated. This
+table is available for reading in /proc/net/ax25_route, and will be built up
+dynamically by stations heard. However it is possible to add, delete and list
+entries via this option.
+.LP
+The formats of this option are:
+.LP
+.nf
+.B axparms --route add <port> <callsign> [<digis>] [--ipmode V|D]
+.br
+.B axparms --route del <port> <callsign>
+.fi
+.B axparms --route list
+.fi
+.LP
+Routes added via this command will not be removed from the internal routing
+table when they are \(lqold\(rq as normal entries are. The 
+.B --ipmode
+option sets mode vc or mode datagram for this destination.
+.LP
+If the <callsign> argument is set to \(lqdefault\(rq then this will set the 
+default route for all outgoing AX.25 connections which will be used when there 
+is no specific route to the required destination.
+.SH "--setcall Argument"
+.LP
+The format of this option is:
+.LP
+.B axparms --setcall <interface> <callsign>
+.LP
+This changes the callsign associated at the given physical ax25 interface.
+.LP
+Cave: The interface name is not the symbolic port name from axports, but
+the real interface name (from ifconfig(8)):
+ax0, ax1, .., sp0, .., bpq0, ... etc..
+.LP
+The change is permanent as long as the interface exists, or another \(lqaxparms
+--setcall\(rq is issued.
+.LP
+The interface has to exist already in order to use this option; it 
+may be in state UP or DOWN.
+.SH "--version Argument"
+.LP
+This option displays the version of the AX.25 utilities that
+.B axparms
+belongs to.
+.SH FILES
+.LP
+/proc/net/ax25_bpqether
+.br
+/proc/net/ax25_calls
+.br
+/etc/ax25/axports
+.SH "SEE ALSO"
+.BR call (1),
+.BR getsockopt (2),
+.BR setsockopt (2),
+.BR ax25 (4),
+.BR axctl (8),
+.BR axports (5).
+.SH AUTHORS
+.nf
+Alan Cox GW4PTS <alan@cymru.net>
+.br
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+.br
+Joerg Reuter DL1BKE <jreuter@poboxes.com>
+.fi
