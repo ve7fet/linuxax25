@@ -1,0 +1,76 @@
+.TH KISSPARMS 8 "15 October 1996" Linux "Linux System Managers Manual"
+.SH NAME
+kissparms \- Configure KISS TNCs.
+.SH SYNOPSIS
+.B kissparms [-c crc-type] -p <port> [-f y|n] [-h hw] [-l txtail] [-r pers] [-s slot] [-t txd] [-e feclevel] [-v] [-x] [-X raw] 
+.SH DESCRIPTION
+.LP
+.B Kissparms
+is used to dynamically configure KISS TNCs that have been setup for AX.25
+use by
+.B kissattach.
+This program uses the packet interface to allow it to communicate with the
+KISS TNC without interrupting the AX.25 data stream. Therefore the KISS
+parameters may be set at any time during the operation of the AX.25 port.
+.LP
+A full description of the KISS protocol can be found in the ARRL 6th Computer
+Networking Conference papers pp 38-43. While use of the Tx Tail value is
+now deprecated, it has been included to satisfy the requirements of users of
+old TNC firmware.
+.LP
+Although this utility was originally designed for controlling KISS TNCs
+connected to a serial port, it is used by a number of other Linux packet
+radio devices such as the Z8530 SCC driver for controlling their parameters
+in exactly the same manner. Therefore
+.B kissparms
+functionality extends to more than KISS TNCs.
+.SH OPTIONS
+.TP 12
+.BI "\-c crc-type"
+Sets the crc-type to use. For e.g. kernel mkiss: 0 = auto, 1 = none, 2 = flexnet, 3 = smack
+.TP 12
+.BI "\-p port"
+Sets the port that is being configured.
+.TP 12
+.BI "\-f y|n"
+This sets the TNC into either full duplex ``y'', or half duplex ``n'' mode.
+.TP 12
+.BI "\-h hardware"
+This is used to set hardware specific parameters.
+.TP 12
+.BI "\-e FEC error correction level"
+Sets the FEC error correction level in a DSP card based modem (KISS parameter
+8). Larger correction level means better noise resistance, but slower
+throughput on a good connection. This is an experimental feature found in a
+QPSK modem for the Motorola DSP56001 based DSP4 and EVM cards only.
+.TP 12
+.BI "\-l txtail"
+Sets the TX Tail time in milliseconds. Note that the command to the TNC only
+operates in steps of ten milliseconds, so only use values like 10, 20 etc.
+.TP 12
+.BI "\-r persist"
+Sets the persist value. This parameter is scaled to the range 0 to 255.
+.TP 12
+.BI "\-s slottime"
+Sets the slottime in milliseconds. Note that the command to the TNC only
+operates in steps of ten milliseconds, so only use values like 10, 20 etc.
+.TP 12
+.BI "\-t txdelay"
+Sets the TX Delay in milliseconds. Note that the command to the TNC only
+operates in steps of ten milliseconds, so only use values like 10, 20 etc.
+.TP 12
+.BI \-v
+Display the version.
+.TP 12
+.BI \-x
+Takes the TNC out of KISS mode back into ``normal'' mode. This command is
+manufacturer specific but works in many cases. This option overrides all
+options except the port number.
+.TP 12
+.BI \-X raw
+Sends the specified raw value to the kiss driver.
+.SH "SEE ALSO"
+.BR axports (5),
+.BR kissattach (8).
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

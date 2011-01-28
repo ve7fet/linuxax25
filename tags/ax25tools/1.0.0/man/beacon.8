@@ -1,0 +1,52 @@
+.TH BEACON 8 "10 February 1997" Linux "Linux System Managers Manual"
+.SH NAME
+beacon \- transmit periodic messages on an AX.25 port.
+.SH SYNOPSIS
+.B beacon [-c <src_call>] [-d <dest_call>[digi ..]] [-l] [-m] [-s] [-t interval] [-v] port \(lqmessage\(rq
+.SH DESCRIPTION
+.LP
+.B Beacon
+transmits the message text on an AX.25 port every thirty minutes. The message
+is addressed to \(lqIDENT\(rq and is sent using the AX.25 callsign of the port
+specified on the command line. Typically the message text will contain
+spaces and/or other characters, therefore the message text should be
+enclosed in quotes to ensure they are passed to the
+.B beacon
+program untranslated.
+.SH OPTIONS
+.TP 16
+.BI \-c
+Configure the source callsign for beacons. The default is to use the
+interface callsign.
+.TP 16
+.BI \-d
+Configure the destination callsign for beacons. The default is \(lqIDENT\(rq.
+Optional: Digipeaters may follow, separated with spaces. Use \-d "DEST DIGI1 DIGI2 .."
+.TP 16
+.BI \-l
+Enables the logging of errors to the system log, the default is off.
+.TP 16
+.BI \-m
+Changes the destination address to \(lqMAIL\(rq and sends the message text
+once only. This option overrides any destination callsign given with the \-d option.
+.TP 16
+.BI \-s
+Sends the message text once only.
+.TP 16
+.BI "\-t interval"
+The time interval between messages, the interval is given in minutes and the
+default is thirty minutes.
+.TP 16
+.BI \-v
+Display the version.
+.SH "SEE ALSO"
+.BR ax25 (4),
+.BR axports (5).
+.SH AUTHORS
+.nf
+Alan Cox GW4PTS <alan@cymru.net>
+.br
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+.br
+David Brooke G6GZH <db@fusk.demon.co.uk>
+.fi

@@ -1,0 +1,220 @@
+.\" Copyright 1996 Thomas Sailer (t.sailer@alumni.ethz.ch)
+.\" May be distributed under the GNU General Public License
+.\" "
+.TH HDLCDRV 9 "2 October 1996" "Linux 2.1.x" "Kernel Reference Guide"
+.SH NAME
+hdlcdrv \- HDLC amateur (AX.25) packet radio network driver
+.SH SYNOPSIS
+
+.B #include <linux/hdlcdrv.h>
+
+.B linux/drivers/net/hdlcdrv.c
+
+.BI "extern inline void hdlcdrv_putbits(struct hdlcdrv_state * " s ", unsigned int " bits ");"
+
+.BI "extern inline unsigned int hdlcdrv_getbits(struct hdlcdrv_state * " s ");"
+
+.BI "extern inline void hdlcdrv_channelbit(struct hdlcdrv_state * " s ", unsigned int " bit ");"
+
+.BI "extern inline void hdlcdrv_setdcd(struct hdlcdrv_state * " s " , int " dcd ");"
+
+.BI "extern inline int hdlcdrv_ptt(struct hdlcdrv_state * " s ");"
+
+.BI "void hdlcdrv_receiver(struct device *, struct hdlcdrv_state *);"
+
+.BI "void hdlcdrv_transmitter(struct device *, struct hdlcdrv_state *);"
+
+.BI "void hdlcdrv_arbitrate(struct device *, struct hdlcdrv_state *);"
+
+.BI "int hdlcdrv_register_hdlcdrv(struct device * " dev ", struct hdlcdrv_ops * " ops ", unsigned int " privsize ", char * " ifname ", unsigned int " baseaddr " , unsigned int " irq ", unsigned int " dma ");
+
+.BI "int hdlcdrv_unregister_hdlcdrv(struct device * " dev ");"
+
+.SH DESCRIPTION
+This driver should ease the implementation of simple AX.25 packet radio
+modems where the software is responsible for the HDLC encoding and decoding.
+Examples of such modems include the \fIbaycom\fP family and the 
+\fIsoundcard\fP modems. 
+
+This driver provides a standard Linux network driver interface.
+It can even be compiled if Kernel AX.25 is not enabled in the Linux
+configuration. This allows this driver to be used even for userland
+AX.25 stacks such as \fIWampes\fP or \fITNOS\fP, with the help of
+the \fInet2kiss\fP utility.
+
+This driver does not access any hardware; it is the responsibility of
+an additional hardware driver such as \fIbaycom\fP or \fIsoundmodem\fP
+to access the hardware and derive the bitstream to feed into this
+driver.
+
+The hardware driver should store its state in a structure of the
+following form:
+
+.nf
+struct hwdrv_state {
+	struct hdlc_state \fIhdrv\fP;
+
+	... the drivers private state
+};
+.fi
+
+A pointer to this structure will be stored in \fIdev->priv\fP.
+
+\fBhdlcdrv_register_hdlcdrv\fP registers a hardware driver to the
+hdlc driver. \fIdev\fP points to storage for the \fIdevice\fP structure,
+which must be provided by the hardware driver, but gets initialized by
+this function call. \fIops\fP provides information about the hardware driver
+and its calls. \fIprivsize\fP should be \fIsizeof(struct\ hwdrv_state)\fP.
+\fIifname\fP specifies the name the interface should get. \fIbaseaddr\fP,
+\fIirq\fP and \fIdma\fP are simply stored in the \fIdevice\fP structure.
+After this function succeeds, the interface is registered with the kernel.
+It is not running, however, this must be done with
+\fBifconfig\ \fP\fIifname\fP\fB\ up\fP.
+
+\fBhdlcdrv_unregister_hdlcdrv\fP shuts the interface down and unregisters
+it with the kernel.
+
+\fBhdlcdrv_putbits\fP delivers 16 received bits for processing to the HDLC
+driver. This routine merely stores them in a buffer and does not process them.
+It is thus fast and can be called with interrupts off. The least significant
+bit should be the first one received.
+
+\fBhdlcdrv_getbits\fP requests 16 bits from the driver for transmission.
+The least significant bit should be transmitted first. This routine takes
+them from a buffer and is therefore fast. It can be called with interrupts
+off.
+
+\fBhdlcdrv_channelbit\fP puts a single bit into a buffer, which can be
+displayed with \fBsethdlc\ \-s\fP. It is intended for driver debugging
+purposes.
+
+\fBhdlcdrv_setdcd\fP informs the HDLC driver about the channel state
+(i.e. if the hardware driver detected a data carrier). This information
+is used in the channel access algorithm, i.e. it prevents the driver
+from transmitting on a half duplex channel if there is already a
+transmitter on air.
+
+\fBhdlcdrv_ptt\fP should be called by the hardware driver to determine
+if it should start or stop transmitting. The hardware driver does not
+need to worry about keyup delays. This is done by the HDLC driver.
+
+\fBhdlcdrv_receiver\fP actually processes the received bits delivered
+by \fBhdlcdrv_putbits\fP. It should be called with interrupts on.
+It guards itself against reentrance problems.
+
+\fBhdlcdrv_transmitter\fP actually prepares the bits to be transmitted.
+It should be called with interrupts on. It guards itself against
+reentrance problems.
+
+\fBhdlcdrv_arbitrate\fP does the channel access algorithm
+(p-persistent CSMA). It should be called once every 10ms. Note that the
+hardware driver \fBmust\fP set the \fIhdrv.par.bitrate\fP field prior
+to starting operation so that \fBhdlcdrv\fP can calculate the transmitter
+keyup delay correctly.
+
+.SH "HARDWARE DRIVER ENTRY POINTS"
+The hardware driver should provide the following information to
+the HDLC driver:
+
+.nf
+struct hdlcdrv_ops {
+        const char *\fIdrvname\fP;
+        const char *\fIdrvinfo\fP;
+        int (*\fIopen\fP)(struct device *);
+        int (*\fIclose\fP)(struct device *);
+        int (*\fIioctl\fP)(struct device *, struct ifreq *, int);
+};
+.fi
+
+\fBdrvname\fP and \fBdrvinfo\fP are just for informational purposes.
+
+The following routines receive a pointer to the \fIdevice\fP structure,
+where they may find the io address, irq and dma channels.
+
+\fBopen\fP must be provided. It is called during
+\fBifconfig\ \fP\fIifname\fP\fB\ up\fP and should check for the hardware,
+grab it and initialize it. It usually installs an interrupt handler
+which then gets invoked by the hardware.
+
+\fBclose\fP must be provided. It is called during
+\fBifconfig\ \fP\fIifname\fP\fB\ down\fP and should undo all actions done
+by \fBopen\fP, i.e. release io regions and irqs.
+
+\fBioctl\fP may be provided to implement device specific ioctl's. 
+
+.SH "IOCTL CALLS"
+
+The driver only responds to \fISIOCDEVPRIVATE\fP. Parameters are passed
+from and to the driver using the following struct:
+
+.nf
+struct hdlcdrv_ioctl {
+        int cmd;
+        union {
+                struct hdlcdrv_params mp;
+                struct hdlcdrv_channel_params cp;
+                struct hdlcdrv_channel_state cs;
+                unsigned int calibrate;
+                unsigned char bits;
+        } data;
+};
+.fi
+
+Since the 16 private \fIioctl\ request\fP numbers for network drivers
+were not enough, the driver implements its own \fIsub\ request\fP number
+with \fIcmd\fP. The following numbers are implemented:
+
+.TP
+.B HDLCDRVCTL_GETMODEMPAR
+returns the IO parameters of the modem in \fIdata.mp\fP. This includes
+the io address, irq, eventually dma, and ports to output a PTT signal.
+
+.TP
+.B HDLCDRVCTL_SETMODEMPAR
+sets the modem parameters. Only superuser can do this. Parameters
+can only be changed if the interface is not running (i.e. down).
+
+.TP
+.B HDLCDRVCTL_GETCHANNELPAR
+returns the channel access parameters.
+
+.TP
+.B HDLCDRVCTL_SETCHANNELPAR
+sets the channel access parameters. Only superuser can do this.
+They may also be changed using the \fBkissparms\fP command if using
+kernel AX.25 or the \fBparam\fP command of \fB*NOS\fP.
+
+.TP
+.B HDLCDRVCTL_GETSTAT
+statistics and status information, such as if a carrier is detected
+on the channel and if the interface is currently transmitting.
+
+.TP
+.B HDLCDRVCTL_CALIBRATE
+instructs the driver to transmit a calibration pattern for the
+specified number of seconds.
+
+.TP
+.B HDLCDRVCTL_GETSAMPLES
+returns the bits delivered by the hardware driver with
+\fIhdlcdrv_channelbit\fP. The bits are returned 8 at a time
+with the least significant bit the first one. This command may not be
+available, depending on debugging settings.
+
+.TP
+.B HDLCDRVCTL_GETBITS
+returns the bits delivered by the hardware driver to the HDLC decoder.
+The bits are returned 8 at a time with the least significant bit the
+first one. This command may not be available, depending on debugging
+settings.
+
+.SH "SEE ALSO"
+.BR baycom "\ (9), " soundmodem "\ (9), " sethdlc "\ (8), "
+linux/drivers/net/hdlcdrv.c,
+
+.SH AUTHOR
+hdlcdrv was written by Thomas Sailer, HB9JNX/AE4WA, (t.sailer@alumni.ethz.ch).
+
+
+
+

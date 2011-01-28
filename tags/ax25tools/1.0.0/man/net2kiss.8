@@ -1,0 +1,45 @@
+.TH NET2KISS 8 "15 October 1996" "" ""
+.SH NAME
+net2kiss \- convert a network AX.25 driver to a KISS stream on a pseudo-tty
+.SH SYNOPSIS
+.B "net2kiss [-sfzva] [-i ifname] ptyname"
+.br
+.SH DESCRIPTION
+.B net2kiss
+takes AX.25 packets from an AX.25 kernel network interface and converts them
+into a KISS data stream via a pseudo-tty.
+.SH PARAMETERS
+.TP
+.B ptyname
+specifies the path to the pseudo-tty. If you use the special name "/dev/ptmx", then a Unix98-PTY pair is used; the pty name is written to stdout.
+.SH OPTIONS
+.TP
+.B "\-i ifname"
+specifies the name of the kernel AX.25 network interface. The default
+is bc0.
+.TP
+.B \-s
+tells net2kiss to search by itself for a free pseudoterminal, open the
+master side and create a symlink named by -p to the slave side.
+.TP
+.B \-f
+can be used in conjunction with -s to force the creation of the symlink
+even if the target file does already exist. *DANGEROUS*
+.TP
+.B \-v
+Verbose output. Displays error messages during operation and decoded
+packets to stdout.
+.TP
+.B \-z
+put the network interface into promiscious mode.
+.TP
+.B \-a
+receive every packet instead of only AX.25 from the kernel AX.25 network
+interface.
+.SH BUGS
+None known.
+.SH SEE ALSO
+.BR ifconfig (8),
+.BR kissattach (8).
+.SH AUTHORS
+Thomas M. Sailer, HB9JNX/AE4WA, <t.sailer@alumni.ethz.ch>

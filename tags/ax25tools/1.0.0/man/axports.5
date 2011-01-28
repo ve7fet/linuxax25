@@ -1,0 +1,69 @@
+.TH AXPORTS 5 "2008-Feb-04" Linux "Linux Programmer's Manual"
+.SH NAME
+.I /etc/ax25/axports
+\- AX.25 port configuration file.
+.SH DESCRIPTION
+.LP
+.I axports
+is an ASCII file that contains information about each of the physical AX.25
+ports that are to be used.
+When dealing with an AX.25 utility such as
+.BR call ,
+it takes an argument that is the port name.
+This port name is a reference to the line within
+.B axports,
+which has that name as its first argument.
+The information on each line contains enough information to bind
+the command to a particular physical AX.25 interface, this binding
+is done by matching the callsign on the line in
+.B axports
+with the callsign of the port set by
+.B kissattach.
+.LP
+The lines within
+.I axports
+must either be a comment line, which starts with a # in the first column,
+or a port description in the following format, each field being delimited
+by white space:
+.sp
+.RS
+name callsign speed paclen window description
+.RE
+.sp
+The field descriptions are:
+.sp
+.RS
+.TP 14
+.B name
+is the unique identifier of the port.
+This is the name given as the port argument of many of the AX.25 support
+programs.
+This is
+.I not
+in any way related to actual device identities, just unique
+.TP 14
+.B callsign
+the callsign of the physical interface to bind to.
+.TP 14
+.B speed
+this is the speed of interface, a value of zero means that no speed will be
+set by kissattach(8).
+.TP 14
+.B paclen
+is the default maximum packet size for this interface.
+.TP 14
+.B window
+the default window size for this interface.
+.TP 14
+.B description
+a free format description of this interface, this field extends to the end
+of the line. This field may contain spaces.
+.RE
+.SH FILES
+.LP
+/etc/ax25/axports
+.SH "SEE ALSO"
+.BR call (1),
+.BR ax25 (4),
+.BR axparms (8),
+.BR kissattach (8).

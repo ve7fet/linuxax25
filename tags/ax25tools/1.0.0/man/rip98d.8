@@ -1,0 +1,59 @@
+.TH RIP98D 8 "20 August 1996" Linux "Linux System Managers Manual"
+.SH NAME
+rip98d \- Send and receive RIP98 routing messages
+.SH SYNOPSIS
+.B rip98d [-d] [-l] [-r] [-t interval] [-v]
+.SH DESCRIPTION
+.LP
+The RIP98 routing protocol was devised by John Wiseman G8BPQ as an
+alternative to both traditional RIP and RSPF for use in an RF environment.
+Its main advantage is that each routing element only takes six bytes and is
+therefore much more efficient in terms of bandwidth than other routing
+protocols.
+.LP
+In operation
+.B rip98d
+that each neighbour that also uses RIP98 must be listed. RIP98 is not a
+broadcast protocol and each neighbour is individually contacted. Any
+incoming RIP98 message is also validated against this list. The list of
+neighbours is held in /etc/ax25/rip98d.conf, and each line is
+either the name or the dotted decimal IP address of the neighbour.
+.LP
+The time interval between RIP98 transmissions is set to one hour by default
+but other intervals can be set with the \-t option. The routes advertised
+and received can be restricted by the \-r option which only allows
+processing of ampr.org addresses. At present
+.B rip98d
+is under development and any feedback on its operation would be welcome.
+.SH OPTIONS
+.TP 16
+.BI \-d
+Set debugging on. Information is only output if the logging option is also
+enabled.
+.TP 16
+.BI \-l
+Enable logging to the system log, the default is off.
+.TP 16
+.BI \-r
+Restricts the transmitting and receiving of routes to ampr.org (44.x.x.x)
+addresses only.
+.TP 16
+.BI "\-t interval"
+The time interval between routing broadcasts, in minutes. The default is 60
+minutes.
+.TP 16
+.BI \-v
+Display the version.
+.SH FILES
+.nf
+/proc/net/route
+.br
+/etc/ax25/rip98d.conf
+.fi
+.SH "SEE ALSO"
+.BR rip98.conf (5),
+.BR arp (8),
+.BR ifconfig (8),
+.BR route (8).
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

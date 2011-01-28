@@ -1,0 +1,78 @@
+.\" Copyright 1996 Thomas Sailer (t.sailer@alumni.ethz.ch)
+.\" May be distributed under the GNU General Public License
+.\" "
+.TH SMDIAG 8 "1 October 1996" "Smdiag 0.1" "Linux Programmer's Manual"
+.SH NAME
+smdiag \- Linux soundcard packet radio modem driver diagnostics utility
+.SH SYNOPSIS
+.B smdiag
+.B "[\-i device]"
+.B "[\-d display]"
+.B "[ \-ce ]"
+
+.SH DESCRIPTION
+.B smdiag
+may help to adjust the audio levels of the soundcard modem driver, as well
+as to control the quality of the radio link. It may either display an
+oscilloscope like view of the input signal, or display an eye diagram.
+The display may be gated with DCD, i.e. only updated if the modem detects
+a data carrier.
+
+.SH OPTIONS
+.B smdiag
+accepts the following options:
+
+.TP
+.B \-i
+The
+.I device
+argument specifies the soundcard modem device which should be configured or
+interrogated.  It will usually have the following form:
+.I sm[0-3].
+.TP
+.B \-d
+sets the address of the X server to display the window.
+.TP
+.B \-h
+display an overview of the available command line parameters and exit.
+.TP
+.B \-c
+toggle the carrier gating of the display.
+.TP
+.B \-e
+display an eye diagram (overlay of the synchronized demodulator output)
+instead of an oscilloscope view of the input signal.
+
+.SH KEYS
+.TP
+.B C
+clears the window
+.TP
+.B D
+toggles the DCD gating.
+.TP
+.B E
+displays an eye diagram
+.TP
+.B I
+displays the input signal
+.TP
+.B Q
+quits
+.I smdiag
+
+.SH BUGS
+.B smdiag
+Reacts sluggishly to keypresses. The window size is fixed. For speed reasons,
+two square root operations per sample are not implemented in the AFSK 1200 
+baud modes. The eye diagram for the AFSK 1200 baud mode is therefore
+distorted.
+
+.SH "SEE ALSO"
+.BR smmixer " (8), " sethdlc " (8),"
+linux/drivers/net/soundmodem.c
+
+.SH AUTHOR
+smdiag was written by Thomas Sailer (t.sailer@alumni.ethz.ch).
+
+

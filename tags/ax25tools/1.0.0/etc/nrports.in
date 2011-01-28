@@ -1,0 +1,31 @@
+# @sysconfdir@/ax25/nrports
+#
+# Nrports is an ASCII file that contains information about each 
+# of the NET/ROM ports that are to be used. When dealing with an 
+# NET/ROM utility such as call, it takes an optional argument that 
+# is the port name. 
+#
+# This port name is a reference to the line within nrports, which 
+# has the same name. It is the name that is used by nrattach to 
+# create the actual netrom port.
+#
+# The callsign that which NET/ROM traffic from this port will use. 
+# Note, this is not that address that users should connect to to get 
+# access to a node style interface. This callsign/ssid should be 
+# unique and should not appear elsewhere in either of the 
+# @sysconfdir@/ax25/axports or the @sysconfdir@/ax25/nrports files.
+#
+# You also need to configure @sysconfdir@/ax25/nrbroadcast for NET/ROM to work.
+#
+# The example:
+# netrom	N0ONE-7		LNODE	235	Net/ROM Switch Port
+# creates a NET/ROM port known to the rest of the network as:
+# LNODE:N0ONE-7
+#
+# Note that if you put a # in front of the alias name, that node will 
+# not appear in the standard node lists at remote sites.
+#
+# The format of this file is:
+#
+# name 	callsign 	alias 	paclen 	description
+netrom	N0ONE-7		LNODE	235	Net/ROM Switch Port

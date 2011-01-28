@@ -1,0 +1,36 @@
+To install ttylinkd;
+
+To create binary:
+	make
+
+To install binary and man pages:
+	make install
+
+Then edit the file /etc/ax25/ttylinkd.conf to change the sysops login to
+whoever you want.
+
+That should hopefully be it, although you may want to do/check the
+following;
+
+  * Ensure that there is a line in /etc/services that says
+	'link	87/tcp	ttylink'.
+  * Add the following line to /etc/inetd.conf,
+	'ttylink stream tcp   nowait root   /usr/sbin/ttylinkd ttylinkd'
+  * Get inetd to re-read config file by sending a HUP signal to it.
+	To do this find the process number of inetd with ps and then type
+	'kill -SIGHUP <number>'
+
+If you want connections from AX25, Net/ROM or ROSE ports, you will have to
+edit your ax25d.conf file too, for example mine has;
+[VK2XLZ-1 VIA VHF]
+NOCALL	 * * * * * *  L
+default  * * * * * *  - root /usr/bin/node node
+[VK2XLZ-6 VIA VHF]
+NOCALL   * * * * * *  L
+default  * * * * * *  - root /usr/sbin/ttylinkd ttylinkd
+
+etc, pretty simple stuff.
+
+For programs like node etc to connect to sysop, specify the callers callsign
+as a parameter, eg ttylinkd <callsign>.  This will send a message to the
+sysop's screen that <callsign> wants to talk to them.

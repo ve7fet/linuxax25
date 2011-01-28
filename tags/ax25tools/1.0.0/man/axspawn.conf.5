@@ -1,0 +1,103 @@
+.TH AXSPAWN.CONF 5 "2 August 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+axspawn.conf \- Control the operation of axspawn.
+.SH DESCRIPTION
+.LP
+The
+.B axspawn.conf
+file controls the operation of the axspawn(8) program. The operation of the
+config file can best be seen in an example:
+.LP
+.RS
+# this is /etc/ax25/axspawn.conf
+.br
+#
+.br
+# allow automatic creation of user accounts
+.br
+create    yes
+.br
+# allow empty password field (so user may login via telnet, too) [default no]
+.br
+create_empty_password       no
+.br
+#create_empty_password       yes
+.br
+# create with system utility useradd(8)? [default no]
+.br
+#create_with_useradd  no
+.br
+create_with_useradd  yes
+.br
+#
+.br
+# pwcheck method: password or call or group. [default: password]
+.br
+#pwcheck call
+.br
+#pwcheck group
+.br
+pwcheck password
+.br
+#
+.br
+# guest user if above is 'no' or everything else
+.br
+# fails. Disable with "no"
+.br
+guest     guest
+.br
+#
+.br
+# group id or name for autoaccount
+.br
+group     hams
+.br
+#
+.br
+# first user id to use
+.br
+first_uid 400
+.br
+#
+.br
+# maximum user id
+.br
+max_uid   2000
+.br
+#
+.br
+# where to add the home directory for the new user
+.br
+home      /home/hams
+.br
+#
+.br
+# secure homedirectories (g-rwx)
+.br
+#secure_home yes
+.br
+#
+.br
+# user's shell
+.br
+shell     /bin/bash
+.br
+#
+.br
+# bind user id to callsign for outgoing connects.
+.br
+associate yes
+.RE
+.LP
+The \(lqassociate\(rq option has to be used with great care. If a user logs
+on it removes any existing callsign from the translation table for this
+userid and replaces it with the callsign and SSID of the user. This will
+happen with multiple connects (same callsign, different SSIDs), too. Unless
+you want your users to be able to call out from your machine disable
+\(lqassociate\(rq.
+.SH FILES
+.LP
+/etc/ax25/axspawn.conf
+.SH "SEE ALSO"
+.BR axspawn (8).

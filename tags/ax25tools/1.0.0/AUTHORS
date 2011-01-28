@@ -1,0 +1,25 @@
+axspawn			Joerg Reuter DL1BKE <jreuter@poboxes.com>
+ax25ipd			Rob Mayfield VK5XXX <mayfieldrob@mail.dec.com>
+ax25rtd			Klaus Kudielka <oe1kib@oe1xtu.ampr.org>
+bpqparms		Joerg Reuter DL1BKE <jreuter@poboxes.com>
+call			Alexander Tietzel DG6XA <tietze_a@etech.fh-hamburg.de>
+mkiss			Tomi Manninen OH2BNS <oh2bns@sral.fi>
+kissnetd		Frederic Rible F1OAT <frible@teaser.fr>
+listen			Heikki Hannikainen OH7LZB <oh7lzb@sral.fi>
+net2kiss		Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
+node			Tomi Manninen OH2BNS <oh2bns@sral.fi>
+nodesave		Tomi Manninen OH2BNS <oh2bns@sral.fi>
+nrsdrv			Dave Brown N2RJT <dcb@vectorbd.com>
+piconfig		John Paul Morrison VE7JPM <jmorriso@bogomips.com>
+pms			David Brown N2RJT <dcb@vectorbd.com>
+rxecho			Tomi Manninen OH2BNS <oh2bns@sral.fi>
+setcrystal		Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
+sethdlc			Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
+smdiag			Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
+smmixer			Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
+ttylinkd		Craig Small VK2XLZ <csmall@small.dropbear.id.au>
+dmascc_cfg		Klaus Kudielka	
+yamcfg			Jean-Paul Roubelat F6FBB <jpr@f6fbb.org>	
+
+All others		Jonathon Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+
