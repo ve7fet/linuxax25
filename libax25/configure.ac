@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT(libax25, 1.0.0, linux-hams@vger.kernel.org)
+AC_INIT(libax25, 1.0.1, linux-hams@vger.kernel.org)
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 AC_CONFIG_SRCDIR([pathnames.h])
 AC_CONFIG_HEADERS([config.h])
@@ -7,7 +7,7 @@ AC_CONFIG_HEADERS([config.h])
 # Determine versions for package managers.
 basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
 AC_SUBST(BASEVERSION, [$basever])
-extraver=$(echo $PACKAGE_VERSION | sed -e 's@@<:@^-@:>@*-@@' -e 's@-@_@')
+extraver=$(echo $PACKAGE_VERSION | sed -e 's@'$basever'@@' -e 's@^-@_@')
 AC_SUBST(EXTRAVERSION, [$extraver])
 
 # Checks for programs.
