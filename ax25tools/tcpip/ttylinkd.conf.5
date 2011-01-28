@@ -1,0 +1,22 @@
+.TH TTYLINKD.CONF 5 "9 March 1997" Linux "Linux Programmer's Manual"
+.SH NAME
+ttylinkd.conf \- ttylinkd configuration file.
+.SH DESCRIPTION
+.LP
+.B ttylinkd.conf
+allows the super user to determine certain parameters with ttylinkd(8). 
+Current there is only one field, with the view of not extending this further
+(ttylinkd is about a resourceful as it is going to get).
+.SH PARAMETERS
+.TP 10
+.B #
+Any line beginning with the hash (#) symbol is a comment and wille be ignored.
+.TP 10
+.B "sysop=<user>[@hostname.domain.name]"
+The login <user> will be attempted to be contacted with ttylinkd(8) is
+launched. If you do not supply a hostname then the local host will be assumed.
+.SH SEE ALSO
+.BR ttylinkd (8).
+.SH AUTHOR
+Craig Small VK2XLZ <csmall@small.dropbear.id.au>
+

@@ -1,0 +1,101 @@
+.TH DMASCC_CFG 1 "30 June 1999" Linux "Linux Programmer's Manual"
+.SH NAME
+dmascc_cfg \- Configure dmascc devices
+.SH SYNOPSIS
+.B dmascc <interface> [<options>]
+.SH DESCRIPTION
+.LP
+.B dmascc_cfg
+is used to configure dmascc devices such as PI2 and PackeTwin cards.  The
+\fB\-\-show\fR option can be used by any user, all other options must be
+used by root.
+.SH OPTIONS
+.TP 10
+.BI "\-\-speed "\fIfrequency\fR
+Set frequency of baud rate generator to \fIfrequency\fR. A value of 0
+disables the baud rate generator and the digital PLL. Use the \fB\-\-show\fR
+option to check whether the frequency you selected could be approximated 
+with sufficient accuracy.
+.TP 10
+.BI "\-\-nrzi "\fR[\fI0\fR|\fI1\fR] 
+\fI0\fR selects NRZ mode, \fI1\fR selects NRZI mode.
+.TP 10
+.BI "\-\-clocks "\fIinteger\fR
+Set the clock mode. You may \fBOR\fR together three choices (other values
+are not supported and may cause strange results).
+.PP
+TX clock pin:
+.IP
+.ta 1.5i
+0x00 input
+.br
+0x05 output TX clock *
+.br
+0x06 output baud rate generator *
+.br
+0x07 output digital PLL *
+.PP
+TX clock source:
+.IP
+.ta 1.5i
+0x00 RX clock pin
+.br
+0x08 TX clock pin #
+.br
+0x10 baud rate generator
+.br
+0x18 digital PLL +
+.br
+.PP
+RX clock source:
+.IP
+.ta 1.5i
+0x00 RX clock pin
+.br
+0x20 TX clock pin
+.br
+0x40 baud rate generator
+.br
+0x60 digital PLL +
+.br
+.PP
+* Not allowed on PI2 Port A if J3 is installed.
+.PP
+# TX clock pin must be configured as input.
+.PP
++ Speed must be equal to 32 times the baud rate.
+.TP 10
+.BI "\-\-txdelay "\fImilliseconds\fR
+Set transmit delay to \fImilliseconds\fR. Maximum is 2500 ms.
+.TP 10
+.BI "\-\-txtime "\fIseconds\fR
+Set maximum time the transmitter may be active to \fIseconds\fR.
+.TP 10
+.BI "\-\-sqdelay "\fImilliseconds\fR
+Set the squelch delay to \fImilliseconds\fR. Maximum delay is 2500 ms.
+.TP 10
+.BI "\-\-slottime "\fImilliseconds\fR
+Set the slot time to \fImilliseconds\fR. Maximum slottime is 2500 ms.
+.TP 10
+.BI "\-\-waittime "\fImilliseconds\fR
+Set the minimum time between the transmitter turning off to when it turns
+on to \fImilliseconds\fR. Maximum wait time is 2500 ms.
+.TP 10
+.BI "\-\-persist "\fIf\fR
+Set the persistance parameter to \fIf\fR. Must be between 0 and 255 
+(inclusive).
+.TP 10
+.BI "\-\-dma "\fIchannel\fR
+Set the DMA channel to \fIchannel\fR. Can be 1 or 3.  Setting to 0 disables
+DMA.
+.LP
+.SH BUGS
+.B dmascc_cfg
+does not check the parameters for validity. The driver or kernel may crash
+if you specify invalid values.
+.SH AUTHORS
+.nf
+Klaus Kudielka
+.br
+This manual page written by Craig Small <csmall@small.dropbear.id.au>
+.fi

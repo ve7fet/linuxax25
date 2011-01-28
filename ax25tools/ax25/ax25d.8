@@ -1,0 +1,46 @@
+.TH AX25D 8 "27 August 1996" Linux "Linux System Managers Manual"
+.SH NAME
+ax25d \- General purpose AX.25, NET/ROM and Rose daemon
+.SH SYNOPSIS
+.B ax25d [-v] [-c altconffile] [-l]
+.SH DESCRIPTION
+.LP
+.B Ax25d
+is a general purpose server daemon that listens on a number of AX.25, NET/ROM
+and Rose ports and offers different services depending upon port, callsign
+and other parameters.
+.B Ax25d
+is driven by a complex configuration file, a full description of which may
+be found in another manual page.
+.sp 1
+.B AX25d
+has the facility to log information about incoming connections to the
+system log file. By default no logging is done. When
+.B ax25d
+is running, and a change in the configuration file is made,
+.B ax25d
+can be forced to re-read its configuration file by sending it a SIGHUP.
+.SH OPTIONS
+.TP 15
+.BI "\-c altconffile"
+Specifies an alternate configuration file name.
+.TP 15
+.BI \-l
+Specifies that messages should be logged into the system log file. By default
+no messages are logged.
+.TP 15
+.BI \-v
+Display the version.
+.SH FILES
+.LP
+/etc/ax25/ax25d.conf
+.SH "SEE ALSO"
+.BR kill (1),
+.BR ax25 (4),
+.BR netrom (4),
+.BR rose (4),
+.BR ax25d.conf (5).
+.SH AUTHOR
+Darryl Miles G7LED <dlm@frink.demon.co.uk>
+.br
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

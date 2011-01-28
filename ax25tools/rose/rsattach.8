@@ -1,0 +1,33 @@
+.TH RSATTACH 8 "27 August 1996" Linux "Linux System Managers Manual"
+.SH NAME
+rsattach \- Start a Rose interface
+.SH SYNOPSIS
+.B rsattach [-i inetaddr] [-v] port
+.SH DESCRIPTION
+.LP
+.B Rsattach
+takes many of the parameters for the port from the rsports(5) file. The port
+argument is the name of a port as given in the rsports(5) file.
+.LP
+.B Rsattach
+tries to find the free Rose device in the system. The device name checked is
+rose0. If no free Rose device is available an error is generated and the
+program terminates.
+.SH OPTIONS
+.TP 16
+.BI "\-i inetaddr"
+Set the internet address of the interface. This address may either be a
+dotted decimal address or a host name.
+.TP 16
+.BI \-v
+Display the version.
+.SH "SEE ALSO"
+.BR rose (4),
+.BR rsparms (4),
+.BR rsports (5),
+.BR ifconfig (8).
+.SH BUGS
+The program can be run many times with the same arguments creating many
+instances of the same attributes on different devices. Not a good idea.
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
