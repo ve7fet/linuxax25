@@ -9,6 +9,7 @@ License:        GPLv2+ and BSD
 URL:            http://linuxax25.googlecode.com/
 Source0:        http://code.google.com/p/linuxax25/downloads/detail?name=%{name}-@VERSION@.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-@VERSION@-%{release}-root-%(%{__id_u} -n)
+BuildRequires:	libstdcc++-devel, libax25-devel >= 1.0.1, ncurses-devel
 Requires:       libstdc++, libax25 >= 1.0.0, ncurses
 
 %description
@@ -50,7 +51,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man?/*
 
 %changelog
-* Fri Jan 29 2011 Lee Woldanski <ve7fet@tparc.org>
+* Fri Jan 29 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
 - Fixed some of the versioning output for creating files so it is correct
 - Changed configure line to put files where they belong
 - Added some dependencies
