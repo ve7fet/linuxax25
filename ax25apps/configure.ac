@@ -4,6 +4,12 @@ AC_CONFIG_SRCDIR([pathnames.h])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
+# Determine versions for package managers.
+basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
+AC_SUBST(BASEVERSION, [$basever])
+extraver=$(echo $PACKAGE_VERSION | sed -e 's@'$basever'@@' -e 's@^-@_@')
+AC_SUBST(EXTRAVERSION, [$extraver])
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_GCC_TRADITIONAL
@@ -39,12 +45,6 @@ AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_UTIME_NULL
 AC_CHECK_FUNCS([bzero gethostbyname inet_ntoa memchr memmove memset select socket strcasecmp strchr strdup strerror strrchr strtol strtoul utime])
-
-# Parse out some variables for creating rpm packages
-basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
-AC_SUBST(BASEVERSION, [$basever])
-extraver=$(echo $PACKAGE_VERSION | sed -e 's@@<:@^-@:>@*-@@' -e 's@-@_@')
-AC_SUBST(EXTRAVERSION, [$extraver])
 
 AC_CONFIG_FILES([call/Makefile ax25ipd/Makefile listen/Makefile Makefile ax25rtd/Makefile ax25mond/Makefile doc/Makefile man/Makefile etc/Makefile ax25-apps.spec])
 

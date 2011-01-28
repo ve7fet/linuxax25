@@ -676,6 +676,8 @@ am__leading_dot
 AMTAR
 am__tar
 am__untar
+BASEVERSION
+EXTRAVERSION
 CC
 CFLAGS
 LDFLAGS
@@ -698,8 +700,6 @@ EGREP
 AX25_LIB
 NCURSES_LIB
 LIBOBJS
-BASEVERSION
-EXTRAVERSION
 LTLIBOBJS'
 ac_subst_files=''
       ac_precious_vars='build_alias
@@ -2219,6 +2219,14 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 
 
+
+
+# Determine versions for package managers.
+basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
+BASEVERSION=$basever
+
+extraver=$(echo $PACKAGE_VERSION | sed -e 's@'$basever'@@' -e 's@^-@_@')
+EXTRAVERSION=$extraver
 
 
 # Checks for programs.
@@ -7163,14 +7171,6 @@ fi
 done
 
 
-# Parse out some variables for creating rpm packages
-basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
-BASEVERSION=$basever
-
-extraver=$(echo $PACKAGE_VERSION | sed -e 's@[^-]*-@@' -e 's@-@_@')
-EXTRAVERSION=$extraver
-
-
 ac_config_files="$ac_config_files call/Makefile ax25ipd/Makefile listen/Makefile Makefile ax25rtd/Makefile ax25mond/Makefile doc/Makefile man/Makefile etc/Makefile ax25-apps.spec"
 
 
@@ -7884,6 +7884,8 @@ am__leading_dot!$am__leading_dot$ac_delim
 AMTAR!$AMTAR$ac_delim
 am__tar!$am__tar$ac_delim
 am__untar!$am__untar$ac_delim
+BASEVERSION!$BASEVERSION$ac_delim
+EXTRAVERSION!$EXTRAVERSION$ac_delim
 CC!$CC$ac_delim
 CFLAGS!$CFLAGS$ac_delim
 LDFLAGS!$LDFLAGS$ac_delim
@@ -7906,8 +7908,6 @@ EGREP!$EGREP$ac_delim
 AX25_LIB!$AX25_LIB$ac_delim
 NCURSES_LIB!$NCURSES_LIB$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
-BASEVERSION!$BASEVERSION$ac_delim
-EXTRAVERSION!$EXTRAVERSION$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
