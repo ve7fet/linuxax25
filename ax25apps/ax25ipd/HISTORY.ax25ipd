@@ -1,0 +1,56 @@
+/*
+ *  HISTORY:
+ *
+ *	0.2.1	First distribution.
+ *
+ *	0.2.2	Comments, documentation, increased routing table to 128.
+ *
+ *	0.3.0	Added the "myalias" stuff, and began work on a beacon
+ *		mechanism.
+ *		Added support for the SIGHUP signal.  Now a "kill -1 <pid>"
+ *		will make ax25ip re-read the config file and restart.
+ *
+ *	0.3.1	Now can specify the internet host by internet number as
+ *		well as host name.
+ *
+ *	0.4.0	Removed "autoadd" references
+ *		Added support for sending and listening on UDP sockets.
+ *		Added "SIGUSR" handler for dumping statistics on demand.
+ *		The Beacon frame is computed only once.
+ *		Any I/O errors will result in an exit()... This should be
+ *		fixed, specially for the UDP socket, but for the moment
+ *		this prevents errors from going wild and consuming vast
+ *		amounts of system and user time.
+ *		Fixed a bug in the KISSEMIT macro (thanks Jim Durham)
+ *		Added support for both termio and termios (thanks Jim Durham)
+ *
+ *	0.4.1	added a generic "io_error" routine to handle errors in the
+ *		main processing loop.  This is in hopes of building a mech-
+ *		anism that can deal with temporary network failures in a
+ *		more robust fashion.
+ *
+ *	0.4.2	added support for the BSD sgtty method for setting and
+ *		controlling the serial port.
+ *
+ *	1.0.0	modifications to bring ax25ip into line with the standard
+ *		linux ax25 tools distribution. (vk5xxx)
+ *
+ *	1.0.1	various cleanups and changes ... now called ax25ipd
+ *		added prototypes, fork's itself ... (vk5xxx)
+ *
+ *	1.0.2	Incorporated patch allowing wildcarding of ax.25 callsigns. 
+ *		The old method required a route for every call/ssid 
+ *		combination. (thanks to John Woolner. Wildcarding to be
+ *		enhanced later ...
+ *
+ *      July97  Added support for broadcast addresses and routes.
+ *              Converted route array to a linked list and removed the
+ *              maximum route limitations. (vk2ktj)
+ *
+ *	2005-10-26 - dl9sau:
+ *		added a new fast and efficient link to the linux kernel ax25
+ *              stack, via the ethertap interface.
+ *		ax25 goes directly to the bpqether interface in the kernel via
+ *		ethertap/tuntap interfaces, which is a much better way than
+ *              traditional kissattach to a ttyp/ptyp pair.
+ */
