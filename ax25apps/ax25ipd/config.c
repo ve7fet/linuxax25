@@ -292,6 +292,8 @@ int parse_line(char *buf)
 		return 0;
 
 	} else if (strcmp(p, "route") == 0) {
+		char *thost;
+	
 		uport = 0;
 		flags = 0;
 
@@ -305,15 +307,26 @@ int parse_line(char *buf)
 		q = strtok(NULL, " \t\n\r");
 		if (q == NULL)
 			return -1;
-		he = gethostbyname(q);
-		if (he != NULL) {
-			memcpy(tip, he->h_addr_list[0], 4);
-		} else {	/* maybe user specified a numeric addr? */
-			j = inet_addr(q);
-			if (j == -1)
-				return -5;	/* if -1, bad deal! */
+		thost = strdup(q);
+		j = inet_addr(q);
+		if (j != -1){ /* maybe user specified a numeric addr? */
+			flags |= AXRT_PERMANENT; /* Prevent useless dns check on dotted ip */
 			memcpy(tip, (char *) &j, 4);
+			if (!j){/* IP of 0.0.0.0. Learn from incoming packets */
+				flags |= AXRT_LEARN;
+			}
 		}
+		else {
+			he = gethostbyname(q); 
+			if (he != NULL) {
+				memcpy(tip, he->h_addr_list[0], 4);
+			} else {	
+				j = inet_addr("0.0.0.0");/* try to rescue this idea of checking later.*/
+				memcpy(tip,  (char *) &j, 4);
+				fprintf(stderr,"ax25ipd: %s host IP address unknown - will probe it again later\n",thost);
+			}
+		}
+	
 
 		while ((q = strtok(NULL, " \t\n\r")) != NULL) {
 			if (strcmp(q, "udp") == 0) {
@@ -334,9 +347,19 @@ int parse_line(char *buf)
 				if (strchr(q, 'd')) {
 					flags |= AXRT_DEFAULT;
 				}
+
+				/* Test for "permanent" flag */
+				if (strchr(q, 'p')) {
+					flags |= AXRT_PERMANENT;
+				}
+				/* Test for "learn" flag */
+				if (strchr(q, 'l')) {
+					flags |= AXRT_LEARN;
+				}
 			}
 		}
-		route_add(tip, tcall, uport, flags);
+		route_add(thost, tip, tcall, uport, flags);
+		free(thost);
 		return 0;
 
 	} else if (strcmp(p, "broadcast") == 0) {

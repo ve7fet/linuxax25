@@ -1,0 +1,157 @@
+# @sysconfdir@/ax25/ax25ipd.conf
+#
+# ax25ipd configuration file
+#
+# See @datadir@/doc/ax25-apps/README.ax25ipd and HISTORY.ax25ipd 
+# for further information.
+#
+# To start ax25ipd with a different config file:
+#  ax25ipd -c /some/where/ax25ipd.conf
+#
+# Select axip transport. 
+# ip or udp are your options
+# ip has traditionally been used
+# udp is used between FPAC nodes
+# 
+# If using UDP for transport, be sure to specify the socket THIS node is
+# using.
+#
+# socket ip
+socket udp 10093
+#
+# Set ax25ipd mode of operation. (digi or tnc)
+#
+mode tnc
+#
+# If you selected digi, you must define a callsign.  If you selected
+# tnc mode, the callsign is currently optional, but this may change
+# in the future! (2 calls if using dual port kiss)
+#
+#mycall vk5xxx-4
+#mycall2 vk5xxx-5
+#
+# In digi mode, you may use an alias. (2 for dual port)
+#
+#myalias svwdns
+#myalias2 svwdn2
+#
+# Send an ident every 540 seconds ...
+#
+#beacon after 540
+#btext ax25ip -- tncmode rob/vk5xxx -- Experimental AXIP gateway
+#
+#
+# Serial port, ethertap interface, or pipe connected to a kissattach instance
+#
+# Alternatively, if you have the kernel module bpqether:
+# if you use tun/tap or ethertap instead of kissattach you may say, without
+# leading slashes (!! - that's how ax25ipd consideres using the tty kiss
+# driver or tun/tap or ethertap):
+#   with tun/tap:
+#     device foobar
+#   with ethertap (obsolete):
+#     device tap0
+# make sure you set a mycall above, or say axparms foobar -setcall te1st
+# note: the device will be up when you assign an ip address
+# _after_ starting ax25rtd (which initializes the device), start ax25d
+# with bpqether or pty, you do not need to care about the speed
+# tun/tap: as descriped in /usr/src/linux/Documentatioa/networking/tuntap.txt,
+# make a device # like this:
+#   crw-r--r--    1 root     root      10, 200 Nov 26 13:32 tun
+# with the command mknod /dev/net/tun c 10 200
+#
+# With a serial port, you could assign physical ports like ttyS0 or ptys.
+# ax25ipd  supports  BSD-style  pseudo-terminals as well as the Unix98 pty's.
+# If the tty argument is "/dev/ptmx", then Unix98 behaviour
+# will automaticaly take effekt. With Unix98 pty's, the slave tty name
+# can not be predicted. That's why ax25ipd will print the corresponding
+# slave pty name as a separate line on stdout.
+# 
+# Currently, the most common way to utilize ax25ipd is to attach it to a 
+# kissattach instance through a Unix98 pty tunnel.
+#
+# You would want to do something like this in a shell startup script:
+#  @prefix@/sbin/ax25ipd  > /tmp/unix98
+#  echo $! > /var/run/ax25ipd.pid
+#  export AXUDP=`tail -1 /tmp/unix98`
+#  #
+#  echo "Installing a KISS link on ethernet port"
+#  @prefix@/sbin/kissattach  $AXUDP axudp 44.151.75.15 > /tmp/ax25-config.tmp
+#   awk '/device/ { print $7 }' /tmp/ax25-config.tmp > /tmp/ax25-config-tmp
+#  read Device < /tmp/ax25-config-tmp
+#  # Check for Device
+#  if [ -d /proc/sys/net/ax25/$Device ]
+#  then echo "Port axudp attached to $Device"
+#   cd /proc/sys/net/ax25/$Device/
+#   # ifconfig $Device parameters
+#   ifconfig $Device netmask 255.255.255.255
+#   ifconfig $Device broadcast 0.0.0.0
+#  else echo "** Error setting $Device parms **"
+#  fi
+#
+# The code above will start ax25ipd, grab the slave tty name, start kissattach 
+# on the other end of the tunnel (slave), and set some parameters for the interface.
+#
+#device ampr
+#device /dev/ttyp0
+device /dev/ptmx
+#
+#
+# Set the device speed
+#
+# ***NOTE*** By default, ax25ipd will use 9600 for the speed if your system does not
+# support speeds faster than this, and/or you try and tell it to use an unsupported speed.
+#
+# Versions of ax25ipd <=1.0.6 only support up to max speed of 38400
+# Versions of ax25ipd >=1.1.0 support additional speeds of 57600 and 115200
+#
+# This speed only affects serial communications (ie directly with a TNC). It does not 
+# have any effect when using IP/UDP.
+speed 9600
+#
+# loglevel 0 - no output
+# loglevel 1 - config info only
+# loglevel 2 - major events and errors
+# loglevel 3 - major events, errors, and AX25 frame trace
+# loglevel 4 - all events
+# log 0 for the moment, syslog not working yet ...
+#
+loglevel 3
+#
+# If we are in digi mode, we might have a real tnc here, so use param to
+# set the tnc parameters ...
+#
+#param 1 20
+#
+# Broadcast Address definition. Any of the addresses listed will be forwarded
+# to any of the routes flagged as broadcast capable routes (b flag).
+#
+broadcast QST-0 NODES-0 FBB-0
+#
+# ax.25 route definition, define as many as you need.
+# format is route (call/wildcard) (ip host at destination)
+# ssid of 0 routes all ssid's
+#
+# route <destcall> <destaddr> <UDP port> [flags]
+#
+# Valid flags are:
+#	  l  - update the address based on incoming packets
+#	  p  - check DNS until it succeeds, and the never again
+#         b  - allow broadcasts to be transmitted via this route
+#         d  - this route is the default route
+#
+# route N0ONE-0 44.23.1.1 udp 10093 b
+# send all traffic for N0ONE to 4.23.1.1 as well as send broadcasts
+#
+# route vk2sut-0 44.23.2.2 udp 10093 d
+# send all traffic for vk2sut out this route, and any traffic that 
+# doesn't match any other destination (default route)
+#
+# route KE6I-1 0.0.0.0 l
+# the route to KE6I-1 will be updated based on IP addresses of incoming packets
+#
+# route KE6I-2 ke6i.ampr.org p
+# check the DNS for ke6i.ampr.org on startup, if it succeeds, don't check it 
+# again. If it fails, check until it succeeds, and then don't check again.
+#
+#

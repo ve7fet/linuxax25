@@ -53,4 +53,54 @@
  *		ax25 goes directly to the bpqether interface in the kernel via
  *		ethertap/tuntap interfaces, which is a much better way than
  *              traditional kissattach to a ttyp/ptyp pair.
- */
+ *
+        1.0.5
+ *
+ *              added provision for dynamic dns hosts
+ *              Steve Fraser vk5asf, June 2005
+ *
+ *
+        1.0.6
+
+List:       linux-hams
+Subject:    [PATCH] ax25ipd
+From:       Cathryn Mataga <cathryn () junglevision ! com>
+Date:       2009-12-15 23:14:01
+
+I've been sitting on this code for about a week, and it's
+been running fine here.  I've made a few small changes, mostly
+to the comments.
+
+1. This patch adds the ability to route packets over axip
+links that are not from the gateway callsign.
+
+2.  Integrates the Dynamic DNS patch and uses mutex and
+a thread as suggested.
+
+3.   If DNS fails during startup for a route, the IP of a route is set
+to 0. Then later, after about an hour or so, DNS for the
+route is checked again.
+
+4.  ax25ipd.conf has two new flags for routes.  l and p.
+
+route KE6I-1 0.0.0.0 l
+
+The route to KE6I-1 will be updated based on the IP
+addresses of incoming packets.
+
+route KE6I-2 ke6i.ampr.org p
+
+the 'p' flag forces the code to not recheck DNS later for
+this route.   If DNS fails at startup, however, DNS will
+be checked until it succeeds, and then DNS will not be checked
+again.
+
+
+ax25ipd should route as before, except in the case when packets
+not from the callsign of the route but from the same IP
+would have gone to the default route, they now will go to the
+ip from which they originate. (Ugh, that's an awkward sentence.)
+
+Anyway, let me know what you think, good or bad.
+
+*/

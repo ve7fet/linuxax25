@@ -68,6 +68,7 @@ void process_init(void)
 void from_kiss(unsigned char *buf, int l)
 {
 	unsigned char *a, *ipaddr;
+        unsigned char ipstorage[IPSTORAGESIZE];// Provide storage for the IP.  To keep all the locking stuff centralized. 
 
 	if (l < 15) {
 		LOGL2("from_kiss: dumped - length wrong!\n");
@@ -105,7 +106,7 @@ void from_kiss(unsigned char *buf, int l)
 	}			/* end of tnc mode */
 
 	/* Lookup the IP address for this route */
-	ipaddr = call_to_ip(a);
+	ipaddr = call_to_ip(a, ipstorage);
 
 	if (ipaddr == NULL) {
 		if (is_call_bcast(a)) {
@@ -146,10 +147,11 @@ void from_kiss(unsigned char *buf, int l)
  * We simply send the packet to the KISS send routine.
  */
 
-void from_ip(unsigned char *buf, int l)
+void from_ip(unsigned char *buf, int l, struct sockaddr_in *ip_addr)
 {
 	int port = 0;
 	unsigned char *a;
+	unsigned char *f;
 
 	if (!ok_crc(buf, l)) {
 		stats.ip_failed_crc++;
@@ -194,6 +196,10 @@ void from_ip(unsigned char *buf, int l)
 		}
 #endif
 	}			/* end of tnc mode */
+
+	f = from_addr(buf);
+	route_process(ip_addr, f);
+
 	if (!ttyfd_bpq)
 		send_kiss(port, buf, l);
 	else {
@@ -277,6 +283,31 @@ int addrmatch(unsigned char *a, unsigned char *b)
 }
 
 /*
+ * return 0 if the addresses supplied match
+ * return a positive or negative value otherwise 
+ */
+int addrcompare(unsigned char *a, unsigned char *b)
+{
+	signed char diff;
+
+	if ((diff = (signed char )((*a++ - *b++) & 0xfe)))
+		return diff;	/* "K" */
+	if ((diff = (signed char )((*a++ - *b++) & 0xfe)))
+		return diff;	/* "A" */
+	if ((diff = (signed char )((*a++ - *b++) & 0xfe)))
+		return diff;	/* "9" */
+	if ((diff = (signed char )((*a++ - *b++) & 0xfe)))
+		return diff;	/* "W" */
+	if ((diff = (signed char )((*a++ - *b++) & 0xfe)))
+		return diff;	/* "S" */
+	if ((diff = (signed char )((*a++ - *b++) & 0xfe)))
+		return diff;	/* "B" */
+	if ((diff = (signed char )((*a++ - *b++) & 0xfe)))
+		return diff;	/* ssid */
+	return 0;
+}
+
+/*
  * return pointer to the next station to get this packet
  */
 unsigned char *next_addr(unsigned char *f)
@@ -299,6 +330,32 @@ unsigned char *next_addr(unsigned char *f)
 /* all the digis have seen it.  return the destination address */
 	return f;
 }
+
+/*
+ * return pointer to the last station this packet came from 
+ */
+unsigned char *from_addr(unsigned char *f)
+{
+	unsigned char *a;
+
+	a = f + 7;
+/* If no digis, return the source address */
+	if (NO_DIGIS(f))
+		return a;
+
+/* check each digi field. Go to last that has seen it */
+	do
+		a += 7;
+	while (NOT_LAST(a) && REPEATED(a));
+
+/* in DIGI mode: we have set REPEATED already, so the one before is it */	
+	if (digi || !REPEATED(a))
+		a -= 7;
+
+/* in TNC mode: always the last is it */
+	return a;
+}
+
 
 /*
  * tack on the CRC for the frame.  Note we assume the buffer is long

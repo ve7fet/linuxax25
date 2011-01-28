@@ -1,3 +1,35 @@
+ax25-apps (1.0.0)
+	* This is a custom release, not associated with the official source.
+	* This package has been in beta for so long, it is time to release version 1.0.0.
+	* Cleaned up source directories, put the docs, conf files, and mans 
+	  in their own folders
+	* Rebuilt the configure.ac re-checking dependencies
+	* Fixed the configure.ac so the rpm building support works
+	* Updated configure to use current GNU autotools
+	* Used CVS code (Jan 12 2011) for ax25rtd, ax25mond, call, listen and 
+	  used patched source from Bernard Pidoux for ax25ipd
+	* ax25ipd now supports:
+	   *dynamic DNS hosts (Steve Fraser vk5asf, Jun 2005)
+	   *ability to route packets over axip links that are not from the 
+	    gateway callsign (Cathryn Mataga)
+	   *integrates the dynamic DNS patch and uses mutex and threads
+	    if DNS fails on start, route is set to 0 and rechecked about an 
+	    hour later (Cathryn Mataga)
+	   *ax25ipd.conf now supports additional flags l and p (Cathryn Mataga)
+	* ax25ipd should route as before, except in the case when packets 
+	  not from the callsign of the route but from the same IP would 
+	  have gone to the default route, they now will go to the 
+	  ip from which they originate.
+	* Default baud rate for ax25ipd is 9600bps. Present version supports 19200
+	  and 38400 as well, but any invalid rate will default to 9600. Change compile
+	  flags to use TERMIOS instead of TERMIO which is obsolete. (Lee W.)
+	* Add support for ax25ipd to use baud rates up to 115200. (Lee W.)
+	* Removed previous patch that closes stderr and stdout, not required to use Unix98 
+	  pty's. Now we get logging and status again when run as a daemon! (Lee W.)	
+	* ax25ipd version incremented (Lee W.)
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 27 Jan 2011 23:00:00 -0800
+
 ax25-apps (0.0.8)
 	* Fix numerous build warnings and errors on modern systems.
 	* Switch to more modern autoconf and automake to fix build issues on

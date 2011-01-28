@@ -1,28 +1,23 @@
-
-installconf:
-
 bin_PROGRAMS = listen
 
-man_MANS = listen.1
+listen_SOURCES = \
+listen.c \
+listen.h \
+kissdump.c \
+ax25dump.c \
+nrdump.c \
+arpdump.c \
+ipdump.c \
+icmpdump.c \
+udpdump.c \
+tcpdump.c \
+rspfdump.c \
+ripdump.c \
+rosedump.c \
+flexnetdump.c \
+opentracdump.c \
+utils.c
 
-EXTRA_DIST = $(man_MANS) 
+listen_LDADD = $(NCURSES_LIB) $(AX25_LIB)
 
-LDADD = $(AX25_LIB) $(NCURSES_LIB)
 
-listen_SOURCES = 	\
-	listen.c	\
-	listen.h	\
-	kissdump.c	\
-	ax25dump.c	\
-	nrdump.c	\
-	arpdump.c	\
-	ipdump.c	\
-	icmpdump.c	\
-	udpdump.c	\
-	tcpdump.c	\
-	rspfdump.c	\
-	ripdump.c	\
-	rosedump.c	\
-	flexnetdump.c	\
-	opentracdump.c \
-	utils.c
