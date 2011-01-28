@@ -59,7 +59,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*.so
 
 %changelog
-* Fri Jan 28 2011 Lee Woldanski <ve7fet@tparc.org>
+* Fri Jan 28 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
 - Fixed some of the versioning output for creating files so it is correct
 - Changed configure line to put files where they belong
 - Added some dependencies
