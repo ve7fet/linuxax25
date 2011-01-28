@@ -1,4 +1,4 @@
-# /etc/ax25/ttylinkd.conf : config file for ttylinkd(8)
+# @sysconfdir@/ax25/ttylinkd.conf : config file for ttylinkd(8)
 #
 # We just have one line, who gets the incoming ttylink calls.
 #
