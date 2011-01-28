@@ -1,3 +1,11 @@
+ax25-apps (1.0.1)
+        * Changed the way version is parsed in configure.ac to be passed to the rpm
+          spec file.
+        * Changed the spec file to install the package in the proper places as well
+          as the URL's to point to here. Also added dependency checking.
+
+-- Lee Woldanski <ve7fet@tparc.org>  Fri, 28 Jan 2011 12:00:00 -0800
+
 ax25-apps (1.0.0)
 	* This is a custom release, not associated with the official source.
 	* This package has been in beta for so long, it is time to release version 1.0.0.
