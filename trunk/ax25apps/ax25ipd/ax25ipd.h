@@ -25,6 +25,24 @@
  * Terry Dawson, VK2KTJ, September 2001.
  */
 
+/*
+  Version 1.0.5
+  added provision for dynamic dns hosts
+  Steve Fraser vk5asf, June 2005
+*/
+
+/*
+  Version 1.0.6
+
+
+*/
+
+/*
+  Version 1.1.0
+  added support for baudrates 57600 and 115200
+  Lee Woldanski ve7fet, Jan 2011
+*/
+
 /* Define the current version number
  *
  * The first digit represents the major release (0 is a prototype release)
@@ -37,7 +55,7 @@
  *
  */
 
-#define VERS2 "Version 1.0.2"
+#define VERS2 "Version 1.1.0"
 
 #define IPPROTO_AX25 93
 #define DEFAULT_UDP_PORT 10093
@@ -118,6 +136,11 @@ struct {
 
 #define	AXRT_BCAST	1
 #define	AXRT_DEFAULT	2
+#define	AXRT_PERMANENT	4
+#define	AXRT_LEARN	8	
+
+
+#define IPSTORAGESIZE 6 /* Bytes needed for call_to_ip */
 
 /* start external prototypes */
 /* end external prototypes */
@@ -133,12 +156,16 @@ void send_params(void);
 
 /* routing.c */
 void route_init(void);
-void route_add(unsigned char *, unsigned char *, int, unsigned int);
+void route_add(char *, unsigned char *, unsigned char *, int, unsigned int);
+int route_ipmatch(struct sockaddr_in *, unsigned char *);
+unsigned char *retrieveip(unsigned char *, unsigned char *);
+void route_process(struct sockaddr_in *, unsigned char *);
 void bcast_add(unsigned char *);
-unsigned char *call_to_ip(unsigned char *);
+unsigned char *call_to_ip(unsigned char *, unsigned char *);
 int is_call_bcast(unsigned char *);
 void send_broadcast(unsigned char *, int);
 void dump_routes(void);
+void update_dns(unsigned);
 
 /* config.c */
 void config_init(void);
@@ -151,11 +178,13 @@ void dump_config(void);
 /* process.c */
 void process_init(void);
 void from_kiss(unsigned char *, int);
-void from_ip(unsigned char *, int);
+void from_ip(unsigned char *, int, struct sockaddr_in *);
 /* void do_broadcast(void);  where did this go ?? xxx */
 void do_beacon(void);
 int addrmatch(unsigned char *, unsigned char *);
+int addrcompare(unsigned char *, unsigned char *);
 unsigned char *next_addr(unsigned char *);
+unsigned char *from_addr(unsigned char *);
 void add_crc(unsigned char *, int);
 void dump_ax25frame(char *, unsigned char *, int);
 

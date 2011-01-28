@@ -1,8 +1,10 @@
+# @sysconfdir@/ax25/ax25rtd.conf
+#
 # Example configuration for ax25rtd. I'm assuming that you have a central
 # node with two interfaces serving the same subnet (this is my personal
 # setup).
 #
-# For a general discussion of each parameter see ax25rtd/README.
+# For a general discussion of each parameter see @datadir@/doc/ax25-apps/READNE.ax25rtd.
 #
 # General setup
 # =============

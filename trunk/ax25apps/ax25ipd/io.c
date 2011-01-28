@@ -281,6 +281,14 @@ void io_open(void)
 		baudrate = EXTB;
 #endif /* EXTB */
 #endif /* B38400 */
+#ifdef B57600
+	else if (ttyspeed == 57600)
+		baudrate = B57600;
+#endif /* B57600 */
+#ifdef B115200
+	else if (ttyspeed == 115200)
+		baudrate = B115200;
+#endif /* B115200 */
 	else
 		baudrate = B9600;
 
@@ -378,10 +386,11 @@ void io_start(void) {
 		if (nb == 0) {
 			fflush(stdout);
 			fflush(stderr);
+			update_dns(60*60); // Once/hour
 			/* just so we go back to the top of the loop! */
 			continue;
 		}
-
+		update_dns(60*60); // once/hour
 		if (FD_ISSET(ttyfd, &readfds)) {
 			do {
 				n = read(ttyfd, buf, MAX_FRAME);
@@ -418,7 +427,7 @@ out_ttyfd:
 				LOGL4("udpdata from=%s port=%d l=%d\n", (char *) inet_ntoa(from.  sin_addr), ntohs(from.  sin_port), n);
 				stats.udp_in++;
 				if (n > 0)
-					from_ip(buf, n);
+					from_ip(buf, n, &from);
 			}
 		}
 		/* if udp_mode */
@@ -434,7 +443,7 @@ out_ttyfd:
 				LOGL4("ipdata from=%s l=%d, hl=%d\n", (char *) inet_ntoa(from.  sin_addr), n, hdr_len);
 				stats.ip_in++;
 				if (n > hdr_len)
-					from_ip(buf + hdr_len, n - hdr_len);
+					from_ip(buf + hdr_len, n - hdr_len, &from);
 			}
 #ifdef USE_ICMP
 			if (FD_ISSET(icmpsock, &readfds)) {
@@ -461,6 +470,9 @@ void send_ip(unsigned char *buf, int l, unsigned char *targetip)
 
 	if (l <= 0)
 		return;
+	if (* (unsigned *) targetip == 0){ /* If the ip is set to 0 don't send anything. I'm not sure what sending to 0 does, but I don't like the idea. */
+		return; 
+	}
 	memcpy((char *) &to.sin_addr,
 	       targetip, 4);
 	memcpy((char *) &to.sin_port,
