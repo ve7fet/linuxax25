@@ -1,0 +1,39 @@
+
+AX25IPD
++++++++
+
+ax25ipd is a derivative work of ax25ip written by Michael Westerhof, and
+as such copyright is governed by Mike's original copyright notice.
+
+> /* ax25ipd.c     main entrypoint
+>  *
+>  * Copyright 1991, Michael Westerhof, Sun Microsystems, Inc.
+>  * This software may be freely used, distributed, or modified, providing
+>  * this header is not removed.
+>  *
+>  */
+
+And an extract from the original README file.
+
+> Comments, Criticism, Enhancements, Problems, Bugs
+> -------------------------------------------------
+> 
+>    You can reach the person responsible for ax25ip at any of the following
+>    addresses:
+> 
+>    Mike.Westerhof@Central.Sun.COM
+> 
+>    KA9WSB@WB9YAE
+> 
+>    Mike Westerhof, 17 N Main St, Mt Prospect, IL 60056
+> 
+> -------------------------------------------------------------------------
+> Copyright 1991, Michael Westerhof, Sun Microsystems, Inc.
+> This software may be freely used, distributed, or modified, providing
+> this footer is not removed.
+> -------------------------------------------------------------------------
+
+This release of ax25ipd was cleaned up slightly, and prototyped, man page
+written, and had a few other's enhancements included along the way, by
+Rob Mayfield VK5XXX, mayfieldrob@mail.dec.com.
+

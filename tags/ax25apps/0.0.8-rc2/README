@@ -1,0 +1,13 @@
+AX25 Apps
+========
+
+Listen now by default is NOT setuid root which means that normal users will
+not be able to run it out of the box.  If you want everyone to run
+listen then after installing the binaries as root type
+  chmod u+s /usr/bin/listen
+This version includes support for Mat DG2FEF's new AX.25 subsystem. Binaries
+are not interchangeable but require recompile.
+
+
+  - Craig Small <csmall@small.dropbear.id.au>
+

@@ -1,0 +1,91 @@
+.TH LISTEN 1 "27 August 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+listen \- monitor AX.25 traffic
+.SH SYNOPSIS
+.B listen [-8] [-a] [-c] [-h] [-i] [-p port] [-r] [-t] [-v]
+.SH DESCRIPTION
+.LP
+.B Listen
+uses SOCK_PACKET facilities to provide a network monitor of all AX.25
+traffic heard by the system. Since KISS is implicitly promiscuous no
+special driver configurations are needed.
+.LP
+This version displays standard AX.25, PE1CHL extended AX.25, NET/ROM, Rose, ARP,
+IP, ICMP, TCP and UDP. It also displays IP, TCP, ICMP, TCP and UDP
+encapsulated within NET/ROM frames. The program also displays AX.25 and IP
+encapsulated within an IP frame, but see RFC1326 for reasons not to do so.
+.LP
+.B Listen
+makes an attempt at decoding some of the more common routing protocols. RSPF
+and RIP (both \(lqnormal\(rq and G8BPQs RIP98) are traced. JNOS style
+NET/ROM node polls are also displayed.
+.LP
+.B Listen
+can use colors to make the output more readable. The ncurses library is used
+to accomplish this. 
+.B Color support defaults to being disabled,
+and the 
+.BR -c
+parameter is used to enable it.
+.SH OPTIONS
+.TP 10
+.BI \-8
+Indicates that the terminal is capable of printing 8-bit characters. This 
+parameter is required for the -i parameter to work.
+.TP 10
+.BI \-a
+Allow for the monitoring of outgoing frames as well as incoming ones.
+.TP 10
+.BI \-c
+Enable color support.
+.TP 10
+.BI \-h
+Dump the data portion of the packet in both hexadecimal and ASCII. The
+default is to display data as ASCII only.
+.TP 10
+.BI \-i
+Map IBM codepage 437 characters 128-158 to their ISO-Latin-1 equivalents.
+This is a hack for scandinavian users. This parameter is only valid
+when used with the -8 and -c parameters.
+.TP 10
+.BI "\-p port"
+Monitor only those frames received on a particular port, by default all
+AX.25 devices are monitored.
+.TP 10
+.BI \-r
+Dump the data portion in a "readable" fashion, which is more suitable
+for tracing plaintext AX.25 traffic. CR-LF conversion is done.
+.TP 10
+.BI \-t
+Displays a timestamp with each packet received.
+.TP 10
+.BI \-v
+Display the version.
+.SH FILES
+/etc/ax25/axports
+.SH "SEE ALSO"
+.BR call (1),
+.BR mheard (1),
+.BR beacon (1),
+.BR ax25 (4),
+.BR netrom (4),
+.BR rose (4),
+.BR kissattach (8).
+.LP
+.SH BUGS
+.B Listen
+does not validate the checksums of frames that support them (ie IP),
+therefore corrupt frames will be displayed with bogus values. The MSS
+of a TCP frame that contains that option is not displayed.
+.SH AUTHORS
+.nf
+Alan Cox GW4PTS <alan@cymru.net>
+.br
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+.br
+Phil Karn KA9Q <karn@qualcomm.com>
+.br
+Heikki Hannikainen OH7LZB <oh7lzb@sral.fi>
+.br
+Scott Miller N1VG <scott@opentrac.org>
+.fi
