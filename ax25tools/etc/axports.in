@@ -1,0 +1,43 @@
+# @sysconfdir@/ax25/axports
+#
+# Use simple descriptive names for the ports, to make debugging 
+# other associated software easier.
+#
+# Callsign is the callsign attached to the ax port with ifconfig. Use
+# the L2 callsign of the port here.
+#
+# Speed is serial line speed between the computer and the TNC
+# NOT the over-the-air baud rate.
+#
+# Paclen is the maximum packet length to send. When paclen bytes are ready, 
+# a packet is automatically sent. 
+#
+# The maximum is 256. Try this on user ports with good quality links. You 
+# may find that reducing this number as low as 128 helps on RF links. 
+#
+# For trunks (link) between nodes, the maximum should be 253 (because of 
+# protocol overhead, ie ROSE uses 3 bytes). Again, reduce this number on 
+# lower quality links to reduce the number of retries.
+# 
+# On HF (300 baud), use a setting of 32.
+#
+# Window size is the same as the MAXFRAME setting in many TNC's. It is
+# the number of frames to send in a transmission without an ACK. Maximum 
+# is 7, use smaller numbers for poor quality or RF links. 
+#
+# On VHF/UHF you should be able to use a setting of 4 with good results.
+#
+# On HF you will want to use 2 or 1.
+#
+# The description field will be shown when programs query information 
+# about the port, use something descriptive about the port for users.
+#
+# The format of this file is:
+#portname	callsign	speed	paclen	window	description
+vhfdrop		N0ONE-1		9600	128	2	145.090MHZ+ 1200baud VHF Drop
+uhfdrop 	N0ONE-3		9600	128	2	443.425MHz+ 1200baud UHF Drop
+hfdrop		N0ONE-5		9600	32	2	40m HF Drop
+wtrunk		N0ONE-11	38400	253	2	UHF Trunk West
+etrunk		N0ONE-13	38400	253	2	UHF Trunk East
+axudp		N0ONE-8		115200	253	2	Linux (AX25<->UDP)
+

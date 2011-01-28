@@ -13,9 +13,7 @@
 #define	DATA_MHEARD_FILE	AX25_LOCALSTATEDIR"mheard/mheard.dat"
 
 #define	LOCK_AXSPAWN_FILE	"/var/lock/axspawn"
-#define	LOCK_SERIAL_DIR		"/var/lock"
 
-#define	PROC_AX25_FILE		"/proc/net/ax25"
 #define	PROC_AX25_ROUTE_FILE	"/proc/net/ax25_route"
 #define	PROC_IP_ROUTE_FILE	"/proc/net/route"
 #define	PROC_NR_SYSCTL_DIR	"/proc/sys/net/netrom"
@@ -24,5 +22,3 @@
 #define PROC_AX25_CALLS_FILE	"/proc/net/ax25_calls"
 #define PROC_NR_NEIGH_FILE	"/proc/net/nr_neigh"
 #define PROC_NR_NODES_FILE	"/proc/net/nr_nodes"
-
-

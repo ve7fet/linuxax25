@@ -1,3 +1,23 @@
+ax25-tools (1.0.0)
+	* This is a custom release, not associated with the official source.
+	* This package has been beta for so long, it is time to relase version 1.0.0.
+	* Moved axports, nrports, and rsports example config files to this 
+	  package from libax25. They should be in here where their associated 
+	  utilities reside (kissattach, nrattach, rsattach, etc), not in the 
+	  library distribution.
+	* Moved the related mans axports.5, nrports.5, and rsports.5 into this 
+	  package from libax25. The conf files are here, so the man pages had 
+	  to come too.
+	* Re-organized the package to put the /etc and /man files in their 
+	  own build directories.
+	* Put misc README's in /doc
+	* Re-checked build dependencies and updated configure.ac for:
+	  automake 1.10.1
+	  autoconf 2.61
+	* Removed un-necessary checks in configure.ac
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 27 Jan 2011 23:00:00 -0800
+
 ax25-tools (0.0.10)
 	* Version number 0.0.10 was used for several years in CVS.  To avoid
 	  confusion we decieded to not make a 0.0.9 tarball release.

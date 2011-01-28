@@ -1,0 +1,49 @@
+# @sysconfdir@/ax25/ax25d.conf
+#
+# ax25d Configuration File.
+#
+# Anyone connecting with the source call of N0CALL will be 
+# dropped. Everyone else is sent to the default. 
+# 
+# To route calls from a specific callsign to a different application, 
+# add them as desired.
+#
+# AX.25 Ports begin with a '['.
+# Format is [<incoming callsign> VIA <axportname>]
+#
+# When users connect to <incoming callsign>, they will be processed 
+# by the section that matches.
+#
+[N0ONE VIA vhfdrop]
+NOCALL   * * * * * *  L
+default  * * * * * *  -	root  @prefix@/sbin/ttylinkd	ttylinkd
+#parameters_extAX25 VC-wait-login VC-disc-on-linkfailure-msg VC-log-connections
+#
+#
+[N0ONE-1 VIA vhfdrop]
+NOCALL   * * * * * *  L
+default  * * * * * *  -	root  @prefix@/sbin/node	node
+#
+#
+[N0ONE VIA uhfdrop]
+NOCALL   * * * * * *  L
+default  * * * * * *  -	root  @prefix@/sbin/ttylinkd	ttylinkd
+#
+[N0ONE-1 VIA uhfdrop]
+NOCALL   * * * * * *  L
+default  * * * * * *  -	root  @prefix@/sbin/node	node
+#
+[N0ONE-3 VIA uhfdrop]
+NOCALL   * * * * * *  L
+default  * * * * * *  -	root  @prefix@/sbin/axwrapper	axwrapper /usr/bin/finger finger
+#
+# NET/ROM Ports begin with a '<'.
+#
+#<netrom>
+#NOCALL  * * * * * *  L
+#default * * * * * *  -	root  @prefix@/sbin/ttylinkd	ttylinkd
+#
+<netrom>
+NOCALL   * * * * * *  L
+default  * * * * * *  -	root  @prefix@/sbin/node	node
+#

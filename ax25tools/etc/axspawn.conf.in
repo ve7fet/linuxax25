@@ -1,4 +1,4 @@
-# /etc/ax25/axspawn.conf
+# @sysconfdir@/ax25/axspawn.conf
 #
 # allow automatic creation of user accounts
 create    yes
