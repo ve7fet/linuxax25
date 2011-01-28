@@ -1,0 +1,92 @@
+.TH INET 3  "2008-Feb-04" "Linux" "Linux Programmer's Manual"
+.SH NAME
+.B ax25_aton, ax25_aton_entry, ax25_aton_arglist,
+.B ax25_ntoa, ax25_cmp, ax25_validate
+\- AX25 Address manipulation routines
+.SH SYNOPSIS
+.nf
+.B #include <netax25/ax25.h>
+.PP
+.BI "int ax25_aton(const char *" cp ", struct full_sockaddr_ax25 *" fsap ");"
+.PP
+.BI "int ax25_aton_arglist(const char **" cp ", struct full_sockaddr_ax25 *" fsap ");"
+.PP
+.BI "int ax25_aton_entry(const char *" cp ", char *" axp ");"
+.PP
+.BI "char *ax25_ntoa(ax25_address *" axp ");"
+.PP
+.BI "int ax25_cmp(ax25_address *" ax1 ", ax25_address *" ax2 ");"
+.PP
+.BI "int ax25_validate(char *" axp ");"
+.PP 
+.BI "char *ax25_config_file(const char *filename);"
+.fi
+
+.SH DESCRIPTION
+.BR ax25_aton ()
+takes the ASCII string
+.I cp
+that is in the format
+.I callsign
+.RI [[ V | VIA ] callsign "...]"
+and stores it in
+.I fsap
+in network format. 
+.PP
+.BR ax25_aton_entry ()
+takes the ASCII string of a callsign
+.I cp
+and stores it in network format in
+.I axp.
+.PP
+The 
+.BR ax25_aton_arglist ()
+takes a NULL terminated array of strings
+.I cp
+and stores it in
+.I fsap
+in network format.
+.PP
+The
+.BR ax25_ntoa ()
+takes a network format address
+.I axp
+and returns the ASCII representation.
+The string is returned in a statically allocated buffer, which
+subsequent calls will overwrite.
+.PP
+The
+.BR ax25_cmp ()
+function compares the two ax25 addresses,
+.I ax1
+and
+.IR ax2 ,
+that are in network format and determines wether they are identical,
+differ only by their SSIDs or are different.
+.PP
+The
+.BR ax25_validate ()
+function checks to see if the address
+.I axp
+in network format is a correctly formatted address.
+.SH "RETURN VALUE"
+The
+.BR ax25_aton () and
+.BR ax25_aton_arglist ()
+functions return -1 if an error occurs otherwise the length of
+the returned structure.
+.PP
+The
+.BR ax25_aton_entry ()
+function returns -1 if an error occurs otherwise zero.
+.PP
+The
+.BR ax25_cmp ()
+function returns 0 if the two addresses are identical, 1 if they are
+different or 2 is only the SSIDs are different.
+.PP
+The
+.BR ax25_validate ()
+function returns TRUE if the callsign is valid or FALSE if it is not.
+.SH "SEE ALSO"
+.BR ax25 "(4), " netrom "(4), " rose "(4)"

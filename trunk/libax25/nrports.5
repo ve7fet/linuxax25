@@ -1,0 +1,56 @@
+.TH NRPORTS 5 "2 August 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+nrports \- NET/ROM port configuration file.
+.SH DESCRIPTION
+.LP
+.B Nrports
+is an ASCII file that contains information about each of the NET/ROM
+ports that are to be used. When dealing with an NET/ROM utility such as
+.B call,
+it takes an optional argument that is the port name. This port name is a
+reference to the line within
+.B nrports,
+which has the same name. The information on each line contains
+enough information to bind the command to a particular NET/ROM
+interface, this binding is done by matching the callsign on the line in
+.B nrports
+with the callsign of the port set by
+.B ifconfig.
+.LP
+The
+.B nrports
+file may contain comments that begin with a # in the first column, or a port
+description in the following format, each field being delimited by white space:
+.sp
+.RS
+name callsign alias paclen description
+.RE
+.sp
+The field descriptions are:
+.sp
+.RS
+.TP 14
+.B name
+this is the unique NET/ROM port identifier.
+.TP 14
+.B callsign
+the callsign of the NET/ROM interface to bind to.
+.TP 14
+.B alias
+this is the alias of the NET/ROM port.
+.TP 14
+.B paclen
+is the default packet size for this interface.
+.TP 14
+.B description
+a free format description of this interface, this field extends to the end
+of the line. It may contain spaces.
+.RE
+.SH FILES
+.LP
+/etc/ax25/nrports
+.SH "SEE ALSO"
+.BR call (1),
+.BR netrom (4),
+.BR ifconfig (8),
+.BR nrparms (8).

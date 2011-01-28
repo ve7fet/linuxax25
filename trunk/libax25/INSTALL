@@ -1,0 +1,24 @@
+Installation Instructions for AX.25 Library
+===========================================
+
+To make this library you will need the following:
+	glibc2.1 (Debian 2.1.1-5 or RedHat glibc-2.1.2-3)
+	A Modern kernel (2.2.x)
+	libtool
+
+To build it you type:
+	./configure
+	make
+	make install
+
+If you want to put the files in the "normal" places, type:
+	./configure --exec_prefix=/usr --sysconfdir=/etc --localstatedir=/var
+	make 
+	make install
+	
+That will put the binaries in /usr/{s}bin and the config files in
+/etc/ax25
+
+If you want to install the example config files
+	make installconf
+
