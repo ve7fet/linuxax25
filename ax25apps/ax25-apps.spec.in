@@ -7,10 +7,10 @@ Group:          Applications/Communications
 #ax25ipd is BSD licensed, rest is GPLv2+
 License:        GPLv2+ and BSD
 URL:            http://linuxax25.googlecode.com/
-Source0:        http://code.google.com/p/linuxax25/downloads/detail?name=%{name}-@VERSION@.tar.gz
+Source0:        %{name}-@VERSION@.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-@VERSION@-%{release}-root-%(%{__id_u} -n)
-BuildRequires:	libstdcc++-devel, libax25-devel >= 1.0.1, ncurses-devel
-Requires:       libstdc++, libax25 >= 1.0.0, ncurses
+BuildRequires:	libax25-devel >= 1.0.1
+Requires:       libax25 >= 1.0.0
 
 %description
 This package provides specific user applications for hamradio that use AX.25 
