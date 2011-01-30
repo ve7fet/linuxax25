@@ -8,7 +8,6 @@ License:        LGPLv2+
 URL:		http://linuxax25.googlecode.com/
 Source0:	%{name}-@VERSION@.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-@BASEVERSION@@EXTRAVERSION@-%{release}-root-%(%{__id_u} -n)
-Requires:	zlib
 BuildRequires:	zlib-devel
 
 %description
@@ -20,7 +19,7 @@ ax25 application config file parsing, etc.
 
 Summary:        Development files for %{name}
 Group:          Development/Libraries
-Requires:	%{name} = %{version}-%{release}, zlib
+Requires:	%{name} = %{version}-%{release}
 
 %description    devel
 The %{name}-devel package contains libraries and header files for
