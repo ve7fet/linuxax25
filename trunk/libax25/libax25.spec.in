@@ -6,9 +6,9 @@ Summary:        AX.25 library for hamradio applications
 Group:          System Environment/Libraries
 License:        LGPLv2+
 URL:		http://linuxax25.googlecode.com/
-Source0:	http://code.google.com/p/linuxax25/downloads/detail?name=%{name}-@VERSION@.tar.gz
+Source0:	%{name}-@VERSION@.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-@BASEVERSION@@EXTRAVERSION@-%{release}-root-%(%{__id_u} -n)
-Requires:	libstdc++, zlib
+BuildRequires:	zlib-devel
 
 %description
 libax25 is a library for ham radio applications that use the AX.25, NETROM
@@ -19,7 +19,7 @@ ax25 application config file parsing, etc.
 
 Summary:        Development files for %{name}
 Group:          Development/Libraries
-BuildRequires:       %{name} = %{version}-%{release}, libstdc++-devel, zlib-devel
+BuildRequires:	%{name} = %{version}-%{release}, zlib-devel
 
 %description    devel
 The %{name}-devel package contains libraries and header files for
@@ -36,7 +36,6 @@ make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-make installconf DESTDIR=$RPM_BUILD_ROOT
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 
 %clean
