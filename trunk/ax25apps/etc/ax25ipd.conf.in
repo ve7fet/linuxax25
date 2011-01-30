@@ -2,7 +2,7 @@
 #
 # ax25ipd configuration file
 #
-# See @datadir@/doc/ax25-apps/README.ax25ipd and HISTORY.ax25ipd 
+# See @datadir@/doc/ax25apps/README.ax25ipd and HISTORY.ax25ipd 
 # for further information.
 #
 # To start ax25ipd with a different config file:

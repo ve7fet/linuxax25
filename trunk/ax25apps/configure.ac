@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT(ax25-apps, 1.0.1, linux-hams@vger.kernel.org)
+AC_INIT(ax25apps, 1.0.1, linux-hams@vger.kernel.org)
 AC_CONFIG_SRCDIR([pathnames.h])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
@@ -46,6 +46,6 @@ AC_FUNC_STAT
 AC_FUNC_UTIME_NULL
 AC_CHECK_FUNCS([bzero gethostbyname inet_ntoa memchr memmove memset select socket strcasecmp strchr strdup strerror strrchr strtol strtoul utime])
 
-AC_CONFIG_FILES([call/Makefile ax25ipd/Makefile listen/Makefile Makefile ax25rtd/Makefile ax25mond/Makefile doc/Makefile man/Makefile etc/Makefile ax25-apps.spec])
+AC_CONFIG_FILES([call/Makefile ax25ipd/Makefile listen/Makefile Makefile ax25rtd/Makefile ax25mond/Makefile doc/Makefile man/Makefile etc/Makefile ax25apps.spec])
 
 AC_OUTPUT

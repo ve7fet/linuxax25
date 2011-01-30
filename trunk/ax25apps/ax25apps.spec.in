@@ -1,4 +1,4 @@
-Name:           ax25-apps
+Name:          	@PACKAGE_NAME@ 
 Version:        @BASEVERSION@@EXTRAVERSION@
 Release:        1
 Summary:        AX.25 ham radio applications
@@ -9,7 +9,7 @@ License:        GPLv2+ and BSD
 URL:            http://linuxax25.googlecode.com/
 Source0:        %{name}-@VERSION@.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-@VERSION@-%{release}-root-%(%{__id_u} -n)
-BuildRequires:	libax25-devel >= 1.0.1
+BuildRequires:	libax25-devel >= 1.0.1, ncurses-devel
 Requires:       libax25 >= 1.0.0
 
 %description
@@ -36,6 +36,9 @@ make install DESTDIR=$RPM_BUILD_ROOT
 make installconf DESTDIR=$RPM_BUILD_ROOT
 
 #don't include these twice
+#remove the ones created in ax25-apps (we'll pick them directly later)
+#so they get put in ax25-apps-verison and rpmbuild doesn't have a fit
+#about files not included
 rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}
 
 %clean
@@ -44,11 +47,18 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc AUTHORS ChangeLog COPYING README
-%doc %{_docdir}/*
-%config %{_sysconfdir}/ax25/*
-%{_bindir}/*
-%{_sbindir}/*
+%doc doc/COPYING.ax25ipd  doc/HISTORY.ax25ipd doc/README.ax25ipd  doc/README.ax25rtd  doc/TODO.ax25rtd
+%config %{_sysconfdir}/ax25/ax25ipd.conf
+%config %{_sysconfdir}/ax25/ax25mond.conf
+%config %{_sysconfdir}/ax25/ax25rtd.conf
+%{_bindir}/call
+%{_bindir}/listen
+%{_sbindir}/ax25ipd
+%{_sbindir}/ax25mond
+%{_sbindir}/ax25rtd
+%{_sbindir}/ax25rtctl
 %{_mandir}/man?/*
+%{_localstatedir}/ax25/ax25rtd/*
 
 %changelog
 * Fri Jan 29 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1

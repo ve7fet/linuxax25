@@ -31,7 +31,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/ax25-apps.spec.in \
+	$(srcdir)/Makefile.in $(srcdir)/ax25apps.spec.in \
 	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
 	ChangeLog INSTALL NEWS depcomp install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -42,7 +42,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = ax25-apps.spec
+CONFIG_CLEAN_FILES = ax25apps.spec
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -157,7 +157,7 @@ target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = ax25ipd ax25rtd call listen ax25mond man doc etc
-EXTRA_DIST = pathnames.h ax25-apps.spec
+EXTRA_DIST = pathnames.h ax25apps.spec
 AM_CPPFLAGS = -DAX25_SYSCONFDIR=\""$(sysconfdir)/ax25/"\" \
 	      -DAX25_LOCALSTATEDIR=\""$(localstatedir)/ax25/"\"
 
@@ -217,7 +217,7 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
-ax25-apps.spec: $(top_builddir)/config.status $(srcdir)/ax25-apps.spec.in
+ax25apps.spec: $(top_builddir)/config.status $(srcdir)/ax25apps.spec.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 # This directory's subdirectories are mostly independent; you can cd

@@ -1,5 +1,3 @@
-/* @(#) $Header: /home/cvs/ax25-apps/listen/ax25dump.c,v 1.6 2008/04/27 17:00:21 dl9sau Exp $ */
-
 /* AX25 header tracing
  * Copyright 1991 Phil Karn, KA9Q
  */
