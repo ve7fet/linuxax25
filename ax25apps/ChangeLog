@@ -1,10 +1,12 @@
-ax25-apps (1.0.1)
+ax25apps (1.0.1)
+	* Changed the package name to ax25apps from ax25-apps since the '-' really makes 
+	  creating binary packages a pain (does not comply with most policies)
         * Changed the way version is parsed in configure.ac to be passed to the rpm
           spec file.
         * Changed the spec file to install the package in the proper places as well
           as the URL's to point to here. Also added dependency checking.
 
--- Lee Woldanski <ve7fet@tparc.org>  Fri, 28 Jan 2011 12:00:00 -0800
+-- Lee Woldanski <ve7fet@tparc.org>  Sun, 30 Jan 2011 11:00:00 -0800
 
 ax25-apps (1.0.0)
 	* This is a custom release, not associated with the official source.

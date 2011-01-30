@@ -1,5 +1,3 @@
-/* @(#) $Header: /home/cvs/ax25-apps/listen/tcpdump.c,v 1.2 2001/09/12 13:18:44 terry Exp $ */
-
 /* TCP header tracing routines
  * Copyright 1991 Phil Karn, KA9Q
  */

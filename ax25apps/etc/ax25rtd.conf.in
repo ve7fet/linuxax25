@@ -4,7 +4,7 @@
 # node with two interfaces serving the same subnet (this is my personal
 # setup).
 #
-# For a general discussion of each parameter see @datadir@/doc/ax25-apps/READNE.ax25rtd.
+# For a general discussion of each parameter see @datadir@/doc/ax25apps/README.ax25rtd.
 #
 # General setup
 # =============

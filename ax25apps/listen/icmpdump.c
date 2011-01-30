@@ -1,5 +1,3 @@
-/* @(#) $Header: /home/cvs/ax25-apps/listen/icmpdump.c,v 1.2 2001/09/12 13:18:44 terry Exp $ */
-
 /* ICMP header tracing
  * Copyright 1991 Phil Karn, KA9Q
  */
