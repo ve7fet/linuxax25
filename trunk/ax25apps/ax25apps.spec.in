@@ -36,8 +36,8 @@ make install DESTDIR=$RPM_BUILD_ROOT
 make installconf DESTDIR=$RPM_BUILD_ROOT
 
 #don't include these twice
-#remove the ones created in ax25-apps (we'll pick them directly later)
-#so they get put in ax25-apps-verison and rpmbuild doesn't have a fit
+#remove the ones created in ax25apps (we'll pick them directly later)
+#so they get put in ax25apps-verison and rpmbuild doesn't have a fit
 #about files not included
 rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}
 
@@ -61,7 +61,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/ax25/ax25rtd/*
 
 %changelog
-* Fri Jan 29 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
+* Sun Jan 30 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
 - Fixed some of the versioning output for creating files so it is correct
 - Changed configure line to put files where they belong
 - Added some dependencies
