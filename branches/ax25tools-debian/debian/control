@@ -1,0 +1,19 @@
+Source: ax25tools
+Section: hamradio
+Priority: extra
+Maintainer: Lee Woldanski <ve7fet@tparc.org>
+Build-Depends: debhelper (>= 7), autotools-dev, zlib1g-dev, libax25-dev
+Standards-Version: 3.7.3
+Homepage: http://linuxax25.googlecode.com 
+
+Package: ax25tools
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libax25 (>= 0.0.12)
+Suggests: ax25apps
+Conflicts: ax25utils
+Replaces: ax25utils
+Description: A collection of AX.25 drivers and interface tools for Amateur Radio (non-X)
+ A collection of drivers and interface configureation tools to support 
+ AX.25 Amateur Radio programs. This version does not have any X programs 
+ or depencies on X included.
+

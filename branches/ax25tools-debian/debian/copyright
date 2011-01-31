@@ -1,0 +1,49 @@
+This package was debianized by Lee Woldanski <ve7fet@tparc.org> on
+Sun, 30 Jan 2011 21:00:00 -0800.
+
+It was downloaded from http://linuxax25.googlecode.com 
+
+Upstream Author(s):
+
+    Joerg Reuter DL1BKE <jreuter@poboxes.com>
+    Rob Mayfield VK5XXX <mayfieldrob@mail.dec.com>
+    Klaus Kudielka <oe1kib@oe1xtu.ampr.org>
+    Alexander Tietzel DG6XA <tietze_a@etech.fh-hamburg.de>
+    Tomi Manninen OH2BNS <oh2bns@sral.fi>
+    Frederic Rible F1OAT <frible@teaser.fr>
+    Heikki Hannikainen OH7LZB <oh7lzb@sral.fi>
+    Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
+    Dave Brown N2RJT <dcb@vectorbd.com>
+    John Paul Morrison VE7JPM <jmorriso@bogomips.com>
+    Craig Small VK2XLZ <csmall@small.dropbear.id.au>
+    Jean-Paul Roubelat F6FBB <jpr@f6fbb.org>
+    Jonathon Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+
+Copyright:
+
+    Copyright (C) 2011 Various Authors 
+
+License:
+
+    This package is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2 of the License, or (at your option) any later version.
+
+    This package is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this package; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+On Debian systems, the complete text of the GNU Lesser General
+Public License can be found in `/usr/share/common-licenses/LGPL'.
+
+The Debian packaging is (C) 2011, Lee Woldanski <ve7fet@tparc.org> and
+is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
+
+# Please also look if there are files or directories which have a
+# different copyright/license attached and list them here.

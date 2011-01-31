@@ -1,0 +1,13 @@
+ax25tools (1.0.1) unstable; urgency=low
+
+  * Initial Release.
+  * This version is a modified version of the January 2011 CVS source
+    from http://www.linux-ax25.org/wiki/Main_Page
+  * This version cleans up the upstream source and brings in some 
+    config files from libax25 that belong in here.
+  * This version does not include any X utilities.
+  * The forked code is now available from http://linuxax25.googlecode.com
+  * Package name has been changed froma ax25-tools to ax25tools for better
+    compatibility with package naming policies.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Sun, 30 Jan 2011 21:00:00 -0800
