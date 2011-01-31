@@ -1,0 +1,12 @@
+sbin_PROGRAMS = ax25mond
+
+ax25mond_SOURCES = ax25mond.c
+
+ax25mond_LDADD = $(AX25_LIB)
+
+AX25_SYSCONFDIR=$(sysconfdir)/ax25
+AX25_LOCALSTATEDIR=$(localstatedir)/ax25
+
+AM_CPPFLAGS = -DAX25_SYSCONFDIR=\""$(AX25_SYSCONFDIR)"\" \
+	      -DAX25_LOCALSTATEDIR=\""$(AX25_LOCALSTATEDIR)"\"
+

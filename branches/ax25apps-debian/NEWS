@@ -1,0 +1,8 @@
+NEWS for ax25apps
+==================
+
+These programs are still being tested, you should expect some quirks
+especially with compiling for a little while longer
+
+The package name is now ax25apps (not ax25-apps), since the '-' in the name breaks 
+most distribution package manager policies.
