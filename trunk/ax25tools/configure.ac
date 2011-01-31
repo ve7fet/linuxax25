@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT(ax25-tools, 1.0.1, linux-hams@vger.kernel.org)
+AC_INIT(ax25tools, 1.0.1, linux-hams@vger.kernel.org)
 AC_CONFIG_SRCDIR([pathnames.h])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
@@ -69,5 +69,5 @@ AC_FUNC_STRTOD
 AC_FUNC_UTIME_NULL
 AC_CHECK_FUNCS([alarm atexit dup2 endgrent endpwent gethostbyname gethostname gettimeofday inet_ntoa memmove memset mkdir select socket strcasecmp strchr strdup strerror strncasecmp strrchr strspn strstr strtol strtoul uname utime])
 
-AC_CONFIG_FILES([netrom/Makefile tcpip/Makefile ax25/Makefile ax25/axgetput/Makefile Makefile rose/Makefile user_call/Makefile kiss/Makefile 6pack/Makefile hdlcutil/Makefile hdlcutil/fl/Makefile yamdrv/Makefile dmascc/Makefile doc/Makefile man/Makefile etc/Makefile ax25-tools.spec])
+AC_CONFIG_FILES([netrom/Makefile tcpip/Makefile ax25/Makefile ax25/axgetput/Makefile Makefile rose/Makefile user_call/Makefile kiss/Makefile 6pack/Makefile hdlcutil/Makefile hdlcutil/fl/Makefile yamdrv/Makefile dmascc/Makefile doc/Makefile man/Makefile etc/Makefile ax25tools.spec])
 AC_OUTPUT

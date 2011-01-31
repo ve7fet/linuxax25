@@ -1,3 +1,3 @@
-This is some news about ax25-tools
-
+This package is now known as ax25tools, since using a "-" in the package name (ax25-tools) 
+has a tendency to break most package managers.
 
