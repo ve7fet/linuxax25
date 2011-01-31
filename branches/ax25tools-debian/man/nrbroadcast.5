@@ -1,0 +1,49 @@
+.TH NRBROADCAST 5 "2 August 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+nrbroadcast \- NET/ROM routing broadcast configuration file.
+.SH DESCRIPTION
+.LP
+.B Nrbroadcast
+is an ASCII file that contains information about each of the physical AX.25
+ports that are to have NET/ROM routing broadcasts transmitted from them.
+.LP
+Each line has the following format, each field being delimited by white space:
+.sp
+.RS
+port minobs defqual worstqual verbose
+.RE
+.sp
+The field descriptions are:
+.sp
+.RS
+.TP 14
+.B port
+the port name of the AX.25 port to broadcast on.
+.TP
+.B minobs
+this is the minimum obsolescence count of a routing table entry to be
+broadcast on this port.
+.TP
+.B defqual
+this is the default quality of an incoming routing broadcast from an unknown
+neighbour.
+.TP
+.B worstqual
+this is the worst quality node received from a routing broadcast that will
+be added to our routing table.
+.TP
+.B verbose
+whether the routes to all of my nodes in my routing table, or just the nodes
+resident on my machine are to be broadcast.
+.RE
+.SH FILES
+.LP
+/etc/ax25/nrbroadcast
+.br
+/etc/ax25/axports
+.SH "SEE ALSO"
+.BR call (1),
+.BR netrom (4),
+.BR axports (5),
+.BR netromd (8),
+.BR nrparms (8).

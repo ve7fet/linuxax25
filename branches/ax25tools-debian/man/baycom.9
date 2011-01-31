@@ -1,0 +1,62 @@
+.\" Copyright 1996 Thomas Sailer (t.sailer@alumni.ethz.ch)
+.\" May be distributed under the GNU General Public License
+.\" "
+.TH BAYCOM 9 "2 October 1996" "Linux 2.1.x" "Kernel Reference Guide"
+.SH NAME
+baycom \- amateur (AX.25) packet radio network driver for baycom modems
+.SH SYNOPSIS
+
+.nf
+.B #include <linux/baycom.h>
+.B #include <linux/hdlcdrv.h>
+.fi
+
+.SH DESCRIPTION
+The driver currently supports three different modems: ser12, par96 and
+par97.
+.SS ser12
+This is a very simple 1200 baud AFSK modem. The modem consists only
+of a modulator/demodulator chip, usually a TI TCM3105. The computer
+is responsible for regenerating the receiver bit clock. The modem 
+connects to a serial port, hence the name. Since the serial port is
+not used as an async serial port, the kernel driver for serial ports
+cannot be used, and this driver only supports standard serial 
+hardware (8250, 16450, 16550).
+.SS par96
+This is a modem for 9600 baud FSK compatible to the G3RUH standard.
+The modem does all the filtering and regenerates the receiver clock.
+Data is transferred from and to the PC via a shift register.
+The shift register is filled with 16 bits and an interrupt is
+signalled. The PC then empties the shift register in a burst. This
+modem connects to the parallel port, hence the name.
+.SS par97
+This is a redesign of the par96 modem by Henning Rech, DF9IC. The
+modem is protocol compatible to par96, but uses only three low
+power ICs and can therefore be fed from the parallel port and
+does not require an additional power supply.
+
+.SH "IOCTL CALLS"
+The \fBioctl\fP calls follow the implementation in the \fIhdlcdrv\fP.
+
+.TP
+.B BAYCOMCTL_GETMODEMTYPE
+returns the modem type (i.e. \fIser12\fP or \fIpar96\fP) and the 
+options in effect (currently only the source of the DCD signal)
+.TP
+.B BAYCOMCTL_SETMODEMTYPE
+sets the modem type and the options. Only superuser can do this.
+.TP
+.B BAYCOMCTL_GETDEBUG
+return some debugging values. Not always available.
+
+
+.SH "SEE ALSO"
+.BR baycom " (9), " soundmodem " (9),"
+linux/drivers/net/hdlcdrv.c,
+
+.SH AUTHOR
+baycom was written by Thomas Sailer, HB9JNX/AE4WA, (t.sailer@alumni.ethz.ch).
+
+
+
+

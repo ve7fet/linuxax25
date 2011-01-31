@@ -1,0 +1,28 @@
+# @sysconfdir@/ax25/nrbroadcast
+# This file may contain a number of entries. There would normally be 
+# one entry for each AX.25 port that you wish to allow NET/ROM traffic on.
+#
+# Axport is the name of the port from axports which you want to carry 
+# NET/ROM traffic on. If you do not have an entry in /etc/ax25/nrbroadcasts 
+# for a port, then this means that no NET/ROM routing will occur and any 
+# received NET/ROM broadcasts will be ignored for that port.
+#
+# Min_obs is the minimum obsolecence value for the port.
+#
+# Def_qual is the default quality of an incoming routing broadcast from 
+# an unknown neighbour. 
+#
+# Worst_qual is the worst quality node received from a routing broadcast that 
+# will be added to our routing table. Any routes under this quality will be 
+# ignored.
+#
+# Verbose is a flag that determine if full NET/ROM routing broadcasts (1) 
+# will be sent on this port, or if only this node is advertised (0). On RF 
+# you likely only want to advertise your own node. On IP, you can send your 
+# entire routing table.
+#
+# The format of this file is:
+# axport	min_obs	def_qual	worst_qual	verbose
+#
+vhfdrop		5	192		100		0
+axudp		5	255		100		1

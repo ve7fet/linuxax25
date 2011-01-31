@@ -1,0 +1,56 @@
+.TH TTYLINKD 8 "5 March 1997" Linux "Linux System Managers Manual"
+.SH NAME
+ttylinkd \- TTYlink daemon for AX.25, NET/ROM, ROSE and IP. 
+.SH SYNOPSIS
+.B ttylinkd [-hv] [-c callsign] [-f file]
+.SH DESCRIPTION
+.LP
+.B ttylinkd
+is a simple daemon that allows incoming ttylink calls to be routed through
+to Linux's normal talkd(8)
+system and provides a pipe between the two.
+.LP
+.B ttylinkd 
+is usually setup to be spawned from ax25d(8) or inetd(8)
+but can, since version 0.03, be used on the command line, although
+talk(1) is a much better idea for interactive users.
+.LP 
+Use splitscreen(1)
+for outgoing ttylink sessions.
+.SH OPTIONS
+.TP 10
+.BI \-v
+Display the version.
+.TP 10
+.BI \-h
+Display some help and information on it.
+.TP 10
+.BI "\-c callsign"
+Disable callsign checking and use the given callsign for a name for this
+end of the link.
+.TP 10
+.BI "\-f file"
+Use <file> for the configuration file, instead of the default
+/etc/ax25/ttylinkd.conf
+.SH FILES
+.LP
+/etc/ax25/ttylinkd.conf  the configuration file for ttylinkd
+.SH "SEE ALSO"
+.BR talk (1),
+.BR splitscreen (1),
+.BR ttylinkd.conf (5),
+.BR ax25d (8),
+.BR inetd (8),
+.BR talkd (8).
+.SH BUGS
+.LP
+There is still some need for some checking of who is still logged on.  
+.LP
+The daemon may hang if you disconnect from it strangely.
+.LP
+There is no real way of working out what is going on with talkd.
+.LP
+If you do not have a talk daemon going on the specified host then the program
+will tend to sit there and do nothing.
+.SH AUTHOR
+Craig Small VK2XLZ <csmall@small.dropbear.id.au>

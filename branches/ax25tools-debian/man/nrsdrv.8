@@ -1,0 +1,44 @@
+.TH NRSDRV 8 "22 December 1996" Linux "Linux System Managers Manual"
+.SH NAME
+nrsdrv \- KISS to NET/ROM serial converter
+.SH SYNOPSIS
+.B nrsdrv [-f] [-l] [-s speed] [-v] kissdev nrsdev
+.SH DESCRIPTION
+.LP
+.B Nrsdrv
+is a program designed to convert from the KISS protocol to the NET/ROM
+serial protocol used by real NET/ROM's and TheNet's. The protocols are
+fairly similar, although the NET/ROM serial protocol does include a one byte
+checksum which KISS does not.
+.sp 1
+Typically
+.B nrsdrv
+will be attached to one end of a pseudo-tty of which the other end has been
+attached to a KISS capable program. The NET/ROM device will probably be a
+real serial port attached to a TNC or a Hexipus. The full specification of
+the NET/ROM serial protocol can be found in the original Software 2000
+documentation that accompanied NET/ROMs.
+.SH OPTIONS
+.TP 10
+.BI \-f
+Flow control enabled for use with a Hexipus, the default is disabled.
+See the file hexipus.txt in the source distribution for wiring details.
+
+.TP 10
+.BI \-l
+Log messages to the system log, the default is not to.
+.TP 10
+.BI "\-s speed"
+Sets the speed of both interfaces. If no value is specified then no speed
+will be set.
+.TP 10
+.BI \-v
+Display the version.
+.SH BUGS
+None known.
+.SH "SEE ALSO"
+.BR kill (1),
+.BR stty (1),
+.BR ax25 (4).
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

@@ -1,0 +1,92 @@
+1998/07/29  Version 0.5
+----------
+
+Driver now supports up to 4 yam modems.
+yam0 default to COM1 0x3f8 irq4
+yam1 default to COM2 0x2f8 irq3
+yam2 default to COM3 0x3e8 irq4
+yam3 default to COM4 0x3e8 irq3
+
+1998/09/01  Version 0.6
+----------
+
+Added : bitrate/baudrate configuration.
+Added : mcs file may be loaded from yamcfg. 
+        One mcs file is affected to each bitrate.
+		
+		mcs data for 1200 and 9600 bds are preloaded in the driver
+		but may be changed by yamcfg.
+
+options of yamcfg :
+
+  [iobase <iobase>] 
+  [irq <irq>] 
+  [bitrate <bitrate>] 
+  [baudrate <baudrate>]
+  [duplex <mode>] 
+  [hold <delay>] 
+  [txdelay <txdelay>]
+  [txtail <txtail>] 
+  [slottime <slottime>] 
+  [persist <persistence>]
+  [load <bitrate> <filename.mcs>]
+
+/proc/net/yam gives the current configuration
+
+
+1998/09/12  Version 0.7
+----------
+
+A patch to the kernel tree 2.0.36 has been created.
+To patch the kernel, do the following :
+
+cd /usr/src
+cat PATH_OF_THE_FILE/yam08-2.2.1-patch.diff | patch -p0
+
+cd linux
+run "make menuconfig" (or other) to configure the yam options.
+
+------------
+
+The program yamcfg get or set the parameters of the yam driver
+yamcfg -h gives a minimum help
+
+Example setup of yam0 for 1 serial port (com2) :
+  
+  file /etc/ax25/axports :
+  port0 F1OAT-9 9600 256 2 VHF  (9600 bit/s)  
+
+  commands :
+  setserial /dev/cua0 port 0	# to avoid conflict with yam driver
+  insmod yam
+  yamcfg yam0 io 0x2f8 irq 3
+  ifconfig yam0 hw ax25 f1oat-9 up  
+  
+  
+
+Example setup of yam0,3 for 4 serial port (com1->com4) :
+  
+  file /etc/ax25/axports :
+  port0 F1OAT-9 9600 256 2 VHF  (9600 bit/s)  
+  port1 F1OAT-8 9600 256 2 UHF1 (9600 bit/s)  
+  port2 F1OAT-7 9600 256 2 UHF2 (9600 bit/s)  
+  port3 F1OAT-8 9600 256 2 UHF3 (9600 bit/s)  
+  
+  commands :
+  setserial /dev/cua0 port 0	# to avoid conflict with yam driver
+  setserial /dev/cua1 port 0	# to avoid conflict with yam driver
+  setserial /dev/cua2 port 0	# to avoid conflict with yam driver
+  setserial /dev/cua3 port 0	# to avoid conflict with yam driver
+  insmod yam
+  yamcfg yam2 irq 5
+  yamcfg yam3 irq 7
+  ifconfig yam0 hw ax25 f1oat-9 up  
+  ifconfig yam1 hw ax25 f1oat-8 up  
+  ifconfig yam2 hw ax25 f1oat-7 up  
+  ifconfig yam3 hw ax25 f1oat-6 up  
+  
+
+ 
+Good test !!!
+
+73's Frederic F1OAT and Jean-Paul F6FBB
