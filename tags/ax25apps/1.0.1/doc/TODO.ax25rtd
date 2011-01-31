@@ -1,0 +1,10 @@
+
+What to do next?
+
+- convert the content of README to manual pages
+- Use partly digipeated frames for the AX.25 routing table if we are the
+  next digipeater
+- A solution for IP encapsulation mode changes
+- Support for Flexnet routing information
+- Support PE1CHL's autorouter (Rob, you promised to send me the specs...)
+- A similar program for NET/ROM

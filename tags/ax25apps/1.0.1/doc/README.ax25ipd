@@ -1,0 +1,695 @@
+
+** 
+** This file is a cobbling together of the various notes on ax25ipd.
+** 
+
+                             ax25ipd
+                             =======
+
+This README files pertains to version 1.0.2 of ax25ipd.
+(this document is still incomplete -- the UDP features lack examples)
+
+Overview
+--------
+
+   RFC1226 describes a method of using TCP/IP based networks to transport
+AX.25 frames.  The ax25ipd utility uses this technique to transfer AX.25
+frames in and out of TCP/IP environments.
+
+   The interface to the AX.25 world is via KISS, with ax25ipd emulating
+either a standard KISS TNC or operating as a digipeater.  AX.25 frames
+arriving on the KISS interface are routed to the IP interface and sent
+to the appropriate IP host system.  Incoming frames from the IP interface
+are filtered and sent out the KISS interface.  The operator controls the
+mode (tnc or digipeater), the routing (callsign to ip host mapping), and
+a few sundry controls via a configuration file, read at startup.
+
+   ax25ipd is the Linux incarnation of ax25ip by Mike Westerhof, and is
+not intended to support any OS other than Linux. Although getting it to
+run on BSD should not present too many issues, there has been no attempt
+to retain BSD(Sun) operability since it was updated in an environment
+where there was no access to BSD.
+
+   ax25ipd requires a serial port, and uses a raw socket to gain access 
+to the IP layer of the host's TCP/IP implementation (this requires that 
+ax25ipd be started by root).  ax25ipd also supports using a standard UDP 
+socket in place of the raw socket, although this does not adhere to 
+RFC1226.
+
+
+Modes and Routing
+-----------------
+
+   There are two interfaces into and out of ax25ipd.  The KISS interface
+is a standard serial port, running speeds up to 38400 baud.  The IP
+interface reads and writes packets to an IP network in accordance with
+the specifications in RFC1226.  Several factors determine how AX.25
+frames route within ax25ipd and through the IP network, although some
+basic rules always apply:
+
+   A frame will never leave ax25ipd on the same interface it came in on.
+This fundamental rule eliminates much complexity and much confusion on
+how to set up ax25ipd.
+
+   A frame will never be sent to more than one IP host.  Using an IP
+network as a broadcast media is probably not a good idea, especially
+across the Internet!
+
+  Most other routing factors involve user configuration, and depend
+heavily on the mode of operation.
+
+  In tnc mode, ax25ipd emulates a KISS tnc, and behaves as one would
+expect.  The next destination callsign (either the destination or the
+next digipeater in line) is extracted from frames arriving on the KISS
+interface, and looked up in a routing table (built by the operator in the
+configuration file).  The routing table provides the IP address to which
+this frame should be sent.  The standard CRC is computed, tacked onto the
+frame, and the result is sent off to the target system.  Frames arriving
+from the IP interface have the CRC checked and removed, and are forwarded
+to the KISS interface.
+
+   Digi mode is a little more complicated.  In this mode, ax25ipd is
+assigned a callsign, and acts as a digipeater.  If a frame arriving on
+the KISS interface has ax25ipd's callsign specified as the next digipeater,
+ax25ipd will mark the frame as digipeated by it, look up the next callsign
+in the routing table, compute and append the CRC, and send the frame to
+the specified IP host.  Frames arriving on the IP interface will be
+handled in a similar fashion, but note that in no cases will the frame be
+sent out the same port it arrived in on.
+
+
+Configuration
+-------------
+
+   A single configuration file is used to tailor ax25ipd.  The file is
+usually named "ax25ipd.cfg" and should be located in the same directory
+ax25ipd is executed from.  An example is probably the best way to become
+familiar with configuring ax25ipd.
+
+# Sample Configuration file for ax25ipd
+mode digi
+socket ip
+device /dev/ttya
+speed 9600
+mycall KA9WSB-7
+myalias ILSUN
+beacon every 540
+btext ax25ipd -- digi ka9wsb-7 -- Experimental IP encapsulator
+loglevel 2
+route W1AW-13 handbook.arrl.com 
+route WZ9ZZZ last.one.edu
+param 1 20
+
+The mode command selects the behavior of ax25ipd.  The device line specifies
+the tty device to use, and the speed line selects the baud rate.  Baud
+rates up to 34800 can be used, but 9600 is probably the fastest safe
+speed for serial cables of any distance (remember, KISS has no error
+detection).  The mycall command is required only if you are in digi mode.
+The loglevel command selects the amount of verbosity you want, ranging from
+0 (no output) to 4 (streams of data).  The route command adds entries to
+a static routing table, currently 128 entries deep.  In the example, AX.25
+frames destined for W1AW-13 are forwarded to handbook.arrl.com, frames for
+WZ9ZZZ are sent to last.one.edu, and all others go nowhere.  Specifying the
+word "default" in place of a callsign sets up a default route, used when
+the destination callsign cannot be found in the routing table.  Finally,
+in digi mode, the device on the other end of the KISS interface is probably
+a TNC.  The param command allows you to set the KISS parameters (txdelay,
+slottime, etc).  As many param commands as required can be specified.
+
+The myalias command allows you to specify an alias for this digipeater.
+If you do this, you should probably use the beacon command to ensure
+that you ID regularly.  The beacon every 540 command forces an ID message
+to be sent out the KISS interface every 9 minutes.  Specifying beacon
+after 540 will send the ID packet only if the channel has been idle for
+9 minutes.
+
+Sending a hang-up signal to the ax25ipd process will cause it to reread
+the configuration file and re-initialize itself  (kill -HUP <ax25ipd-pid>).
+
+
+Sample Configuration - NOS-to-NOS
+---------------------------------
+
+   This example shows how to connect a pair of NOS-based PCs together
+using ax25ipd to carry AX.25 traffic.
+
+
+    KA9WSB-3         one.two.com
+  .----------.      .----------.
+  |          |      |          |
+  |          | KISS | UNIX     |   |
+  |  NOS     |------|  host    |---|
+  |   on     |      |          |   |  TCP/IP network
+  |    PC    |      |          |   |
+  `----------'      `----------'   |
+                                   |
+                             (vast distance)
+                                   |
+                                   |   fish.sea.com        W1AW-5
+                                   |   .----------.      .----------.
+                                   |   |          |      |          |
+                                   |   | UNIX     | KISS |          |
+                                   |---|  host    |------|  NOS     |
+                                   |   |          | 1200 |   on     |
+                                       |          | baud |    PC    |
+                                       `----------'      `----------'
+
+
+     Config file:                        Config file:
+      mode tnc                            mode tnc
+      device /dev/ttya                    device /dev/ttya
+      speed 9600                          speed 1200
+      route W1AW-5 fish.sea.com           route KA9WSB-3 one.two.com
+  
+Using this setup, a user could run AX.25 connections between the two PCs.
+Note that while NOS can digipeat, NOS will not automatically allow users
+near W1AW-5 to digipeat through it to reach KA9WSB-3 (i.e. the command
+"C KA9WSB-3 V W1AW-5" will not have the desired result).  This may or may
+not be a problem.
+
+
+Sample Configuration - digi-to-digi
+-----------------------------------
+
+   This example shows how to configure ax25ipd as a pair of digipeaters.
+
+
+                      (KA9WSB-3)
+                     one.two.com
+  .----------.      .----------.
+  |          |      |          |
+  | Standard | KISS | UNIX     |   |
+  |   KISS   |------|  host    |---|
+  |   TNC    |      |          |   |  TCP/IP network
+  | & radio  |      |          |   |
+  `----------'      `----------'   |
+                                   |
+                             (vast distance)
+                                   |
+                                   |    (W1AW-5)
+                                   |   fish.sea.com        W1AW-5
+                                   |   .----------.      .----------.
+                                   |   |          |      |          |
+                                   |   | UNIX     | KISS | Standard |
+                                   |---|  host    |------|   KISS   |
+                                   |   |          | 9600 |   TNC    |
+                                       |          | baud | & radio  |
+                                       `----------'      `----------'
+
+
+     Config file:                        Config file:
+      mode digi                           mode digi
+      mycall KA9WSB-3                     mycall W1AW-5
+      device /dev/ttya                    device /dev/ttya
+      speed 9600                          speed 9600
+      route W1AW-5 fish.sea.com           route KA9WSB-3 one.two.com
+      param 1 20                          param 1 33  
+
+In this setup, the UNIX hosts are "on the air".  No PCs or additional
+hardware are required.  A user near W1AW-5 could read a user near KA9WSB-3
+simply by providing the digipeater path: "c KA9WSB V W1AW-5 KA9WSB-3"
+would work just fine.
+
+
+---------
+
+We have added dual port capibility in DIGI MODE ONLY to allow us to use it
+with a Dataengine. Very little needed changing, but we did not document the 
+changes.  If you really need to know, diff the package against the original,
+which was/is at sunsite.unc.edu.  To specify the second port, do something 
+like this...
+
+#to use the second port, we need to be in digi mode
+mode digi
+#
+#port 0 on my tnc goes to vhf
+mycall ve3djf-12
+myalias vhfdjf
+#
+#port 1 on my tnc goes to uhf.  
+#The callsign and alias must be different for this to work right... 
+mycall2 ve3djf-13
+myalias2 uhfdjf
+#
+
+Everything else is the same.  Note that if you leave out the mycall2 and 
+myalias2 defines, it works just like the original in single port mode.  For
+recieving on the KISS (dual) port, packets are checked against both callsigns
+and aliases.  Whoever is on the other end of the AXIP link can find out what 
+port it came from by looking at the who it got digi'd through, although 
+I can't think of any reason to do that... For transmiting, you go out the 
+port with the callsign matching the digi address.  For example, to go out 
+port 0 in the above example, digi through ve3djf-12 or vhfdjf.
+To go out port 1, digi through ve3djf-13 or uhfdjf.
+
+Deficencies:  If you specify the same callsign on both
+ports, no error is generated, but the way the logic in the code works you
+always go out the upper port (port 1), not port 0.  In TNC mode, there is
+really no way to specify which port to transmit on that I can think of, so
+there is no multiplexing there.  Everything goes out port 0 in TNC mode 
+still.  Lastly, none of the dump routines know anything about ports on the
+KISS interface, so they look the same, with both ports lumped into one.
+
+Let us know if you like this hack, BTW.  In retrospect, we should have 
+written a KISSPlexor (tm:-) HIHI.  I think we will do that next.
+
+
+73! de Jeff / VE3DJF
+Jeff@lnx_rpi.ee.ryerson.ca
+VE3DJF@bbs.VE3RPI.ampr.org
+
+
+AXIP (IP encapsulation of AX.25 frames) daemon by Michael Westerhof.
+ 
+
+
+
+
+
+
+
+Network Working Group                                          B. Kantor
+Request for Comments: 1226                      Univ. of Calif San Diego
+                                                                May 1991
+
+
+            Internet Protocol Encapsulation of AX.25 Frames
+
+Status of this Memo
+
+   This memo describes a method for the encapsulation of AX.25 (the
+   Amateur Packet-Radio Link-Layer Protocol) frames within IP packets.
+   This technique is an Experimental Protocol for the Internet
+   community.  Discussion and suggestions for improvement are requested.
+   Please refer to the current edition of the "IAB Official Protocol
+   Standards" for the standardization state and status of this protocol.
+   Distribution of this memo is unlimited.
+
+The AX.25 Amateur Packet-Radio Link-Layer Protocol
+
+   The AX.25 Amateur Packet-Radio Link-Layer Protocol is described in
+   the publication by that name [1], incorporated here by reference.
+
+   Each AX.25 packet ("frame") is encapsulated in one IP datagram.
+   Normally no AX.25 frame will exceed 330 octets, so fragmentation at
+   the IP layer should not be necessary.  However, experiments with
+   larger AX.25 frame sizes may require the use of standard IP
+   fragmentation and reassembly procedures.
+
+   When an AX.25 frame is encapsulated within an IP packet, HDLC framing
+   elements (flags and zero-stuffing) are omitted, as the IP datagram
+   adequately delimits the beginning and end of each AX.25 frame.  The
+   16-bit CRC-CCITT frame check sequence (normally generated by the HDLC
+   transmission hardware) is included.  In all other respects, AX.25
+   frames are encapsulated unaltered.
+
+   Each such IP datagram shall have a protocol number of 93.
+
+Reference
+
+   [1] AX.25 Amateur Packet-Radio Link-Layer Protocol Version 2.0
+       October 1984.  Available from the American Radio Relay League,
+       Newington CT USA 06111, and other sources.
+
+Security Considerations
+
+   Security issues are not discussed in this memo.
+
+
+
+
+
+Kantor                                                          [Page 1]
+
+RFC 1226            IP Encapsulation of AX.25 Frames            May 1991
+
+
+Author's Address
+
+   Brian Kantor
+   University of California at San Diego
+   Network Operations C-024
+   La Jolla, CA 92093-0214
+
+   Phone: (619) 534-6865
+
+   EMail: brian@UCSD.EDU
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Kantor                                                          [Page 2]
+
+
+
+
+/etc/ax25/ax25ipd.conf for vk5xxx
+
+
+#
+# ax25ipd configuration file for station floyd.vk5xxx.ampr.org
+#
+# Select axip transport. 'ip' is what you want for compatibility
+# with most other gates ...
+#
+socket ip
+#
+# Set ax25ipd mode of operation. (digi or tnc)
+#
+mode tnc
+#
+# If you selected digi, you must define a callsign.  If you selected
+# tnc mode, the callsign is currently optional, but this may change
+# in the future! (2 calls if using dual port kiss)
+#
+#mycall vk5xxx-4
+#mycall2 vk5xxx-5
+#
+# In digi mode, you may use an alias. (2 for dual port)
+#
+#myalias svwdns
+#myalias2 svwdn2
+#
+# Send an ident every 540 seconds ...
+#
+beacon after 540
+btext ax25ip -- tncmode rob/vk5xxx -- Experimental AXIP gateway
+#
+# Serial port, or pipe connected to a kissattach in my case
+#
+device /dev/ttyqd
+#
+# Set the device speed
+#
+speed 9600
+#
+# loglevel 0 - no output
+# loglevel 1 - config info only
+# loglevel 2 - major events and errors
+# loglevel 3 - major events, errors, and AX25 frame trace
+# loglevel 4 - all events
+# log 0 for the moment, syslog not working yet ...
+#
+loglevel 0
+#
+# If we are in digi mode, we might have a real tnc here, so use param to
+# set the tnc parameters ...
+#
+#param 1 20
+#
+# ax.25 route definition, define as many as you need (< 128?)
+# format is route (call/wildcard) (ip host at destination)
+#
+route vk5zeu* 44.136.202.3
+route vk5wsr-1 44.136.202.241
+route vk5wsr-0 44.136.202.241
+route vk5dj-15 44.136.202.241
+route vk5ham* 44.136.202.241
+#
+# a default route. Carefull here, all undefined traffic end's up here.
+#
+route default 44.136.202.241
+#
+
+
+another ax25ipd.cfg
+
+
+# Sample ax25ipd configuration file
+#
+# First select the mode of operation. (digi or tnc)
+#
+socket ip
+#
+mode tnc
+#
+# If you selected digi, you must define a callsign.  If you selected
+# tnc mode, the callsign is currently optional, but this may change
+# in the future!
+#
+mycall ve3rpi-14
+mycall2 ve3rpi-15
+#
+# In digi mode, you may use an alias.
+#
+myalias ryeha1
+myalias2 ryeha2
+#
+# ID every 10 minutes...
+#
+beacon after 540
+btext ax25ipd -- digi jeff -- Experimental IP gateway
+#
+# The tnc or host system must be connected to a serial port.
+#
+device /dev/ttyS1
+#
+# The line speed is set here
+#
+speed 9600
+#
+# loglevel 0 - no output
+# loglevel 1 - config info only
+# loglevel 2 - major events and errors
+# loglevel 3 - major events, errors, and AX25 frame trace
+# loglevel 4 - all events
+#
+loglevel 4
+#
+# If digi mode, we probably have a tnc on the other end of the serial
+# port.  Use the param command to set the KISS parameters (like txdelay!)
+# You can specify as many as you need.
+#
+param 1 20
+#
+# Define some routes.  This example routes all traffic for callsign ka9wsb-7
+# to a host named waveguide.central.sun.com.  You can define as many as
+# required.
+#
+route ve3rpi bbs.ve3rpi.ampr.org
+route ve3rpi-2 ryeham.ee.ryerson.ca
+route qst ryeham.ee.ryerson.ca
+#
+# A catch-all is provided: this line sends all calls not specifically
+# noted in the routing tables to sunbird.central.sun.com.  Use this feature
+# with great care -- the host on the other end may not appreciate all the
+# traffic!
+#
+#route default sunbird.central.sun.com
+#
+
+
+
+ax25ipd.cfg.n8qlb
+
+
+# Sample ax25ipd configuration file (0.4.2 version)
+#
+# First select the mode of operation. (digi or tnc)
+#
+mode tnc
+#
+# The normal mode of operation is using IP datagrams:
+#
+socket ip
+#
+# But you can also use UDP datagrams.  If you don't specify a port number
+# to use, the default will be chosen (usually a Good Idea).
+#
+socket udp
+#
+# If you selected digi, you must define a callsign.  If you selected
+# tnc mode, the callsign is currently optional, but this may change
+# in the future!
+#
+mycall N8QLB-1
+#
+# In digi mode, you may use an alias.
+#
+myalias LINUXX
+#
+# Note that if you use an alias, in order to guarantee you will properly
+# ID every 10 minutes, you MUST specify "beacon every 540" (or so --
+# don't beacon too often, but setting it to 600 might end up squeaking
+# past the 10 minute time if the channel is busy)
+# A possible future enhancement may allow an ID only if necessary (i.e.
+# a packet has been digipeated using the "myalias" id)...
+#
+beacon every 540
+btext ax25ipd -- digi n8qlb -- Experimental IP gateway
+#
+# The tnc or host system must be connected to a serial port.
+#
+device /dev/tnc
+#
+# The line speed is set here
+#
+speed 9600
+#
+# loglevel 0 - no output
+# loglevel 1 - config info only
+# loglevel 2 - major events and errors
+# loglevel 3 - major events, errors, and AX25 frame trace
+# loglevel 4 - all events
+#
+loglevel 0
+#
+# If digi mode, we probably have a tnc on the other end of the serial
+# port.  Use the param command to set the KISS parameters (like txdelay!)
+# You can specify as many as you need.
+#
+param 1 20
+#
+# Define some routes.  This example routes all traffic for callsign ka9wsb-6
+# to a host named sales.central.sun.com, using udp instead of raw ip.  The
+# next line sends all traffic for e3abc-5 to a host at ip address 11.22.33.44,
+# sending the datagrams to udp port 12345.  The last example sends frames
+# addressed to y4xyz-9 and sends them to flim.flam.com, using the ip
+# encapsulation.  You can define as many as required.
+#
+#route n8qlb linux.n8qlb
+#route e3abc-5 11.22.33.44 udp 12345
+#route y4xyz-9 flim.flam.com
+#
+# A catch-all is provided: this line sends all calls not specifically
+# noted in the routing tables to fred.central.sun.com.  Use this feature
+# with great care -- the host on the other end may not appreciate all the
+# traffic!
+#
+route default linux.n8qlb
+#
+ax25ipd.cfg.stock
+# Sample ax25ipd configuration file
+#
+# First select the mode of operation. (digi or tnc)
+#
+mode digi
+#
+# If you selected digi, you must define a callsign.  If you selected
+# tnc mode, the callsign is currently optional, but this may change
+# in the future!
+#
+mycall ka9wsb-7
+#
+# In digi mode, you may use an alias.
+#
+myalias sunord
+#
+# ID every 10 minutes...
+#
+beacon after 540
+btext ax25ipd -- digi ka9wsb-7 -- Experimental IP gateway
+#
+# The tnc or host system must be connected to a serial port.
+#
+device /dev/ttyb
+#
+# The line speed is set here
+#
+speed 9600
+#
+# loglevel 0 - no output
+# loglevel 1 - config info only
+# loglevel 2 - major events and errors
+# loglevel 3 - major events, errors, and AX25 frame trace
+# loglevel 4 - all events
+#
+loglevel 3
+#
+# If digi mode, we probably have a tnc on the other end of the serial
+# port.  Use the param command to set the KISS parameters (like txdelay!)
+# You can specify as many as you need.
+#
+param 1 20
+#
+# Define some routes.  This example routes all traffic for callsign ka9wsb-7
+# to a host named waveguide.central.sun.com.  You can define as many as
+# required.
+#
+route ka9wsb-6 salespuke.central.sun.com
+#
+# A catch-all is provided: this line sends all calls not specifically
+# noted in the routing tables to sunbird.central.sun.com.  Use this feature
+# with great care -- the host on the other end may not appreciate all the
+# traffic!
+#
+#route default sunbird.central.sun.com
+#
+
+
+
+
+Outstanding Issues
+------------------
+
+   There are many outstanding issues with this software.  A partial list,
+in no particular order, appears below.
+
+- Portability!  io.c currently uses BSD-style select but sys5-style termios!
+
+- ICMP messages relating to ax25ipd are ignored.
+
+- Performance of the routing lookups is probably horrid.  Also, a static
+  table is a crock.  Feedback from evaluations and test sites may help
+  determine how this should work.
+
+- Statistics should be added.
+
+- A few more comments in the code would be nice.
+
+
+Comments, Criticism, Enhancements, Problems, Bugs
+-------------------------------------------------
+
+   You can reach the person responsible for ax25ipd at any of the following
+   addresses:
+
+   Mike.Westerhof@Central.Sun.COM
+
+   KA9WSB@WB9YAE
+
+   Mike Westerhof, 17 N Main St, Mt Prospect, IL 60056
+
+-------------------------------------------------------------------------
+Copyright 1991, Michael Westerhof, Sun Microsystems, Inc.
+This software may be freely used, distributed, or modified, providing
+this footer is not removed.
+-------------------------------------------------------------------------
+
