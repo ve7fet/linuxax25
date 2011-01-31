@@ -1,4 +1,4 @@
-Name:           ax25-tools
+Name:          	@PACKAGE_NAME@ 
 Version:        @BASEVERSION@@EXTRAVERSION@
 Release:        1
 Summary:        Tools used to configure an ax.25 enabled computer
@@ -6,10 +6,10 @@ Summary:        Tools used to configure an ax.25 enabled computer
 Group:          Applications/Communications
 License:        GPLv2+
 URL:            http://linuxax25.googlecode.com/
-Source0:        http://code.google.com/p/linuxax25/downloads/detail?name=%{name}-@VERSION@.tar.gz
+Source0:        %{name}-@VERSION@.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-@BASEVERSION@@EXTRAVERSION@-%{release}-root-%(%{__id_u} -n)
-BuildRequires:	libstdc++-devel, libax25-devel >= 1.0.0, zlib-devel
-Requires:	libstdc++, libax25 >= 1.0.0, zlib
+BuildRequires:	libax25-devel >= 1.0.0, zlib-devel
+Requires:	libax25 >= 1.0.0
 
 %description
 ax25-tools is a collection of tools that are used to configure an ax.25 enabled
@@ -54,11 +54,13 @@ as Net/ROM and ROSE configuration.
  * tcp_call - Make a TCP connection
  * yamcfg - configure a YAM interface
 
+THIS VERSION DOES NOT INCLUDE ANY X-UTILITIES.
+
 %prep
 %setup -q -n %{name}-@VERSION@
 
 %build
-%configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
+%configure --without-x --prefix=/usr --sysconfdir=/etc --localstatedir=/var
 make %{?_smp_mflags}
 
 %install
@@ -67,6 +69,9 @@ make install DESTDIR=$RPM_BUILD_ROOT
 make installconf DESTDIR=$RPM_BUILD_ROOT
 
 #don't include these twice
+#remove the ones created in ax25tools (we'll pick them directly later)
+#so they get put in ax25apps-version and rpmbuild doesn't have a fit
+#about files not included
 rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}/
 
 %clean
@@ -75,14 +80,29 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc AUTHORS ChangeLog COPYING README
-%doc %{_docdir}/*
-%config %{_sysconfdir}/ax25/* 
+%doc doc/README.axgetput
+%doc doc/README.dmascc
+%doc doc/README.ttylinkd
+%doc doc/README.user_call
+%doc doc/README.yamdrv
+%doc doc/TIPS.axgetput 
+%config %{_sysconfdir}/ax25/ax25.profile
+%config %{_sysconfdir}/ax25/ax25d.conf
+%config %{_sysconfdir}/ax25/axports
+%config %{_sysconfdir}/ax25/axspawn.conf
+%config %{_sysconfdir}/ax25/nrbroadcast
+%config %{_sysconfdir}/ax25/nrports
+%config %{_sysconfdir}/ax25/rip98d.conf
+%config %{_sysconfdir}/ax25/rsports
+%config %{_sysconfdir}/ax25/rxecho.conf
+%config %{_sysconfdir}/ax25/ttylinkd.conf
 %{_bindir}/*
 %{_sbindir}/*
 %{_mandir}/man?/*
+%{_localstatedir}/ax25/mheard/*
 
 %changelog
-* Fri Jan 29 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
+* Sun Jan 30 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
 - Fixed some of the versioning output for creating files so it is correct
 - Changed configure line to put files where they belong
 - Added some dependencies
