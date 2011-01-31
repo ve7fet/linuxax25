@@ -1,8 +1,0 @@
-libax25 (1.0.1) unstable; urgency=low
-
-  * Initial release.
-  * This version is a modified version of the January 2011 CVS source
-    from http://www.linux-ax25.org/wiki/Main_Page
-  * The forked code is now available from http://linuxax25.googlecode.com
-
- -- Lee Woldanski <ve7fet@tparc.org>  Sun, 30 Jan 2011 21:00:00 -0800
