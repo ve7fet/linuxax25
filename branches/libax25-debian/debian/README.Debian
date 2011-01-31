@@ -1,0 +1,14 @@
+libax25 for Debian
+------------------
+
+This package will conflicts with some files found in libc6-dev. The offending 
+files are:
+	netax25/ax25.h
+	netrose/rose.h
+	netrom/netrom.h
+
+Those files belong to libax25, and as such, this package is marked to replace 
+them. Those files will be overwritten by the ones found in the libax25-dev 
+package.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Sun, 30 Jan 2011 21:00:00 -0800
