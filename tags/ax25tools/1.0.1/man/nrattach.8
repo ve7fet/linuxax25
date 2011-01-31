@@ -1,0 +1,39 @@
+.TH NRATTACH 8 "21 May 1996" Linux "Linux System Managers Manual"
+.SH NAME
+nrattach \- Start a NET/ROM interface
+.SH SYNOPSIS
+.B nrattach [-i inetaddr] [-m mtu] [-v] port
+.SH DESCRIPTION
+.LP
+.B Nrattach
+takes many of the parameters for the port from the nrports(5) file. The
+paclen parameter is used for the device mtu unless overridden by a value on
+the command line. The port argument is the name of a port as given in the
+nrports(5) file.
+.LP
+.B Nrattach
+tries to find the first free NET/ROM device in the system. The devices
+checked are nr0, nr1, nr2 and nr3 in that order. If no free NET/ROM device
+is available an error is generated and the program terminates.
+.SH OPTIONS
+.TP 16
+.BI "\-i inetaddr"
+Set the internet address of the interface. This address may either be a
+dotted decimal address or a host name.
+.TP 16
+.BI "\-m mtu"
+Sets the mtu of the interface. If this value is not given then the value is
+taken from the paclen parameter in nrports.
+.TP 16
+.BI \-v
+Display the version.
+.SH "SEE ALSO"
+.BR netrom (4),
+.BR nrparms (4),
+.BR nrports (5),
+.BR ifconfig (8).
+.SH BUGS
+The program can be run many times with the same arguments creating many
+instances of the same attributes on different devices. Not a good idea.
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

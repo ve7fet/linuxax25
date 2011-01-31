@@ -1,0 +1,13 @@
+# @sysconfdir@/ax25/rxecho.conf
+#
+# This means that packets received on port 'vhfdrop' are copied to 
+# port 'uhfdrop' if they are destined to N0ONE-1 or N0ONE-2. 
+#
+# All packets from port 'uhfdrop' are copied to port 'vhfdrop'.
+#
+# There may be empty lines and an arbirary amount of white space around the
+# tokens but the callsign field must not have any spaces in it. There can be
+# up to MAXCALLS callsigns in the callsign field.
+#
+vhfdrop		2	N0ONE-1,N0ONE-2
+uhfdrop		1	*

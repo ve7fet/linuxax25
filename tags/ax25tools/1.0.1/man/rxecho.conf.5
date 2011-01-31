@@ -1,0 +1,22 @@
+.TH RXECHO.CONF 5 "2 August 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+rxecho.conf \- control rxecho AX.25 packet routing.
+.SH DESCRIPTION
+.LP
+.B Rxecho.conf
+controls the copying of packets between AX.25 ports performed by the program
+rxecho. The format of the configuration file is:
+
+portin	portout		* | callsign...
+
+Each entry in the file represents a one-way packet flow between ports. Any
+packet received on portin is copied to portout, if its destination callsign
+or the next callsign to digipeat the frame is in the list of callsigns. If
+the callsign list is replaced by a \(lq*\(rq then all packets are copied.
+The configuration file may contain comments that begin with a #.
+.SH FILES
+.LP
+/etc/ax25/rxecho.conf
+.SH "SEE ALSO"
+.BR axports (8),
+.BR rxecho (8).

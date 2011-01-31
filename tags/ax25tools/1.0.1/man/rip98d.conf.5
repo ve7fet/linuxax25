@@ -1,0 +1,19 @@
+.TH RIP98.CONF 5 "2 August 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+rip98d.conf \- control RIP98 routing messages.
+.SH DESCRIPTION
+.LP
+.B Rip98d.conf
+controls the transmission of RIP98 routing messages. RIP98 is not a
+broadcast protocol but instead is transmitted individually to each other
+known RIP98 capable system. The list of these systems is kept in the RIP98
+configuration file as a list of host names or IP numbers that are to be
+transmitted to, and messages received from.
+.SH FILES
+.LP
+/etc/ax25/rip98d.conf
+.SH "SEE ALSO"
+.BR arp (8),
+.BR ifconfig (8),
+.BR rip98d (8),
+.BR route (8).

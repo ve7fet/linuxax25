@@ -1,0 +1,48 @@
+.TH MHEARDD 8 "27 August 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+mheardd \- collect information about packet activity
+.SH SYNOPSIS
+.B mheardd [-f] [-l] [-n number] [-p [!]port1[,port2,..]] [-v]
+.SH DESCRIPTION
+.LP
+.B Mheardd
+is a daemon that collects the statistics about the activity on all the AX.25
+channels that are configured. The list generated is available for viewing by
+the
+.BR mheard (1)
+program. The information collected is a superset of the information normally
+collected by similar mheard programs and this is reflected in the options
+available for the viewing program. Logging to the system log file may be
+enabled which will enable monitoring of pathalogical conditions, for example
+invalid frame types and invalid/unknown protocol IDs.
+.SH OPTIONS
+.TP 10
+.BI \-f
+Deletes the existing mheard logging file at program startup, this is not the
+default.
+.TP 10
+.BI \-l
+Enables logging to the system log file. The default is off.
+.TP 10
+.BI "\-n number"
+Sets the number of entries in the activity list file, the default is 100. The
+minimum value allowed is 10 and the maximum is 1000.
+.TP 10
+.BI "\-p [!]port1[,port2,..]"
+With -p, you instruct mheardd to only listen on specified ax25 ports. 
+You may give more ports, seperated by ','.
+If you introduce the port(s) by a leading '!', then mheardd will listen
+on all ports except those you specified.
+.TP 10
+.BI \-v
+Display the version.
+.SH FILES
+.LP
+/var/ax25/mheard/mheard.dat
+.br
+/etc/ax25/axports
+.SH "SEE ALSO"
+.BR mheard (1),
+.BR ax25 (4).
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

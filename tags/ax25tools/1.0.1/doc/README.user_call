@@ -1,0 +1,59 @@
+This is the first version of the user_call utilities. They are little
+program,s to allow users of ax25d and the node to initiate outgoing AX.25,
+NET/ROM and Rose connections. They are very powerful program because it can
+pretend to be someone else, so be careful !
+
+My testing has been within the confined of the node, but the comments here
+apply equally well to use via ax25d.
+
+Ax25_call takes at least three parameters:
+
+ax25_call <port> <my callsign> <remote callsign> [<digipeaters> ...]
+
+Netrom_call takes three parameters:
+
+netrom_call <port> <my callsign> <remote address>
+
+Rose_call takes four parameters:
+
+rose_call <port> <my callsign> <remote callsign> <remote Rose address>
+
+The <port> is the name of a local AX.25, NET/ROM or Rose port as defined in
+the axports, nrports or rsports files respectively. <my callsign> is the
+callsign that this connection appears to have come from, ie the local
+*user*. It has nothing to do with your AX.25 port callsign.
+
+Ax25_call must have at least the callsign of the remote user and a set of
+optional digipeaters.
+
+The <remote address> for netrom_call may be of two forms, either the remote
+node callsign, or a combination of the remote node alias and remote node
+callsign seperated by a ':'. Netrom_call only connects to the remote
+callisgn, the full address is sent to the local user for information.
+
+The <remote callsign> for rose_call is the "service" at the remote Rose
+node, ie USERS or any other valid AX.25 callsign, <remote Rose address> is
+the ten-digit Rose address of the remote node.
+
+To start any of these from within the node, you will need to add a line like
+the following to the /etc/ax25/node.conf file, this example uses rose_call:
+
+ExtCmd	BBS 0 root /usr/sbin/rose_call rose_call rose %S k4dpz 3100352392
+
+This assumes that rose_call is installed in /usr/sbin which is the default.
+This will create a new command "BBS" for the node, which when typed will
+connect the user to the callsign K4DPZ at remote Rose node 3100352392. The
+callsign of the local user is where the %S appears in the line, it is
+substituted by node for the users callsign. See node.conf(5) for more
+details of the syntax.
+
+Setting up these programs via ax25d is also quite simple and is similar
+conceptually to the example above.
+
+All of these programs generates errors that are received by the local user,
+so if there are any problems then the local user will be able to quote the
+message to you.
+
+Give them a whirl and let me know how you go.
+
+Jonathan
