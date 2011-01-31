@@ -9,6 +9,6 @@ They were build on a clean install of CentOS 5.5. They should be pretty portable
 
 If you are installing on a system other than CentOS, you may need to re-build the RPM's.
 
-This isn't too hard to do, in fact we have outlined the process for you on [[RPM_Packages|this page]].
+This isn't too hard to do, in fact we have outlined the process for you on [RPM_Packages building RPM's] .
 
 You may need to edit the .spec file for your distribution to correct the dependency library names in order to get it to build cleanly.
