@@ -1,0 +1,57 @@
+This package was debianized by Lee Woldanski <ve7fet@tparc.org> on
+Sun, 30 Jan 2011 21:00:00 -0800.
+
+It was downloaded from http://linuxax25.googlecode.com 
+
+Upstream Author(s):
+
+    Michael Westerhof
+    Michael Durrant VE3PNX <mdurrant@arcturusnetworks.com>
+    D. Jeff Dionne VE3DJF <Jeff@lnx_rpi.ee.ryerson.ca>
+    Rob Mayfield VK5XXX/VK5ZEU <mayfieldrob@mail.dec.com>
+    Terry Dawson VK2KTJ <terry@animats.net>
+    Cathryn Mataga <cathryn@junglevision.com>
+    Steve Fraser VK5ASF
+    Joerg Reuter <jreuter@poboxes.com>
+    Llaus Kudielka OE1KIB
+    Phil Karn KA9Q <karn@qualcomm.com>
+    Jeff White N0POY
+    Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+    Heikki Hannikainen OH7LZB <oh7lzb@sral.fi>
+    Alan Cox GW4PTS <alan@cymru.net>
+    Jean-Paul for rose decoding
+    Jeroen Vreeken for INP decoding
+    Alexander Tietzel DG6XA <TIETZE_A@etech.fh-hamburg.de>
+    Steve Henson G6IXS <shenson@nyx.cs.du.edu>
+    Mark Wahl
+    Werner Almesberger
+
+
+Copyright:
+
+    Copyright (C) 2011 Various Authors (above)
+
+License:
+
+    This package is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2 of the License, or (at your option) any later version.
+
+    This package is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this package; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+On Debian systems, the complete text of the GNU Lesser General
+Public License can be found in `/usr/share/common-licenses/LGPL'.
+
+The Debian packaging is (C) 2011, Lee Woldanski <ve7fet@tparc.org> and
+is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
+
+# Please also look if there are files or directories which have a
+# different copyright/license attached and list them here.

@@ -1,0 +1,16 @@
+The Debian Package ax25apps
+----------------------------
+
+This version is a modified version of the January 2011 CVS source
+from http://www.linux-ax25.org/wiki/Main_Page
+
+It re-arranges the source code in to proper directorys, updates to
+current autotools, and corrects build dependencies.
+
+Until the modified source makes it into CVS, it will be available
+from http://linuxax25.googlecode.com
+
+Package name has been changed froma ax25-apps to ax25apps for better
+compatibility with package naming policies.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Sun, 30 Jan 2011 21:00:00 -0800
