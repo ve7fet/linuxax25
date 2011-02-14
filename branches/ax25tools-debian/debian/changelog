@@ -1,3 +1,9 @@
+ax25tools (1.0.1-1) unstable; urgency=low
+
+  * Updated spec file for building rpm's with.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Mon, 14 Feb 2011 10:30:00 -0800
+
 ax25tools (1.0.1) unstable; urgency=low
 
   * Initial Release.

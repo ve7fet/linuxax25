@@ -1,4 +1,9 @@
 ax25tools (1.0.1)
+	* Modified the spec file to handle different dependency names for Mandriva
+
+-- Lee Woldanski <ve7fet@tparc.org>  Mon, 14 Feb 2011 10:30:00 -0800
+
+ax25tools (1.0.1)
 	* Changed package name from ax25-tools to ax25tools for better compliance with 
 	  most distributions package naming policies.
         * Changed the way version is parsed in configure.ac to be passed to the rpm
