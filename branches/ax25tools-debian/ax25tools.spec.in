@@ -1,6 +1,6 @@
 Name:          	@PACKAGE_NAME@ 
 Version:        @BASEVERSION@@EXTRAVERSION@
-Release:        1
+Release:        2 
 Summary:        Tools used to configure an ax.25 enabled computer
 
 Group:          Applications/Communications
@@ -9,9 +9,9 @@ URL:            http://linuxax25.googlecode.com/
 Source0:        %{name}-@VERSION@.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-@BASEVERSION@@EXTRAVERSION@-%{release}-root-%(%{__id_u} -n)
 %if 0%{?mdkversion}
-	BuildRequires:	libax25-devel >= 1.0.0, zlib1-devel
+BuildRequires:	libax25-devel >= 1.0.0, zlib1-devel
 %else
-	BuildRequires:	libax25-devel >= 1.0.0, zlib-devel
+BuildRequires:	libax25-devel >= 1.0.0, zlib-devel
 %endif
 Requires:	libax25 >= 1.0.0
 
