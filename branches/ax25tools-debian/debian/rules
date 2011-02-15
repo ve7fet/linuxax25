@@ -72,8 +72,8 @@ install-arch:
 
 	# Add here commands to install the arch part of the package into
 	# debian/tmp.
-	$(MAKE) DESTDIR=$(CURDIR)/debian/ax25-tools install
-	$(MAKE) DESTDIR=$(CURDIR)/debian/ax25-tools installconf
+	$(MAKE) DESTDIR=$(CURDIR)/debian/ax25tools install
+	$(MAKE) DESTDIR=$(CURDIR)/debian/ax25tools installconf
 
 	dh_install -s
 # Must not depend on anything. This is to be called by
