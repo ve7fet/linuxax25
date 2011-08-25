@@ -1,6 +1,6 @@
 Name:           libax25
 Version:        @BASEVERSION@@EXTRAVERSION@
-Release:        2 
+Release:        1 
 Summary:        AX.25 library for hamradio applications
 
 Group:          System Environment/Libraries
@@ -62,6 +62,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*.so
 
 %changelog
+* Wed Aug 24 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.2-1
+- Bug fix and revert a bad patch
+
 * Fri Jan 28 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
 - Fixed some of the versioning output for creating files so it is correct
 - Changed configure line to put files where they belong
