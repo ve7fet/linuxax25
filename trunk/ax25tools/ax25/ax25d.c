@@ -577,7 +577,7 @@ close_link:
 							/* close link */
 							/* setproctitle("ax25d [%s]: disconnecting", User); */
 							close(new);
-							return 0;
+							exit(0);
 						}
 login:
 						/* setproctitle("ax25d [%s]: login", User); */
@@ -614,11 +614,15 @@ login:
 							closelog();
 
 						/* Make root secure, before we exec() */
-						setgroups(0, grps);	/* Strip any supplementary gid's */
-						setgid(raxl->gid);
-						setuid(raxl->uid);
+						/* Strip any supplementary gid's */
+						if (setgroups(0, grps) == -1)
+							exit(1);
+						if (setgid(raxl->gid) == -1)
+							exit(1);
+						if (setuid(raxl->uid) == -1)
+							exit(1);
 						execve(raxl->exec, argv, NULL);
-						return 1;
+						exit(1);
 
 					default:
 						close(new);
