@@ -1,15 +1,15 @@
 Source: libax25
 Priority: extra
 Maintainer: Lee Woldanski <ve7fet@tparc.org>
-Build-Depends: debhelper (>= 7), autotools-dev, libc6-dev, zlib1g-dev
-Standards-Version: 3.7.3
+Build-Depends: debhelper (>= 7), autotools-dev, libc6-dev (>= 2), zlib1g-dev
+Standards-Version: 3.8.0
 Section: libs
 Homepage: http://linuxax25.googlecode.com 
 
 Package: libax25-dev
 Section: libdevel
 Architecture: any
-Depends: libax25 (= ${binary:Version}), libc6-dev, zlib1g-dev
+Depends: libax25 (= ${binary:Version}), libc6-dev (>= 2), zlib1g-dev
 Replaces: libc6-dev
 Description: AX.25 development libraries for building and running Amateur Radio programs 
  AX.25 development libraries and Header files for building and running programs

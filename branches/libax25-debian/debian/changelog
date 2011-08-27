@@ -2,14 +2,14 @@ libax25 (1.0.2) unstable; urgency=low
 
   * Added versioning to the shared libs to differentiate the ones generated
     by this source.
-  * Revert a patch from the linux-ax25.org source to axutils.c (version 1.5) that
-    changed the behaviour of the ax25_ntoa function (breaking it). aton should
-    only convert the callsign, not modify it. Specifically, if the callsign has
-    a -0 SSID, DON'T DROP IT! This breaks existing software that does use -0! If
-    some program doesn't like SSID -0, then IT should be modified to drop it or do
-    whatever you want. The AX.25 spec says callsigns MUST have an SSID from 0-15.
-    The ax25_ntoa function strictly should perform the conversion to ascii, and
-    that is it.
+  * Revert a patch from the linux-ax25.org source to axutils.c (version 1.5) 
+    that changed the behaviour of the ax25_ntoa function (breaking it). aton 
+    should only convert the callsign, not modify it. Specifically, if the 
+    callsign has a -0 SSID, DON'T DROP IT! This breaks existing software that 
+    does use -0! If some program doesn't like SSID -0, then IT should be 
+    modified to drop it or do whatever you want. The AX.25 spec says callsigns 
+    MUST have an SSID from 0-15. The ax25_ntoa function strictly should 
+    perform the conversion to ascii, and that is it.
 
  -- Lee Woldanski <ve7fet@tparc.org>  Fri, 26 Aug 2011 22:00:00 -0800
 
