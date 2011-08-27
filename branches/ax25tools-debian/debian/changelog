@@ -1,4 +1,4 @@
-ax25tools (1.0.2-1) unstable; urgency=low
+ax25tools (1.0.2) unstable; urgency=low
 
   * Fix for CVE-2011-2910: check return status of setuid()
   * Manually patched against upstream source current as of August 27, 2011
