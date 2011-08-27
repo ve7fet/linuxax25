@@ -1693,7 +1693,11 @@ again:
                 pututline(&ut_line);
                 endutent();
 
-		setsid();
+		/* become process group leader, if we not already are */
+		if (getpid() != getsid(0)) {
+			if (setsid() == -1)
+				exit(1);
+		}
 
                 chargc = 0;
                 envc = 0;

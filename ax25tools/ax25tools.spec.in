@@ -1,6 +1,6 @@
 Name:          	@PACKAGE_NAME@ 
 Version:        @BASEVERSION@@EXTRAVERSION@
-Release:        2 
+Release:        1 
 Summary:        Tools used to configure an ax.25 enabled computer
 
 Group:          Applications/Communications
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/ax25/mheard/*
 
 %changelog
+* Sat Aug 27 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.2-1
+-Bumped version coincident with new release.
+
 * Sun Jan 30 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
 - Fixed some of the versioning output for creating files so it is correct
 - Changed configure line to put files where they belong

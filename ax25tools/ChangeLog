@@ -1,3 +1,10 @@
+ax25tools (1.0.2)
+	* Fix for CVE-2011-2910: check return status of setuid()
+	* Manually patched against upstream source current as of August 27, 2011
+	* Minor grammar fixes
+
+-- Lee Woldanski <ve7fet@tparc.org>  Sat, 27 Aug 2011 15:00:00 -0800
+
 ax25tools (1.0.1)
 	* Modified the spec file to handle different dependency names for Mandriva
 

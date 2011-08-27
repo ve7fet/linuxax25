@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT(ax25tools, 1.0.1, linux-hams@vger.kernel.org)
+AC_INIT(ax25tools, 1.0.2, linux-hams@vger.kernel.org)
 AC_CONFIG_SRCDIR([pathnames.h])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
