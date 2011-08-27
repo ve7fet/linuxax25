@@ -19,7 +19,7 @@
 
 #include "../pathnames.h"
 
-char nodes_usage[]  = "usage: rsparms -node add|del nodeaddr[/mask] port neighbour [digis...]\n       rsparms -node list\n";
+char nodes_usage[]  = "usage: rsparms -nodes add|del nodeaddr[/mask] port neighbour [digis...]\n       rsparms -node list\n";
 
 /* print the Rose neighbour whose number is supplied */
 void printnb(char *neigh)

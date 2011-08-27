@@ -10,7 +10,7 @@
  *
  * Author(s):
  *
- *	Iñaki Arenaza (EB2EBU) <iarenaza@escomposlinux.org>
+ *	Iñki Arenaza (EB2EBU) <iarenaza@escomposlinux.org>
  *
  * History:
  *
