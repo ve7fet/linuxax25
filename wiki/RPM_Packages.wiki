@@ -48,6 +48,9 @@ Delete the extracted tarball folders, rpmbuild will extract them elsewhere when 
 In order to build the RPM's from scratch, you will need to make sure you have installed the following packages:
 
 {{{
+gcc 
+gcc-c++ 
+kernel-devel
 rpm-build
 glibc
 zlib-devel
