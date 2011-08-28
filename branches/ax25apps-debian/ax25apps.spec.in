@@ -1,6 +1,6 @@
 Name:          	@PACKAGE_NAME@ 
 Version:        @BASEVERSION@@EXTRAVERSION@
-Release:        2
+Release:        3 
 Summary:        AX.25 ham radio applications
 
 Group:          Applications/Communications
@@ -65,6 +65,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/ax25/ax25rtd/*
 
 %changelog
+* Sat Aug 27 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-3
+- Going to re-build the distro rpm on CentOS 6, so bumped the release
+
 * Sun Jan 30 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
 - Fixed some of the versioning output for creating files so it is correct
 - Changed configure line to put files where they belong
