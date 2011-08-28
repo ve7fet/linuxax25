@@ -1,0 +1,26 @@
+AX25 Apps
+========
+
+ax25ipd now supports baud rates of 57600 and 115200. Previous versions (<1.1.0) will
+default to 9600 if:
+	* your system does not support rates >9600
+	* if you try and set a speed >38400
+
+This WILL cause problems if you are configured to use >38400 and are using THIS version
+of ax25ipd (>=1.1.0) to communicate with an older version that "thinks" it is
+configured to use a speed >38400 (since it will default to 9600).
+
+Note that this only affects serial communications and not IP/UDP.
+
+  -- Lee Woldanski <ve7fet@tparc.org>  Thu 20 Jan 2011 14:00:00 -0800
+
+Listen now by default is NOT setuid root which means that normal users will
+not be able to run it out of the box.  If you want everyone to run
+listen then after installing the binaries as root type
+  chmod u+s /usr/bin/listen
+This version includes support for Mat DG2FEF's new AX.25 subsystem. Binaries
+are not interchangeable but require recompile.
+
+
+  - Craig Small <csmall@small.dropbear.id.au>
+

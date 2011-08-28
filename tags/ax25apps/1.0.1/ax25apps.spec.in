@@ -1,0 +1,79 @@
+Name:          	@PACKAGE_NAME@ 
+Version:        @BASEVERSION@@EXTRAVERSION@
+Release:        3 
+Summary:        AX.25 ham radio applications
+
+Group:          Applications/Communications
+#ax25ipd is BSD licensed, rest is GPLv2+
+License:        GPLv2+ and BSD
+URL:            http://linuxax25.googlecode.com/
+Source0:        %{name}-@VERSION@.tar.gz
+BuildRoot:      %{_tmppath}/%{name}-@VERSION@-%{release}-root-%(%{__id_u} -n)
+%if 0%{?mdkversion}
+BuildRequires:	libax25-devel >= 1.0.1, libncurses-devel
+%else
+BuildRequires:	libax25-devel >= 1.0.1, ncurses-devel
+%endif
+Requires:       libax25 >= 1.0.0
+
+%description
+This package provides specific user applications for hamradio that use AX.25 
+Net/ROM or ROSE network protocols:
+
+ * axcall: a general purpose AX.25, NET/ROM and ROSE connection program.
+ * axlisten: a network monitor of all AX.25 traffic heard by the system.
+ * ax25ipd: an RFC1226 compliant daemon which provides encapsulation of
+   AX.25 traffic over IP.
+ * ax25mond: retransmits data received from sockets into an AX.25 monitor
+   socket.
+
+%prep
+%setup -q -n %{name}-@VERSION@
+
+%build
+%configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
+make %{?_smp_mflags}
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
+make installconf DESTDIR=$RPM_BUILD_ROOT
+
+#don't include these twice
+#remove the ones created in ax25apps (we'll pick them directly later)
+#so they get put in ax25apps-verison and rpmbuild doesn't have a fit
+#about files not included
+rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root,-)
+%doc AUTHORS ChangeLog COPYING README
+%doc doc/COPYING.ax25ipd  doc/HISTORY.ax25ipd doc/README.ax25ipd  doc/README.ax25rtd  doc/TODO.ax25rtd
+%config %{_sysconfdir}/ax25/ax25ipd.conf
+%config %{_sysconfdir}/ax25/ax25mond.conf
+%config %{_sysconfdir}/ax25/ax25rtd.conf
+%{_bindir}/call
+%{_bindir}/listen
+%{_sbindir}/ax25ipd
+%{_sbindir}/ax25mond
+%{_sbindir}/ax25rtd
+%{_sbindir}/ax25rtctl
+%{_mandir}/man?/*
+%{_localstatedir}/ax25/ax25rtd/*
+
+%changelog
+* Sat Aug 27 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-3
+- Going to re-build the distro rpm on CentOS 6, so bumped the release
+
+* Sun Jan 30 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
+- Fixed some of the versioning output for creating files so it is correct
+- Changed configure line to put files where they belong
+- Added some dependencies
+- Added a make installconf line to install the default config files during packaging
+- Identified the config files
+
+* Sat Jun 27 2009 Ralf Baechle <ralf@linux-mips.org>
+- Initial version

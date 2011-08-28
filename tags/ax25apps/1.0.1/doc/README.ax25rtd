@@ -1,0 +1,306 @@
+ax25rtd with DG2FEF/DG1KJD Linux-AX.25 Kernel NOTES:
+
+- Here is an example ax25rtd.conf file:
+
+ax25-maxroutes 256
+ip-maxroutes 256
+ip-encaps-dev ipax0
+
+[sp0]
+ax25-learn-routes yes
+ax25-learn-only-mine yes
+ip-adjust-mode no
+ip-learn-routes no
+arp-add yes
+
+[ipax0]
+arp-add yes
+ip-learn-routes yes
+
+- ax25-learn-only-mine has to be on for now, since ax25rtd is not able to
+  recognize digipeater paths yet when this node is part of it.
+
+- ax25rtd will be replaced as soon as possible by something reasonable, so
+  this is only a temporary solution
+
+- ipax0 must be up when ax25rtd is startet
+
+- all other listeners (ax25d et al) must be registrated at this point of
+  time, too
+
+- There must be an entry for ipax0 in /etc/axports, here is an example:
+
+ipax0 dg1kjd-10 76800 256 7 IP-encap device
+
+----
+   Jens
+
+
+*****************************************************************
+* Please send all comments and suggestions regarding ax25rtd to *
+* Klaus Kudielka (klaus.kudielka@ieee.org).                     *
+*****************************************************************
+
+Just a quick small README... 
+This will hopefully go into the man pages ASAP.
+
+Ax25routed
+----------
+
+/usr/sbin/ax25rtd
+
+This is a daemon that:
+
+- emulates the ceased "autorouter" of Linux Kernel AX.25
+- sets up ARP entries automagically
+- may adjust IP routes and encapsulation mode 
+  (although I really do not recomment to use this feature...)
+
+The "autorouter" is not really an autorouter. It just listens to the AX.25
+traffic on your ports and uses this information to setup AX.25 routes. This
+can be turned on or off by altering the configuration file
+/etc/ax25/ax25rtd.conf.
+
+Ax25routed provides a socket /var/ax25/ax25rtd/control which is used for
+runtime maintainance through ax25rtctl or to set up new routes by other
+daemons (a Flexnet router, perhaps?)
+
+On startup ax25rtd reads the configuration file and afterwards preloads
+the caches from the files /var/ax25/ax25rtd/ax25_routes and
+/var/ax25/ax25rtd/ip_routes. On SIGTERM or ax25rtctl --save it saves the
+caches to those files.
+
+ax25rtd.conf
+---------------
+
+The file /etc/ax25/ax25rtd.conf is the configuration file for ax25rtd.
+The parameters of the options shown here are the default values except the
+ones marked with (example)
+
+ax25-maxroutes	256
+ip-maxroutes	256
+
+	The maximum size of the three lists / caches. On overflow,
+	ax25rtd will substitute the oldest entry with the new one.
+[1k2]
+	This marks the beginning of per-port definitions. Note that
+	you have to use port names as defined in axports(5) here,
+	anywhere else you may use the port or the device name.
+
+ax25-learn-routes no
+
+	Set this to "yes", ax25rtd will add the routing information
+	for every heard frame (with complete digipeater path) to the 
+	kernel AX.25 routing table. Note that ax25rtd's internal cache
+	will be updated anyway, regardless of this option.
+
+ax25-learn-only-mine no
+
+	If you set it to "yes", only frames that are sent to (1) the
+	interface callsign, (2) any of the listeners on this device, or
+	(3) the callsigns specified by ax25-more-mycalls will be used
+	to update the internal cache and (depending on
+	ax25-learn-routes) the kernel routing table.
+
+ax25-add-path db0ach	(example)
+
+	This is useful on DAMA digipeaters. In this case, the DAMA
+	master has to be used for _every_ AX.25 connection, thus
+	ax25rtd will add this digipeater(s) to every target we learn
+	that has no digipeater path (yet). "db0ach" is just an
+	example here.
+
+ax25-more-mycalls dl1bke dl1bke-8	(example)
+
+	You can specify more calls as calls here that belong to
+	this interface... "dl1bke" and "dl1bke-8" are examples.
+
+ip-learn-routes no
+
+	If set to "yes", ax25rtd will modify the IP routing table if it
+	receives an IP frame (directed to us). This is dangerous!
+
+	It should not screw up your routing table, though. Ax25rtd 
+	recognizes the netmask of the device and will adjust the route 
+	only if it fits the netmask and the old route points to
+	one of the devices ax25rtd knows about (hence an AX.25 device).
+
+	The problems begin if you have more than one port and a user
+	is able to hear your outgoing traffic on at least two of them. 
+	Due to technical reasons ax25rtd adjusts the route _after_ the 
+	kernel has sent the reply to the received TCP frame already.  
+	This has technical reasons. 
+
+	If the remote does the same both are switching between the two
+	ports.
+
+	Don't use this feature unless you know what you are doing.
+
+	It _should_ be safe do enable this on one-port machines, although
+	I strongly recommend to set a network route instead, i.e.:
+
+		route add -net 44.0.0.0 scc3
+
+	Note that ax25rtd's internal cache will be updated anyway,
+	regardless of this option.
+
+irtt <irtt>
+
+       If ip-learn-routes is enabled this will assign newly added
+       routes an initial round trip time (IRTT) for TCP. <irtt>
+       is measured in msec, hence
+
+               irtt 10000
+
+       sets the irtt to 10 seconds. A value of 0 disables this
+       feature (default).
+
+ip-adjust-mode no
+
+	If you set this option to "yes" ax25rtd will change the IP
+	encapsulation mode according to the last received IP frame.
+
+	The problem with this option is that the kernel AX.25 sends
+	a received IP frame to the IP layer regardless if it was
+	sent in UI frame encapsulation "mode datagram (dg)" or 
+	in I frame encaps, hence in an AX.25 connection, "mode virtual 
+	connect (vc)". The Linux kernel will respond to this frame
+	before ax25rtd can adjust the mode. If the remote does the
+	same... You get the picture.
+
+	Don't use this feature unless you know what you are doing.
+
+arp-add	no
+
+	This option, if set to "yes", changes the ARP table to the 
+	source callsign of the received frame. It should be harmless,
+	just has the the effect that if it is a new entry, the Linux
+	ARP code will send one ARP request before ax25rtd has adjust
+	the ARP table. If there was already an existing ARP entry
+	for this IP route, one IP datagram will be sent to the old
+	address. Not really a problem, I hope.
+
+
+Ax25rtctl
+---------
+
+/usr/sbin/ax25rtctl <option>
+
+This is a program to control ax25rtd. There are several options:
+
+ax25rtctl --add ax25 <callsign> <dev> <time> [digipeater]
+ax25rtctl -a ax25 <callsign> <dev> <time> [digipeater]
+
+	Add an entry to the AX.25 routing table. If time is "0"
+	this entry will be marked permanent, hence: the daemon will not
+	overwrite this route.
+
+ax25rtctl --del ax25 <callsign> <dev>
+ax25rtctl -d ax25 <callsign> <dev>
+
+	Remove an entry from the AX.25 routing table.
+
+ax25rtctl --add ip <ip> <dev> <time> <call> <ipmode>
+ax25rtctl -a ip <ip> <dev> <time> <call> <ipmode>
+
+	Add an entry to the IP routing table. If time is "0" the
+	entry will be marked permanent.
+
+ax25rtctl --del ip <ip>
+ax25rtctl -d ip <ip>
+
+	Remove an entry from the IP routing table.
+
+ax25rtctl --list ax25
+ax25rtctl -l ax25
+
+	Lists the content of the cache for the AX.25 routing table.
+
+ax25rtctl --list ip
+ax25rtctl -l ip
+
+	Lists the content of the cache for the IP routing table.
+
+ax25rtctl --expire <minutes>
+ax25rtctl -e <minutes>
+
+	Removes the entries older than <minutes> from the caches and
+	the kernel routing tables.
+
+ax25rtctl --save
+ax25rtctl -s
+
+	Saves the AX.25 and IP cache to /var/ax25/ax25rtd/ax25_routes and
+	/var/ax25/ax25rtd/ip_routes (or the files specified in
+	/etc/ax25/ax25rtd.conf).
+
+ax25rtctl --reload
+ax25rtctl -r
+
+	Reloads the config file /etc/ax25/ax25rtd.conf. This will
+	*not* affect the caches or the heard list.
+
+ax25rtctl --shutdown
+ax25rtctl -q
+
+	Same as 'killall -TERM ax25rtd' ;-)
+
+
+ax25rtctl --version
+ax25rtctl -V
+	
+	Guess what...
+
+
+Note that you can specify either the port name (as defined in
+/etc/ax25/axports) or the interface name (shown by ifconfig). If names
+conflict (i.e. port scc0 is in fact interface scc3, and vica versa), the
+interface name has precedence over the port name.  Example:
+
+   ax25rtctl --add ax25 dl0tha scc3 0 db0pra
+
+is equivalent to
+
+   ax25rtctl --add ax25 dl0tha 9k6 0 dbpra
+
+All commands return port names in their output, though.
+With one exception: ax25_routes and ip_routes use interface names.
+
+
+/var/ax25/ax25rtd/control
+----------------------------
+
+The commands recognized on this socket are:
+
+add ax25 <callsign> <dev> <time> [<digipeater>]
+	Add an AX.25 route
+add ip   <ip> <dev> <time> <call> <mode>
+	Add an IP route & mode   
+
+del ax25 <callsign> <dev>
+	Remove an AX.25 route from cache an kernel routing table
+del ip   <ip>
+	Remove an IP route from cache and kernel routing table
+
+list [ax25|ip]
+	List cache entries.
+
+reload
+	Reload config
+
+save
+	Save cache
+
+expire <min>
+	Expire cache entries older than <min> minutes
+
+shutdown
+	Save caches and exit
+
+version
+	Prints the version of the ax25rtd
+
+
+Note that every command has to end with a '\n', and every line of the
+response ends with an '\n' as well. The last line of a cache list
+is just a period alone on a line (".\n").
