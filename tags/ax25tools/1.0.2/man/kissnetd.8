@@ -1,0 +1,31 @@
+.TH KISSNETD 8 "13 October 1996" Linux "Linux System Managers Manual"
+.SH NAME
+kissnetd \- Create a virtual network.
+.SH SYNOPSIS
+.B kissnetd [-f size] [-v] [-p <num> | tty... ]
+.SH DESCRIPTION
+.LP
+.B Kissnetd
+allows the creation of a virtual network of AX.25 systems that use the KISS
+protocol. Each tty named on the command line is opened and any KISS frames
+received on tty is copied to the other ttys. This allows a number of AX.25
+systems to share the same packets.
+.SH OPTIONS
+.TP 10
+.BI "\-p num"
+Automaticaly allocate num Unix98 slave pty's via /dev/ptmx.
+These are written to stdout and could be parsed by your startup scripts.
+"kissnetd -p 3" is an comfortable alternative to "kissnetd /dev/ptmx /dev/ptmx /dev/ptmx".
+.TP 10
+.BI "\-f size"
+This sets the maximum KISS frame size that the program will handle. The
+default is 512 bytes which will be adequate under most circumstances.
+.TP 10
+.BI \-v
+Enables verbose mode, tracing of data passed is sent to standard output.
+.SH "SEE ALSO"
+.BR kissattach (8),
+.BR kissparms (8),
+.BR mkiss (8).
+.SH AUTHOR
+Frederic Rible F1OAT <frible@teaser.fr>

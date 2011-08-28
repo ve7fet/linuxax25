@@ -1,0 +1,69 @@
+.TH AX25_CALL 8 "4 July 1999" Linux "Linux Programmer's Manual"
+.SH NAME
+ax25_call, netrom_call, rose_call, tcp_call \- make an AX.25, NET/ROM,
+ROSE or TCP connection
+.SH SYNOPSIS
+.B ax25_call [-c] [-i paclen] [-o paclen] port local_call remote_call [digipeaters ...]
+.sp
+.B netrom_call [-c] [-i paclen] [-o paclen] port local_call remote_netrom_addr
+.sp
+.B rose_call [-c] [-i paclen] [-o paclen] port local_call remote_call remote_rose_addr
+.sp
+.B tcp_call [-c] [-i paclen] [-o paclen] remote_addr remote_port
+.SH DESCRIPTION
+.LP
+.B ax25_call, netrom_call, rose_call and tcp_call
+establish an AX.25, NET/ROM, ROSE or a TCP connection in a manner
+suitable for calling from either the
+.B ax25d
+program directly, or from the
+.B node
+program as an external command. By setting the command line arguments
+appropriately it is possible to set the local callsign from which the call
+will be made. No translation of the end of lines is performed by this
+program.
+.sp
+For
+.B netrom_call
+the  remote_netrom_addr  parameter may either be in the form of a single
+callsign or as a NET/ROM alias  and  callsign  pair separated by
+colon. For example NMCLUS:GB7BPQ. 
+.sp
+For
+.B rose_call
+the remote_rose_addr  parameter  must be in the form of a ten digit
+ROSE address.
+.sp
+For
+.B tcp_call
+the remote_addr parameter must be a dotted-quad IP address or a
+hostname and the remote_port must be a service name (see services(5))
+or a port number.
+.SH OPTIONS
+.TP 12
+.BI \-c
+Enables zlib based compression on the incoming connection. Compression
+algorithm is the same as in LinuxNode (see node(8)).
+.TP 12
+.BI "\-i paclen"
+The maximum frame length to be used on the incoming connection. The
+default is 256 for ax25_call and rose_call, 236 for netrom_call and
+1024 for tcp_call.
+.TP 12
+.BI "\-o paclen"
+The maximum frame length to be used on the outgoing connection. The
+default is 256 for ax25_call and rose_call, 236 for netrom_call and
+1024 for tcp_call.
+.SH FILES
+.br
+/etc/ax25/axports
+.br
+/etc/ax25/nrports
+.br
+/etc/ax25/rsports
+.SH "SEE ALSO"
+.BR ax25(4), netrom(4), rose(4), tcp(4).
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+.br
+Tomi Manninen OH2BNS <oh2bns@sral.fi>

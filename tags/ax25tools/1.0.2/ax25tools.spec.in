@@ -1,0 +1,120 @@
+Name:          	@PACKAGE_NAME@ 
+Version:        @BASEVERSION@@EXTRAVERSION@
+Release:        1 
+Summary:        Tools used to configure an ax.25 enabled computer
+
+Group:          Applications/Communications
+License:        GPLv2+
+URL:            http://linuxax25.googlecode.com/
+Source0:        %{name}-@VERSION@.tar.gz
+BuildRoot:      %{_tmppath}/%{name}-@BASEVERSION@@EXTRAVERSION@-%{release}-root-%(%{__id_u} -n)
+%if 0%{?mdkversion}
+BuildRequires:	libax25-devel >= 1.0.0, zlib1-devel
+%else
+BuildRequires:	libax25-devel >= 1.0.0, zlib-devel
+%endif
+Requires:	libax25 >= 1.0.0
+
+%description
+ax25-tools is a collection of tools that are used to configure an ax.25 enabled
+computer. They will configure interfaces and assign callsigns to ports as well
+as Net/ROM and ROSE configuration.
+
+ * m6pack - handle multiple 6pack TNCs on a single interface
+ * ax25d - general purpose AX.25, NET/ROM and Rose daemon
+ * axctl - configure/Kill running AX.25 connections
+ * axparms - configure AX.25 interfaces
+ * axspawn - allow automatic login to a Linux system
+ * beacon - transmit periodic messages on an AX.25 port
+ * bpqparms - configure BPQ ethernet devices
+ * mheardd - display AX.25 calls recently heard
+ * rxecho - transparently route AX.25 packets between ports
+ * mheard - collect information about packet activity
+ * dmascc_cfg - configure dmascc devices
+ * sethdlc - get/set Linux HDLC packet radio modem driver port information
+ * smmixer - get/set Linux soundcard packet radio modem driver mixer
+ * smdiag - Linux soundcard packet radio modem driver diagnostics utility
+ * kissattach - Attach a KISS or 6PACK interface
+ * kissnetd - create a virtual network
+ * kissparms - configure KISS TNCs
+ * mkiss - attach multiple KISS interfaces
+ * net2kiss - convert a network AX.25 driver to a KISS stream on a pty
+ * netromd - send and receive NET/ROM routing messages
+ * nodesave - saves NET/ROM routing information
+ * nrattach - start a NET/ROM interface
+ * nrparms - configure a NET/ROM interface
+ * nrsdrv - KISS to NET/ROM serial converter
+ * rsattach - start a ROSE interface
+ * rsdwnlnk - user exit from the ROSE network
+ * rsmemsiz - monitor the ROSE subsystem
+ * rsusers.sh - monitor AX.25, NET/ROM and ROSE users
+ * rsparms - configure a ROSE interface
+ * rsuplnk - User entry into the ROSE network
+ * rip98d - RIP98 routing daemon
+ * ttylinkd - TTYlink daemon for AX.25, NET/ROM, ROSE and IP
+ * ax25_call - Make an AX.25 connection
+ * netrom_call - Make a NET/ROM connection
+ * rose_call - Make a ROSE connection
+ * tcp_call - Make a TCP connection
+ * yamcfg - configure a YAM interface
+
+THIS VERSION DOES NOT INCLUDE ANY X-UTILITIES.
+
+%prep
+%setup -q -n %{name}-@VERSION@
+
+%build
+%configure --without-x --prefix=/usr --sysconfdir=/etc --localstatedir=/var
+make %{?_smp_mflags}
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
+make installconf DESTDIR=$RPM_BUILD_ROOT
+
+#don't include these twice
+#remove the ones created in ax25tools (we'll pick them directly later)
+#so they get put in ax25apps-version and rpmbuild doesn't have a fit
+#about files not included
+rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}/
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root,-)
+%doc AUTHORS ChangeLog COPYING README
+%doc doc/README.axgetput
+%doc doc/README.dmascc
+%doc doc/README.ttylinkd
+%doc doc/README.user_call
+%doc doc/README.yamdrv
+%doc doc/TIPS.axgetput 
+%config %{_sysconfdir}/ax25/ax25.profile
+%config %{_sysconfdir}/ax25/ax25d.conf
+%config %{_sysconfdir}/ax25/axports
+%config %{_sysconfdir}/ax25/axspawn.conf
+%config %{_sysconfdir}/ax25/nrbroadcast
+%config %{_sysconfdir}/ax25/nrports
+%config %{_sysconfdir}/ax25/rip98d.conf
+%config %{_sysconfdir}/ax25/rsports
+%config %{_sysconfdir}/ax25/rxecho.conf
+%config %{_sysconfdir}/ax25/ttylinkd.conf
+%{_bindir}/*
+%{_sbindir}/*
+%{_mandir}/man?/*
+%{_localstatedir}/ax25/mheard/*
+
+%changelog
+* Sat Aug 27 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.2-1
+-Bumped version coincident with new release.
+
+* Sun Jan 30 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.1-1
+- Fixed some of the versioning output for creating files so it is correct
+- Changed configure line to put files where they belong
+- Added some dependencies
+- Added a make installconf line to install the default config files during packaging
+- Identified the config files
+
+* Sat Jun 27 2009 Ralf Baechle <ralf@linux-mips.org>
+- Initial version

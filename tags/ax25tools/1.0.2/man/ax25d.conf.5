@@ -1,0 +1,290 @@
+.TH AX25D.CONF 5 "17 January 1997" Linux "Linux Programmer's Manual"
+.SH NAME
+ax25d.conf \- ax25d configuration file.
+.SH DESCRIPTION
+.LP
+.B Ax25d.conf
+controls the functioning of
+.B ax25d.
+Its purpose is to specify on which ports to listen on, which applications
+are available, and to whom they are available to. The configuration file is
+common to both AX.25, NET/ROM and Rose and their is similarity between the
+two parts of the file.
+.sp 1
+The general layout for an entry for a given port is as follows:
+.sp 1
+.RS
+interface control
+.br
+callsign entry 1
+.br
+ .
+.br
+ .
+.br
+callsign entry n
+.RE
+.sp 1
+The
+.B "interface control"
+line determines which port and callsigns apply to the following
+.B "callsign entry"
+lines, until the next
+.B "interface control"
+is read. There are four different variants of the
+.B "interface control"
+line:
+.sp 1
+.RS
+1. [AX.25 Port Name]
+.br
+2. [Callsign VIA AX.25 Port Name]
+.br
+3. <NET/ROM Port Name>
+.br
+4. {Callsign VIA Rose Port Name}
+.RE
+.sp 1
+Version 1 allows the following
+.B "callsign entry"
+lines to listen on the AX.25 port specified by the AX.25 port name using the
+default callsign of that AX.25 port.
+.sp 1
+Version 2 allows the following
+.B "callsign entry"
+lines to listen on the AX.25 port specified by the AX.25 port name using the
+callsign specified instead of the default callsign of that AX.25 port.
+Specifying a * for the AX.25 port name allows the following
+.B "callsign entries"
+to be valid for all the operating AX.25 ports using the callsign specified. VIA
+can be abbreviated to just V. If the callsign has an asterisk appended to it
+then the system will be listening on the port with the callsign, but as a
+pseudo-digipeater instead of being the normal destination callsign.
+.sp 1
+Version 3 allows the following
+.B "callsign entry"
+lines to listen on the NET/ROM port specified by the NET/ROM port name using
+the default callsign of that NET/ROM port.
+.sp 1
+Version 4 allows the following
+.B "callsign entry"
+lines to listen on the Rose port using the specified Rose port name using
+the callsign specified as the service access point (SAP). A * may be
+specified for a callsign to allow matching to any incoming Call Requests
+with any SAP.
+.sp 1
+The
+.B "callsign entry"
+lines have a similar layout for both AX.25, NET/ROM and Rose, the layout is:
+.sp 1
+.RS
+peer window t1 t2 t3 idle n2 mode uid exec args...
+.RE
+.sp 1
+All values must be entered for all entries even when they are not used (ie
+window for NET/ROM, just enter a * instead), The meanings of each of the
+fields is given below. All timings apart from the idle value are given in
+seconds, the idle values is given in minutes.
+.RS
+.TP 10
+.B peer
+This specifies the callsign of the remote end of the connection that should
+have the following parameters and executable set up for them. The syntax of
+the peer argument is explained below.
+.TP 10
+.B window
+This sets the the value of the window size, if a value of * is entered in this
+field then the default value for the port is taken from the \(lqparameters\(rq
+entry (see below) or lacking such an entry, the kernel default value is used.
+This entry is used by AX.25 but not by NET/ROM or Rose.
+.TP 10
+.B t1
+This sets the the value of the T1 timer, if a value of * is entered in this
+field then the default value for the port is taken from the \(lqparameters\(rq
+entry (see below) or lacking such an entry, the kernel default value is used.
+This entry is used by both AX.25 and NET/ROM but not by Rose.
+.TP 10
+.B t2
+This sets the the value of the T2 timer, if a value of * is entered in this
+field then the default value for the port is taken from the \(lqparameters\(rq
+entry (see below) or lacking such an entry, the kernel default value is used.
+This entry is used by both AX.25 and NET/ROM but not by Rose.
+.TP 10
+.B t3
+This sets the the value of the T3 timer, if a value of * is entered in this
+field then the default value for the port is taken from the \(lqparameters\(rq
+entry (see below) or lacking such an entry, the kernel default value is used.
+This entry is used by AX.25 but not by NET/ROM or Rose.
+.TP 10
+.B idle
+This sets the the value of the idle timer, if a value of * is entered in
+this field then the default value for the port is taken from the
+\(lqparameters\(rq entry (see below) or lacking such an entry, the kernel
+default value is used.
+.TP 10
+.B n2
+This sets the the value of the N2 counter, if a value of * is entered in this
+field then the default value for the port is taken from the \(lqparameters\(rq
+entry (see below) or lacking such an entry, the kernel default value is used.
+This entry is used by both AX.25 and NET/ROM but not by Rose.
+.TP 10
+.B mode
+This is a set of flags that control the various properties associated with
+the incoming connection. The flags are single letters, may be in either
+upper or lower case, and there may not be any spaces between them. If no
+flags are to be specified either a 0, - or a * must be entered instead. The
+valid mode flag letters are:
+.RS
+.TP 5
+.B D
+Do not allow connections that have passed via any digipeaters. AX.25 only.
+.TP 5
+.B L
+Do not allow this station to connect, they are Locked out.
+.TP 5
+.B N
+Check that the NET/ROM neighbour is allowed, currently unused.
+.TP 5
+.B Q
+Do not make an entry into the log file for this connection.
+.TP 5
+.B V
+Validate the callsign of the incoming connection, currently unused.
+.RE
+.TP 10
+.B uid
+This is the userid that the following command should run under when
+executing.
+.TP 10
+.B exec
+This is the executable that should be executed when an incoming connection
+matches the criteria of both the
+.B "interface control"
+and the
+.B "callsign entry".
+.TP 10
+.B args...
+These are the optional arguments that are passed to the executable. All of
+the arguments are passed literally apart from the following:
+.RS
+.TP 5
+.B %d
+The name of the port that the connection is on.
+.TP 5
+.B %U
+The username (callsign) of the remote station in upper case without the SSID.
+.TP 5
+.B %u
+The username (callsign) of the remote station in lower case without the SSID.
+.TP 5
+.B %S
+The username (callsign) of the remote station in upper case with the SSID.
+.TP 5
+.B %s
+The username (callsign) of the remote station in lower case with the SSID.
+.TP 5
+.B %P
+The nodename of the remote station in upper case without the SSID.
+This is only valid under NET/ROM and Rose, under AX.25 a % is substituted instead.
+.TP 5
+.B %p
+The nodename of the remote station in lower case without the SSID.
+This is only valid under NET/ROM and Rose, under AX.25 a % is substituted instead.
+.TP 5
+.B %R
+The nodename of the remote station in upper case with the SSID.
+This is only valid under NET/ROM and Rose, under AX.25 a % is substituted instead.
+.TP 5
+.B %r
+The nodename of the remote station in lower case with the SSID.
+This is only valid under NET/ROM and Rose, under AX.25 a % is substituted instead.
+.TP 5
+.B %%
+A %.
+.RE
+.RE
+.sp 1
+The
+.B peer
+argument is dependant upon whether AX.25, NET/ROM or Rose is being used. There are
+five formats of this argument:
+.sp 1
+.RS
+1. default
+.br
+2. parameters
+.br
+3. callsign
+.br
+4. callsign@node
+.br
+5. @node
+.RE
+.sp 1
+The first version is used by AX.25, NET/ROM and Rose to specify that all callsigns
+on a given port are to be matched. The default line is usually the last of the
+.B "callsign entry"
+lines, so that more specific entries may have the chance to be matched
+first.
+.sp 1
+The second version is not a
+.B "callsign entry"
+that is used by any incoming connections. It is a means to specify default
+values for parameters such as Window, T1, T2, T3, Idle and N2. It is used for
+both AX.25, NET/ROM and Rose.
+.sp 1
+The third version is used by both AX.25, NET/ROM and Rose to specify the callsign of
+the remote station to match the
+.B "callsign entry"
+line. If no SSID is specified then the callsign will be matched with any
+that has the same callsign and any SSID. Specifying an SSID causes the
+callsign to be matched exactly. In the case of NET/ROM and Rose this entry does not
+specify which node the originating callsign comes from.
+.sp 1
+The fourth version is used by NET/ROM and Rose to specify the callsign of the remote
+station and the remote node to match the
+.B "callsign entry"
+line. If no SSID is specified in the callsign section then the callsign will
+be matched with any that has the same callsign and any SSID. Specifying an
+SSID causes the callsign to be matched exactly.
+.sp 1
+The fifth version is used by NET/ROM and Rose to specify only the address of the
+remote node to match the
+.B "callsign entry"
+line. This entry will mean that all remote users at the given node will
+match the entry.
+.sp 1
+Comments may be embedded in the configuration file by placing a # in the
+first column.
+.sp 1
+ax25d can now honour AX.25 TCP/IP mode-VC connections in a special way.
+Therefore, a new port specific option "parameters_extAX25" is available, with
+the following options, which are seperated by space.
+.TP 5
+parameters_extAX25
+VC-debug
+.br
+VC-reject-login|VC-wait-login|VC-login-ok
+.br
+VC-disc-on-linkfailure-msg, VC-send-failure-msg, VC-log-connections
+.br
+Recommended settings in ax25d.conf:
+.br
+  parameters_extAX25 VC-wait-login VC-disc-on-linkfailure-msg VC-log-connections
+.br
+or
+.br
+  parameters_extAX25 VC-reject-login VC-send-failure-msg VC-log-connections
+.br
+
+.SH FILES
+.LP
+/etc/ax25/ax25d.conf
+.SH "SEE ALSO"
+.BR ax25 (4),
+.BR netrom (4),
+.BR rose (4),
+.BR axports (5),
+.BR nrports (5),
+.BR rsports (5),
+.BR ax25d (8).

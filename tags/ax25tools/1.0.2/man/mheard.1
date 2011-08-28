@@ -1,0 +1,74 @@
+.TH MHEARD 1 "19 August 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+mheard \- display AX.25 calls recently heard.
+.SH SYNOPSIS
+.B mheard [-d cmns] [-n] [-o cfpt] [-v] [port...]
+.SH DESCRIPTION
+.LP
+.B Mheard
+displays information about most recently heard AX.25 callsigns, the interface
+upon which they were heard, the total packets heard, the time
+at which the last one was heard and other information.
+.B Mheard
+displays different information, in different orders depending on the
+settings of the arguments. Information on specific ports can be displayed by
+giving the port names as arguments.
+.SH OPTIONS
+.TP 13
+.BI "\-d cmns"
+Sets the information that is displayed for each AX.25 callsign heard. The
+different arguments are:
+.RS
+.TP 5
+.BI c
+Display all the information with regard to callsigns, from-callsign,
+to-callsign, port name, and any digipeaters that may be in use.
+.TP 5
+.BI m
+Display miscellaneous information, the from-callsign, port name, no frames
+heard, the last type of frames heard, and which different PIDs have been
+heard from that station.
+.TP 5
+.BI n
+Display the default information. This is the from-callsign, port name, no frames
+heard and the date and time last heard.
+.TP 5
+.BI s
+Displays statistics about the station heard, the from-callsign, port name,
+no I frames, no S frames, no U frames, time first heard, and time last
+heard.
+.RE
+.TP 13
+.BI \-n
+Supress the displaying of titles.
+.TP 13
+.BI "\-o cfpt"
+Sets the ordering of the information displayed. The meanings of the
+different arguments are:
+.RS
+.TP 5
+.BI c
+Sort list by from-callsign.
+.TP 5
+.BI f
+Sort list by number of frames heard.
+.TP 5
+.BI p
+Sort list by port name.
+.TP 5
+.BI t
+Sort list by the time last heard, this is the default.
+.RE
+.TP 13
+.BI \-v
+Display the version.
+.SH FILES
+.LP
+/var/ax25/mheard/mheard.dat
+.br
+/etc/ax25/axports
+.SH "SEE ALSO"
+.BR ax25 (4),
+.BR mheardd (8).
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

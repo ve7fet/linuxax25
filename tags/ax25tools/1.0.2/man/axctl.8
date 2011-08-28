@@ -1,0 +1,67 @@
+.TH AXCTL 8 "2 August 1996" Linux "Linux System Managers Manual"
+.SH NAME
+axctl \- Configure/Kill running AX.25 connections.
+.SH SYNOPSIS
+.B axctl [-v] port dest src window|t1|t2|t3|n2|idle|paclen|kill [parm]
+.SH DESCRIPTION
+.LP
+The
+.B axctl
+command is designed to be a multi-function command that allows miscellaneous
+commands to be issued to the Linux AX.25 protocol layer for existing AX.25
+connections. The connection is uniquely identified via the combination of
+port, destination callsign and source callsign, with that information the
+kernel is able to change the parameters, or abort the connection.
+.LP
+Many of the options are similar to those found in
+.B axparms
+and perform the same function. Only one parameter may be changed on each
+invokation of
+.B axctl.
+.SH OPTIONS
+.TP 20
+.BI \-v
+Displays the version number.
+.TP 20
+.BI "window window"
+Sets the window size for the AX.25 connection.
+.TP 20
+.BI "t1 t1\-timeout"
+Sets the initial T1 timeout value for the AX.25 connection, the value is given in
+seconds.
+.TP 20
+.BI "t2 t2\-timeout"
+Sets the T2 timeout value for the AX.25 connection, the value is given in
+seconds.
+.TP 20
+.BI "t3 t3\-timeout"
+Sets the T3 timeout value for the AX.25 connected, the value is given in
+seconds.
+.TP 20
+.BI "n2 n2\-count"
+Sets the maximum number of tries for the AX.25 connection.
+.TP 20
+.BI "idle idle-timeout"
+Sets the value for the idle timer for the AX.25 connection, the value is in
+minutes.
+.TP 20
+.BI "paclen paclength"
+Sets the maximum packet length that may be transmitted on the AX.25
+connection.
+.TP 20
+.BI "kill"
+Will abort an existing AX.25 connection.
+.SH FILES
+.LP
+/etc/ax25/axports
+.SH "SEE ALSO"
+.BR call (1),
+.BR getsockopt (2),
+.BR setsockopt (2),
+.BR ax25 (4),
+.BR axparms (8),
+.BR axports (5).
+.SH AUTHORS
+.nf
+Joerg Reuter DL1BKE <jreuter@poboxes.com>
+.fi
