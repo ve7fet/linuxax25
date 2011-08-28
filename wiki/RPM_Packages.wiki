@@ -9,7 +9,7 @@ The source tarballs contain a compiled .spec file that should enable you to re-b
 
 If you download a copy if the svn trunk source code, it includes a .spec.in file that will get compiled in to a .spec file after you run ./configure for the first time on the source.
 
-The method prescribed below was carried out on a clean install of CentOS 5.5.
+The method prescribed below was carried out on a clean install of CentOS 6.
 
 
 == Preparation ==
@@ -48,6 +48,7 @@ Delete the extracted tarball folders, rpmbuild will extract them elsewhere when 
 In order to build the RPM's from scratch, you will need to make sure you have installed the following packages:
 
 {{{
+rpm-build
 glibc
 zlib-devel
 ncurses-devel
@@ -78,7 +79,7 @@ To install your packages, you should be able to go in to the rpmbuild/RPMS/i386 
 NOTE: If you are installing the libax25-devel package, you will have to force it:
 
 {{{
-rpm -u --force libax25-1.0.1-1.i386.rpm
+rpm -u --force libax25-1.0.2-1.i386.rpm
 }}}
 
 Why you ask? Well, it is because the glibc package already contains 
