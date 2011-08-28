@@ -5,7 +5,7 @@
 
 RPM binary packages have been created for this project for your convenience.
 
-They were build on a clean install of CentOS 5.5. They should be pretty portable, but there are slight differences between CentOS and Mandriva library names that might cause some grief.
+They were build on a clean install of CentOS 6. They should be pretty portable, but there are slight differences between CentOS and Mandriva library names that might cause some grief.
 
 If you are installing on a system other than CentOS, you may need to re-build the RPM's.
 
