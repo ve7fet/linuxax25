@@ -83,7 +83,7 @@ To install your packages, you should be able to go in to the rpmbuild/RPMS/i386 
 NOTE: If you are installing the libax25-devel package, you will have to force it:
 
 {{{
-rpm -u --force libax25-1.0.2-1.i386.rpm
+rpm -U --force libax25-1.0.2-1.i386.rpm
 }}}
 
 Why you ask? Well, it is because the glibc package already contains 
