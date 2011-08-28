@@ -1,5 +1,0 @@
-# @sysconfdir@/ax25/ax25mond.conf
-#
-# Create an internet socket on port 1234 and transmit the whole
-# AX.25 traffic
-rxtx *:1234
