@@ -14,3 +14,6 @@ AM_CPPFLAGS = -DAX25_SYSCONFDIR=\""$(sysconfdir)/ax25/"\" \
 AX25_SYSCONFDIR=@sysconfdir@/ax25/
 AX25_LOCALSTATEDIR=@localstatedir@/ax25/
 
+install-exec-data:
+	ldconfig
+

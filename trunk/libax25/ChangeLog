@@ -1,3 +1,9 @@
+libax25 1.0.3
+	* Fixed installation issue. Force ldconfig to run on make install to re-
+	  build cache.
+
+-- Lee Woldanski <ve7fet@tparc.org>  Thu, 08 Sep 2011 19:30:00 -0800
+
 libax25 1.0.2
 	* Added versioning to the shared libs to differentiate the ones generated 
 	  by this source.
