@@ -14,6 +14,8 @@ AM_CPPFLAGS = -DAX25_SYSCONFDIR=\""$(sysconfdir)/ax25/"\" \
 AX25_SYSCONFDIR=@sysconfdir@/ax25/
 AX25_LOCALSTATEDIR=@localstatedir@/ax25/
 
-install-exec-data:
-	ldconfig
+install-exec-hook:
+        @echo
+        @echo " *** Remember to run ldconfig as root, or reboot, if applicable to your platform."
+        @echo
 
