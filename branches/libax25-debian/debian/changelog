@@ -1,6 +1,6 @@
-libax25 (1.0.2) unstable; urgency=low
-  * Fixed install bug. Force ldconfig to run and re-build cache during 
-    install.
+libax25 (1.0.3) unstable; urgency=low
+  * Identified install bug. Add warning to run ldconfig or reboot after 
+    install. 
 
  -- Lee Woldanski <ve7fet@tparc.org>  Thu, 08 Sep 2011 19:30:00 -0800
 
