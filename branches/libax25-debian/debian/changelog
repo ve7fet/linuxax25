@@ -1,4 +1,10 @@
 libax25 (1.0.2) unstable; urgency=low
+  * Fixed install bug. Force ldconfig to run and re-build cache during 
+    install.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 08 Sep 2011 19:30:00 -0800
+
+libax25 (1.0.2) unstable; urgency=low
 
   * Added versioning to the shared libs to differentiate the ones generated
     by this source.
