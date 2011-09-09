@@ -22,7 +22,7 @@ AX25_SYSCONFDIR=@sysconfdir@/ax25/
 AX25_LOCALSTATEDIR=@localstatedir@/ax25/
 
 install-exec-hook:
-        @echo
-        @echo " *** Remember to run ldconfig as root, or reboot, if applicable to your platform."
-        @echo
+	@echo
+	@echo " *** Remember to run ldconfig as root, or reboot, if applicable to your platform."
+	@echo
 
