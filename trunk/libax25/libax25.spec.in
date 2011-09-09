@@ -62,6 +62,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*.so
 
 %changelog
+* Thu Sep 08 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.3-1
+- Fix install issue
+
 * Wed Aug 24 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.2-1
 - Bug fix and revert a bad patch
 

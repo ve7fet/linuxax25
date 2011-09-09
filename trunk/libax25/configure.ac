@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT(libax25, 1.0.2, linux-hams@vger.kernel.org)
+AC_INIT(libax25, 1.0.3, linux-hams@vger.kernel.org)
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 AC_CONFIG_SRCDIR([pathnames.h])
 AC_CONFIG_HEADERS([config.h])
