@@ -1,3 +1,9 @@
+ax25apps (1.0.2)
+	* Reverted ax25ipd to compile with -DTERMIO vs. -DTERMIOS. Using the latter 
+	  causes ax25ipd to randomly send garbage traffic on some platforms.
+
+-- Lee Woldanski <ve7fet@tparc.org>  Mon, 12 Sep 2011 20:30:00 -0800
+
 ax25apps (1.0.1)
 	* Modified the spec file to handle different dependency names for Mandriva
 
