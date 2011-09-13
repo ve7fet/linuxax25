@@ -3,7 +3,7 @@ Section: hamradio
 Priority: extra
 Maintainer: Lee Woldanski <ve7fet@tparc.org>
 Build-Depends: debhelper (>= 7), autotools-dev, libncurses5-dev, libax25-dev
-Standards-Version: 3.7.3
+Standards-Version: 3.8.0
 Homepage: http://linuxax25.googlecode.com
 
 Package: ax25apps
