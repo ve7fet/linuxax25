@@ -1,0 +1,205 @@
+.TH AX25IPD.CONF 5 "7 July 1997" Linux "Linux Programmer's Manual"
+.SH NAME
+ax25ipd.conf \- Control the operation of ax25ipd.
+.SH DESCRIPTION
+.LP
+The
+.B ax25ipd.conf
+file controls the operation of the ax25ipd(8) program. The operation of the
+config file can best be seen in an example:
+.LP
+#
+.br
+# ax25ipd configuration file for station floyd.vk5xxx.ampr.org
+.br
+#
+.br
+# Select axip transport. 'ip' is what you want for compatibility
+.br
+# with most other gates ...
+.br
+#
+.br
+socket ip
+.br
+#
+.br
+# Set ax25ipd mode of operation. (digi or tnc)
+.br
+#
+.br
+mode tnc
+.br
+#
+.br
+# If you selected digi, you must define a callsign.  If you selected
+.br
+# tnc mode, the callsign is currently optional, but this may change
+.br
+# in the future! (2 calls if using dual port kiss)
+.br
+#
+.br
+# mycall vk5xxx-4
+.br
+# mycall2 vk5xxx-5
+.br
+#
+.br
+# In digi mode, you may use an alias. (2 for dual port)
+.br
+#
+.br
+# myalias svwdns
+.br
+# myalias2 svwdn2
+.br
+#
+.br
+# Send an ident every 540 seconds ...
+.br
+#
+.br
+# beacon after 540
+.br
+# btext ax25ip -- tncmode rob/vk5xxx -- Experimental AXIP gateway
+.br
+#
+.br
+# Serial port, ethertap interface, or pipe connected to a kissattach in my case
+.br
+# alternatively, if you have the kernel module bpqether:
+.br
+# if you use tun/tap or ethertap instead of kissattach you may say, without
+.br
+# leading slashes (!! - that's how ax25ipd consideres using the tty kiss
+.br
+# driver or tun/tap or ethertap):
+.br
+#   with tun/tap:
+.br
+#     device foobar
+.br
+#   with ethertap (obsolete):
+.br
+#     device tap0
+.br
+# make sure you set a mycall above, or say axparms foobar -setcall te1st
+.br
+# note: the device will be up when you assign an ip address
+.br
+# _after_ starting ax25rtd (which initializes the device), start ax25d
+.br
+# with bpqether or pty, you do not need to care about the speed
+.br
+# tun/tap: as descriped in /usr/src/linux/Documentatioa/networking/tuntap.txt,
+.br
+# make a device # like this:
+.br
+#   crw-r--r--    1 root     root      10, 200 Nov 26 13:32 tun
+.br
+# with the command mknod /dev/net/tun c 10 200
+.br
+# As serial port, you could assign physical ports like ttyS0 or ptys.
+.br
+# ax25ipd supports BSD-style pseudo-terminals as well as the Unix98 pty's.
+.br
+# If the tty argument is "/dev/ptmx", then Unix98 behaviour
+.br
+# will automaticaly take effekt. With Unix98 pty's, the slave tty name
+.br
+# could not be forseen. That's why ax25ipd will print the corresponding
+.br
+# slave pty name as a separate line on stdout.
+.br
+#
+.br
+#device ampr
+.br
+device /dev/ttyp0
+.br
+#
+.br
+# Set the device speed
+.br
+#
+.br
+speed 9600
+.br
+#
+.br
+# loglevel 0 - no output
+.br
+# loglevel 1 - config info only
+.br
+# loglevel 2 - major events and errors
+.br
+# loglevel 3 - major events, errors, and AX25 frame trace
+.br
+# loglevel 4 - all events
+.br
+# log 0 for the moment, syslog not working yet ...
+.br
+#
+.br
+loglevel 4
+.br
+#
+.br
+# If we are in digi mode, we might have a real tnc here, so use param to
+.br
+# set the tnc parameters ...
+.br
+#
+.br
+# param 1 20
+.br
+#
+.br
+# Broadcast Address definition. Any of the addresses listed will be forwarded
+.br
+# to any of the routes flagged as broadcast capable routes.
+.br
+#
+.br
+broadcast QST-0 NODES-0
+.br
+#
+.br
+# ax.25 route definition, define as many as you need.
+.br
+# format is route (call/wildcard) (ip host at destination)
+.br
+# ssid of 0 routes all ssid's
+.br
+#
+.br
+# route <destcall> <destaddr> [flags]
+.br
+#
+.br
+# Valid flags are:
+.br
+#         b  - allow broadcasts to be transmitted via this route
+.br
+#         d  - this route is the default route
+.br
+#
+.br
+route vk2sut-0 44.136.8.68 b
+.br
+route vk5asf 44.136.188.221 b
+.br
+route vk2abc 44.1.1.1 d
+.br
+#
+.br
+#
+.br
+.LP
+More to come ...
+.SH FILES
+.LP
+/etc/ax25/ax25ipd.conf
+.SH "SEE ALSO"
+.BR ax25ipd (8).
