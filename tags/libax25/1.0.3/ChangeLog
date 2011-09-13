@@ -1,0 +1,131 @@
+libax25 1.0.3
+	* Identified an installation issue. Add a note during install to remind 
+	  users to run ldconfig as root to update cache.
+
+-- Lee Woldanski <ve7fet@tparc.org>  Thu, 08 Sep 2011 19:30:00 -0800
+
+libax25 1.0.2
+	* Added versioning to the shared libs to differentiate the ones generated 
+	  by this source.
+	* Revert a patch from the linux-ax25.org source to axutils.c (version 1.5) that 
+	  changed the behaviour of the ax25_ntoa function (breaking it). aton should 
+	  only convert the callsign, not modify it. Specifically, if the callsign has 
+	  a -0 SSID, DON'T DROP IT! This breaks existing software that does use -0! If 
+	  some program doesn't like SSID -0, then IT should be modified to drop it or do 
+	  whatever you want. The AX.25 spec says callsigns MUST have an SSID from 0-15. 
+	  The ax25_ntoa function strictly should perform the conversion to ascii, and 
+	  that is it. 
+
+-- Lee Woldanski <ve7fet@tparc.org>  Wed, 24 Aug 2011 22:00:00 -0800
+
+libax25 1.0.1
+	* Modified the spec file to handle different dependency names for Mandriva
+
+-- Lee Woldanski <ve7fet@tparc.org>  Mon, 14 Feb 2011 10:30:00 -0800
+
+libax25 1.0.1
+	* Changed the way version is parsed in configure.ac to be passed to the rpm
+	  spec file.
+	* Changed the spec file to install the package in the proper places as well 
+	  as the URL's to point to here. Also added dependency checking.
+
+-- Lee Woldanski <ve7fet@tparc.org>  Fri, 28 Jan 2011 12:00:00 -0800
+
+libax25 1.0.0 
+	* This is a custom release, not associated with the official source. 
+	* This library has been beta for so long, it is time to release version 1.0.0.
+	* Added missing compile flag for ax25io (-lz) in the ax25io/Makefile.am.
+	  Note that it HAS to be in the form libax25io_la_LIBADD for it to be
+	  picked up properly (found this out trying to make the Debian package).
+	* Removed etc files (moved them to ax25-tools where they belong
+	* Removed associated man pages to ax25-tools
+	* Made the libax25.spec file get processed by configure properly
+	* Reverted a couple of Bernard's patches in axutils.c back to what was 
+	  in CVS per discussions with Thomas Osterried
+	* Updated configure scripts for automake 1.10.1 and autoconf 2.61
+	* Fixed configure.ac to do a proper check for zlib.h (to build ax25io)
+	  and abort the configure if zlib is not found
+	* Cleaned up the Makefile.am
+	* Moved source files out of the root folder and in to /lib, /man, and /etc
+	* Added patch from Bernard Pidoux <f6bvp@free.fr> to axutils.c
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 27 Jan 2011 22:00:00 -0800
+
+libax25 0.0.12rc2
+	* ax25_ntoa() does no longer print a zero SSID.  This avoids addresses
+	  like AB3DEF-0 which is general convention anyway.
+
+ -- Ralf Baechle DL5RB <ralf@linux-mips.org> Thu, 10 Sep 2009 18:52:00 +0200
+
+libax25 0.0.12
+	* Fix numerous warnings triggered by modern compilers
+	* Updated to recent autoconf and automake version to keep the code
+	  buildable on modern distributions.
+	* libax25 will again find AX.25 interfaces if if they do not have an
+	  IP address assigned.
+	* Add support for building rpm packages.
+
+ -- Ralf Baechle DL5RB <ralf@linux-mips.org> Sat, 6 Jun 2009 17:00:00 +0100
+
+libax25 0.0.11	
+	* libax25io handles nonblocking io correctly. (PE1RXQ)
+	  THIS BREAKS PRACTICLY EVERY APP USING THIS LIBRARY, FIX THEM!!!
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Fri, 21 Feb 2003 21:33:48 +1100
+
+libax25 0.0.10
+
+ 	* Fixed byte counting in flush_obuf() (PE1RXQ)
+ 	* Fixed buffer overflow in flush_obuf() (PE1RXQ)
+ 	* axio_flush() actually flushes the buffer (PE1RXQ)
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Fri, 29 Mar 2002 08:54:20 +1100
+
+libax25 0.0.9
+
+	* Updated config.guess and config.sub for hppa
+	* Updated stuff for new libtool
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Tue, 28 Aug 2001 10:20:18 +1000
+
+libax25 0.0.8
+	* Included ax25.h and rose.h for axlib.h Closes Debian bug #64102
+
+ -- Craig Small <csmall@small.dropbear.id.au>  NEVER RELEASED
+
+libax25 0.0.7
+	* Added Tomi's patch to fix glibc 2.0 includes
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Mon, 23 Aug 1999 11:23:40 +1000
+
+libax25 0.0.6
+	* Fixed pathnames.h typo
+	* Fixed instructions
+
+ -- Craig Small <csmall@small.dropbear.id.au>  , 19 Jul 1999
+
+libax25 0.0.5
+	* More patches from Tomi for ax25io stuff
+	* Cleaner way of naming config files
+	* The licence use is now obvious
+	* Added axports, rsports and nrports plus their man pages
+
+ -- Craig Small <csmall@small.dropbear.id.au>  ,  5 Jul 1999
+
+libax25 0.0.4
+	* Made some more functions use const args
+	* Split the libaxio library out
+ -- Craig Small <csmall@small.dropbear.id.au>  , 30 Apr 1999
+
+libax25 0.0.3
+	* Added Jean-Pauls ROSE patches
+	* Changed all the convert names to ntoa type names
+	* Added Tomi's axio stuff
+	* Started writing ax25.3 and rose.3
+ -- Craig Small <csmall@small.dropbear.id.au>  , 20 Apr 1999
+
+libax25 0.0.2
+	* Initial version from Terry Dawson's code, split from the old
+	  ax25-utils package.
+ -- Craig Small <csmall@small.dropbear.id.au>  ,  2 Apr 1999
+
