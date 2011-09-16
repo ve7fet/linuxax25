@@ -1,3 +1,10 @@
+ax25tools (1.0.2-1) unstable; urgency=low
+
+  * Re-building against the newer version of libax25 (so they find the
+    right libs).
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 15 Sep 2011 20:00:00 -0800
+
 ax25tools (1.0.2) unstable; urgency=low
 
   * Fix for CVE-2011-2910: check return status of setuid()
