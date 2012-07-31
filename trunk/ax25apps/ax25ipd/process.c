@@ -76,7 +76,7 @@ void from_kiss(unsigned char *buf, int l)
 		return;
 	}
 
-	if (loglevel > 2)
+	if (loglevel > 3)
 		dump_ax25frame("from_kiss: ", buf, l);
 
 	if (digi) {		/* if we are in digi mode */
@@ -166,7 +166,7 @@ void from_ip(unsigned char *buf, int l, struct sockaddr_in *ip_addr)
 		return;
 	}
 
-	if (loglevel > 2)
+	if (loglevel > 3)
 		dump_ax25frame("from_ip: ", buf, l);
 
 	if (digi) {		/* if we are in digi mode */
