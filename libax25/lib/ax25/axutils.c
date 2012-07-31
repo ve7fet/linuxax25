@@ -25,10 +25,10 @@ int ax25_aton_entry(const char *name, char *buf)
 	char c;
 
 	while (ct < 6) {
-		c = toupper(*p);
-
-		if (c == '-' || c == '\0')
+		if (*p == '-' || *p == '\0')
 			break;
+
+		c = toupper(*p);
 
 		if (!isalnum(c)) {
 			printf("axutils: invalid symbol in callsign '%s'\n", name);
