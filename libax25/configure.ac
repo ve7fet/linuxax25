@@ -3,6 +3,9 @@ AC_INIT(libax25, 1.0.3, linux-hams@vger.kernel.org)
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 AC_CONFIG_SRCDIR([pathnames.h])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
+m4_pattern_allow([AM_PROG_AR])
+AM_PROG_AR
 
 # Determine versions for package managers.
 basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
