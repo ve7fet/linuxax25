@@ -629,6 +629,11 @@ int io_error(
 				fprintf (stderr, "message was %d bytes long.\n", bufsize);
 				return 0;
 			}
+			if (errno == ENETDOWN || ENETRESET || ENETUNREACH || EHOSTDOWN || EHOSTUNREACH || ENONET  ) {   /* host closed his udp receiver or dropped the line */
+				perror("icmp reply from user after writing to udp socket");
+				LOGL1("icmp reply from user after writing to udp socket. ignoring. errno=%d!\n", errno);
+				return 0;
+			}
 			if (errno == ENOBUFS) {	/* congestion; sleep + retry */
 				LOGL4("send congestion on raw ip, sleeping and retrying!\n");
 				usleep(100000);
@@ -645,6 +650,11 @@ int io_error(
 			if (errno == EMSGSIZE) {	/* msg too big, drop it */
 				perror("message dropped on udp socket");
 				fprintf(stderr, "message was %d bytes long.\n", bufsize);
+				return 0;
+			}
+			if (errno == ENETDOWN || ENETRESET || ENETUNREACH || EHOSTDOWN || EHOSTUNREACH || ENONET  ) {   /* host closed his udp receiver or dropped the line */
+				perror("icmp reply from user after writing to udp socket");
+				LOGL1("icmp reply from user after writing to udp socket. ignoring. errno=%d!\n", errno);
 				return 0;
 			}
 			if (errno == ENOBUFS) {	/* congestion; sleep + retry */
