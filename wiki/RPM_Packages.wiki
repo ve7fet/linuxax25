@@ -113,4 +113,4 @@ Make sure you have the dependencies installed that are noted above before you tr
 
 If you want to read all about RPM's, here's a good reference:
 
-[http://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/RPM_Guide/ | Fedora RPM Guide]
+[http://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/RPM_Guide/ Fedora RPM Guide]
