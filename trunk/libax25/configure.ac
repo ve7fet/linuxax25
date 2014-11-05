@@ -52,10 +52,22 @@ AM_CONDITIONAL([AX25_H], [test "$has_ax25" = "yes"])
 AC_MSG_CHECKING(for working netrom/netrom.h header file)
 AC_EGREP_HEADER(unsigned int ndigis, netrom/netrom.h, has_netrom=yes, has_netrom=no)
 if test "$has_netrom" = "yes" ; then
-  AC_DEFINE(HAVE_NETROM_NETROM_H, 1, [Define if you have a proper netrom/netrom.h header file.])
+  AC_DEFINE(HAVE_NETROM_NETROM_H, 1, [Define if you have a proper netrom/netrom.h header file])
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
+fi
+AM_CONDITIONAL([NETROM_H], [test "$has_netrom" = "yes"])
+
+AC_MSG_CHECKING(for working netrose/rose.h header file)
+AC_EGREP_HEADER(rose_facilities_struct, netrose/rose.h, has_rose=yes, has_rose=no)
+if test "$has_rose" = "yes" ; then
+  AC_DEFINE(HAVE_NETROSE_ROSE_H, 1, [Define if you have a proper netrose/rose.h header file.])
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+AM_CONDITIONAL([ROSE_H], [test "$has_rose" = "yes"])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
