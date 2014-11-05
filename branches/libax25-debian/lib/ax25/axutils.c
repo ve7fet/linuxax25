@@ -195,17 +195,21 @@ char *ax25_ntoa(const ax25_address *a)
 	for (n = 0, s = buf; n < 6; n++) {
 		c = (a->ax25_call[n] >> 1) & 0x7F;
 
-		if (c != ' ') *s++ = c;
+		if (c != ' ')
+			*s++ = c;
 	}
 	
-	*s++ = '-';
+	/* Convention is:  -0 suffixes are NOT printed */
+	if (a->ax25_call[6] & 0x1E) {
+	       *s++ = '-';
 
-	if ((n = ((a->ax25_call[6] >> 1) & 0x0F)) > 9) {
-		*s++ = '1';
-		n -= 10;
+		if ((n = ((a->ax25_call[6] >> 1) & 0x0F)) > 9) {
+			*s++ = '1';
+			n -= 10;
+		}
+		*s++ = n + '0';
 	}
-	
-	*s++ = n + '0';
+
 	*s++ = '\0';
 
 	return buf;
@@ -278,8 +282,9 @@ int ax25_validate(const char *call)
 	char s[7];
 	int n;
 
-	for (n = 0; n < 6; n++)
+	for (n = 0; n < 6; n++) {
 		s[n] = (call[n] >> 1) & 0x7F;
+	}
 	s[6] = '\0';
 
 	if (strspn(s, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ ") == 6)

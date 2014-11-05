@@ -179,7 +179,6 @@ static int nr_config_init_port(int fd, int lineno, char *line, const char **ifca
 	char *name, *call, *alias, *paclen, *desc;
 	const char *dev = NULL;
 	int found = 0;
-	char call_beautified[10];
 	
 	name   = strtok(line, " \t");
 	call   = strtok(NULL, " \t");
@@ -216,14 +215,13 @@ static int nr_config_init_port(int fd, int lineno, char *line, const char **ifca
 	strupr(call);
 	strupr(alias);
 
-	strncpy(call_beautified, call, sizeof(call_beautified)-1);
-        call_beautified[sizeof(call_beautified)-1] = 0;
-	if (strchr(call_beautified, '-') == NULL && strlen(call_beautified) < 7)
-		strcat(call_beautified, "-0");
+	char *cp;
+	if ((cp = strstr(call, "-0")) != NULL)
+	  *cp = 0;
 
 	found = 0;
 	for (;ifcalls && *ifcalls; ++ifcalls, ++ifdevs) {
-	  if (strcmp(call_beautified, *ifcalls) == 0) {
+	  if (strcmp(call, *ifcalls) == 0) {
 	    found = 1;
 	    dev = *ifdevs;
 	    break;

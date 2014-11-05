@@ -62,6 +62,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*.so
 
 %changelog
+* Tue Nov 04 2014 Lee Woldanski <ve7fet@tparc.org> 1.0.5-1
+- Sync with upstream sources
+
 * Thu Sep 08 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.3-1
 - Fix install issue
 
