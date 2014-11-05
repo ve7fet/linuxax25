@@ -1,5 +1,4 @@
-/* $Id: cache_ctl.c,v 1.4 2009/06/27 22:30:23 ralf Exp $
- *
+/*
  * Copyright (c) 1996 Joerg Reuter (jreuter@poboxes.com)
  *
  * This program is free software; you can redistribute it and/or modify

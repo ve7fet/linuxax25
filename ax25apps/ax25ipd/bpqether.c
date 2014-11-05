@@ -1,5 +1,3 @@
-/* @(#) $Id: bpqether.c,v 1.5 2009/04/22 21:22:01 dl9sau Exp $ */
-
 extern int ttyfd;
 /*
  * this is a port of wampes ethertap whith my extension for bpqether

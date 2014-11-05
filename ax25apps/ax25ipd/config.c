@@ -327,10 +327,22 @@ int parse_line(char *buf)
 			}
 		}
 	
-
+                if (my_udp)
+                        uport = ntohs(my_udp);
 		while ((q = strtok(NULL, " \t\n\r")) != NULL) {
 			if (strcmp(q, "udp") == 0) {
-				uport = DEFAULT_UDP_PORT;
+                                /* uport == 0 should never happen.
+                                 * re-use setting. It costed me a long time
+                                 * to realize that "udp" in ax25ipd.conf
+                                 * is not enough. It used the wrong port;
+                                 * 93 is standard, I configured socket udp 93,
+                                 * but ax25ipd talked to partners on that
+                                 * strange 10093. Even more, ax25ipd.conf's
+                                 * examples for axip did not help - and the
+                                 * manual is far from complete.
+                                 */
+                                if (uport == 0)
+                                        uport = DEFAULT_UDP_PORT;
 				q = strtok(NULL, " \t\n\r");
 				if (q != NULL) {
 					i = atoi(q);

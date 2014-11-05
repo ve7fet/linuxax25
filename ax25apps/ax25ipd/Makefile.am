@@ -9,6 +9,7 @@ ax25ipd_SOURCES = \
 	ax25ipd.h       \
 	process.c       \
 	routing.c       \
+	syslog.c	\
 	bpqether.c
 
 ax25ipd_LDADD = $(AX25_LIB)
