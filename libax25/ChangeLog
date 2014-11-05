@@ -1,3 +1,11 @@
+libax25 1.0.5
+	* Long overdue updating to bring codebase up to sync with official sources,
+	  will keep our file structure to make packaging easier
+	* Already had most of the patches applied, some minor format changes 
+	* Notes from official source indicate SSID -0 patch was reverted (yay!)
+
+-- Lee Woldanski <ve7fet@tparc.org> Tue, 04 Nov 2014 14:30:00 -0800
+
 libax25 1.0.4
 	* Modify axutils.c to better detect and abort on an empty callsign,
 	  preventing a segfault (per F6BVP)

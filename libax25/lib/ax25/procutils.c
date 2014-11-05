@@ -70,15 +70,6 @@ static char *token(char **ptr, const char *delim)
 	return buf;
 }
 
-static char *strip_zero_ssid(char *call)
-{
-	char *cp;
-
-	if ((cp = strstr(call, "-0")) != NULL)
-		*cp = 0;
-	return call;
-}
-
 struct proc_ax25 *read_proc_ax25(void)
 {
 	FILE *fp;
@@ -345,8 +336,6 @@ struct proc_nr_nodes *read_proc_nr_nodes(void)
 		cp = buffer;
 
 		safe_strncpy(new->call,  token(&cp, space), 9);
-		strip_zero_ssid(new->call);
-
 		safe_strncpy(new->alias, token(&cp, space), 6);
 
 		new->w     = safe_atoi(token(&cp, space));
@@ -386,7 +375,6 @@ struct proc_nr_nodes *read_proc_nr_nodes(void)
 			break;
 		if ((cp = nr_config_get_addr(name)) == NULL)
 			break;
-		strip_zero_ssid(cp);
 		safe_strncpy(new->call, cp, 9);
 		if ((cp = nr_config_get_alias(name)) == NULL)
 			break;
@@ -670,7 +658,6 @@ struct proc_nr_nodes *find_node(char *addr, struct proc_nr_nodes *nodes)
 	static struct proc_nr_nodes n;
 	struct proc_nr_nodes *p, *list;
 
-	strip_zero_ssid(addr);
 	list = nodes ? nodes : read_proc_nr_nodes();
 	for (p = list; p != NULL; p = p->next) {
 		if (!strcasecmp(addr, p->call) || !strcasecmp(addr, p->alias)) {
