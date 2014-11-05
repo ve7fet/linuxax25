@@ -1,7 +1,7 @@
 The Debian Package libax25
 ----------------------------
 
-This version is a modified version of the August 2011 CVS source
+This version is a modified version of the November 2014 GIT source
 from http://www.linux-ax25.org/wiki/Main_Page
 
 It re-arranges the source code in to proper directorys, updates to
@@ -11,4 +11,5 @@ conf files from this package (moved to ax25tools).
 Until the modified source makes it into CVS, it will be available
 from http://linuxax25.googlecode.com
 
- -- Lee Woldanski <ve7fet@tparc.org>  Fri, 26 Aug 2011 22:00:00 -0800 
+ -- Lee Woldanski <ve7fet@tparc.org>  Tue, 04 Nov 2014 14:30:00 -0800 
+
