@@ -12,8 +12,8 @@ Architecture: any
 Depends: libax25 (= ${binary:Version}), libc6-dev (>= 2), zlib1g-dev
 Replaces: libc6-dev
 Description: AX.25 development libraries for building and running Amateur Radio programs 
- Provides AX.25 development libraries and Header files for building and running programs
- that are used for Amateur Radio.
+ Provides AX.25 development libraries and Header files for building and 
+ running programs that are used for Amateur Radio.
 
 Package: libax25
 Section: libs
