@@ -152,6 +152,17 @@ int main(int argc, char **argv)
 	    }
         }
 
+	/* we need to close stdin, stdout, stderr: because otherwise
+	 * scripting like ttyname=$(ax25ipd | tail -1) does not work
+	 */
+	if (!isatty(1)) {
+		fflush(stdout);
+		fflush(stderr);
+		close(0);
+		close(1);
+		close(2);
+	}
+
 	/* and let the games begin */
 	io_start();
 

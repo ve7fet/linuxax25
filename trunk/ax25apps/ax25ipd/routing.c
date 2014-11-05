@@ -20,7 +20,10 @@
 struct route_table_entry {
 	unsigned char callsign[7];	/* the callsign and ssid */
 	unsigned char padcall;	/* always set to zero */
-	unsigned char ip_addr[4];	/* the IP address */
+	union {
+		unsigned char ip_addr[4];	/* the IP address */
+		struct in_addr ip_addr_in;
+	};
 	unsigned short udp_port;	/* the port number if udp */
 	unsigned char pad1;
 	unsigned char pad2;
@@ -113,7 +116,7 @@ void route_add(char *host, unsigned char *ip, unsigned char *call, int udpport,
 	/* Log this entry ... */
 	LOGL4("added route: %s %s %s %d %d\n",
 	      call_to_a(rn->callsign),
-	      (char *) inet_ntoa(*(struct in_addr *) rn->ip_addr),
+	      inet_ntoa(rn->ip_addr),
 	      rn->udp_port ? "udp" : "ip", ntohs(rn->udp_port), flags);
 
 	return;
@@ -148,7 +151,7 @@ void route_updatereturnpath(unsigned char *mycall, struct route_table_entry *rn)
 			memcpy(clookup->callsign, mycall, 7);
 			LOGL4("added return route: %s %s %s %d\n",
 	      			call_to_a(mycall),
-				(char *) inet_ntoa(*(struct in_addr *) rn->ip_addr),
+				inet_ntoa(rn->ip_addr),
 	      			rn->udp_port ? "udp" : "ip", ntohs(rn->udp_port));
 
 			clookup->route = rn;
@@ -322,8 +325,7 @@ unsigned char *call_to_ip(unsigned char *call, unsigned char *ipstorage)
 	while (rp) {
 		if (addrmatch(mycall, rp->callsign)) {
 			LOGL4("found ip addr %s\n",
-			      (char *) inet_ntoa(*(struct in_addr *)
-						 rp->ip_addr));
+			      inet_ntoa(rp->ip_addr));
 			return retrieveip(rp->ip_addr, ipstorage);
 		}
 		rp = rp->next;
@@ -345,8 +347,7 @@ unsigned char *call_to_ip(unsigned char *call, unsigned char *ipstorage)
 		}
 		else{
 			LOGL4("found cached ip addr %s\n",
-			      (char *) inet_ntoa(*(struct in_addr *)
-						 clookup->route->ip_addr));
+			      inet_ntoa(clookup->route->ip_addr));
 	
 			return retrieveip(clookup->route->ip_addr, ipstorage);
 		}	
@@ -359,8 +360,7 @@ unsigned char *call_to_ip(unsigned char *call, unsigned char *ipstorage)
 	 */
 	if (default_route) {
 		LOGL4("failed, using default ip addr %s\n",
-		      (char *) inet_ntoa(*(struct in_addr *)
-					 default_route->ip_addr));
+		      inet_ntoa(default_route->ip_addr));
 		return retrieveip(default_route->ip_addr, ipstorage);
 	}
 
@@ -431,7 +431,7 @@ void dump_routes(void)
 	while (rp) {
 		LOGL1("  %s %s %s %d %d\n",
 		      call_to_a(rp->callsign),
-		      (char *) inet_ntoa(*(struct in_addr *) rp->ip_addr),
+		      inet_ntoa(rp->ip_addr),
 		      rp->udp_port ? "udp" : "ip",
 		      ntohs(rp->udp_port), rp->flags);
 		rp = rp->next;
@@ -461,7 +461,7 @@ void *update_dnsthread(void *arg)
 				pthread_mutex_lock(&dnsmutex);
 				* (unsigned *) rp->ip_addr = * (unsigned *) he->h_addr_list[0];  
 				pthread_mutex_unlock(&dnsmutex);
-				LOGL4("DNS returned IP=%s\n", (char *) inet_ntoa(*(struct in_addr *) rp->ip_addr)); 
+				LOGL4("DNS returned IP=%s\n", inet_ntoa(rp->ip_addr)); 
 			}
 		}
 		rp = rp->next;

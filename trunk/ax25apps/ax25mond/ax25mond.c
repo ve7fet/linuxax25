@@ -83,7 +83,7 @@ struct sockaddr *build_sockaddr(const char *name, int *addrlen)
 	char *serv_name;
 	char buf[1024];
 
-	memset((char *) &addr, 0, sizeof(addr));
+	memset(&addr, 0, sizeof(addr));
 	*addrlen = 0;
 
 	host_name = strcpy(buf, name);
@@ -120,7 +120,7 @@ struct sockaddr *build_sockaddr(const char *name, int *addrlen)
 	if (isdigit(*serv_name & 0xff)) {
 		addr.si.sin_port = htons(atoi(serv_name));
 	} else {
-		struct servent *sp = getservbyname(serv_name, (char *) 0);
+		struct servent *sp = getservbyname(serv_name, NULL);
 		endservent();
 		if (!sp)
 			return 0;

@@ -129,7 +129,7 @@ void menu_write_line(WINDOW * win, int ypos, int menu_breite, int reverse,
 int p_dwn_menu(wint * wtab, menuitem * menustr, int starty, int startx)
 {
 	int str_max_length = 0;
-	int cnt = 0, pos;
+	int cnt = 0;
 	int ypos, oldypos;
 	int lines = 0;
 	int c;
@@ -146,7 +146,6 @@ int p_dwn_menu(wint * wtab, menuitem * menustr, int starty, int startx)
 
 	wrefresh(menuwin);
 
-	pos = 0;
 	menu_write_line(menuwin, 0, str_max_length, TRUE,
 			menustr[0].st_ptr);
 	for (ypos = 1; ypos < lines; ypos++)
@@ -241,7 +240,7 @@ int top_menu(wint * wtab, menuitem menustr[], int ystart)
 {
 	int str_max_length = 0;
 	int str_length = 0;
-	int cnt, pos;
+	int cnt;
 	int xpos, oldxpos;
 	int ypos = 0;
 	int items = 0;
@@ -268,7 +267,6 @@ int top_menu(wint * wtab, menuitem menustr[], int ystart)
 
 	wrefresh(menuwin);
 
-	pos = 0;
 	menu_write_item(menuwin, 1, TRUE, menustr[0].st_ptr);
 
 	for (xpos = 1; xpos < items; xpos++)

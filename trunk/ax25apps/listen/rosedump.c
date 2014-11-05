@@ -53,8 +53,6 @@ static void facility(unsigned char *, int len);
 
 void rose_dump(unsigned char *data, int length, int hexdump)
 {
-	unsigned char *source = NULL;
-	unsigned char *dest = NULL;
 	unsigned int len, hlen;
 	unsigned int lci = ((unsigned) (data[0] & 0x0F) << 8) + data[1];
 	lprintf(T_ROSEHDR, "X.25: LCI %3.3X : ", lci);
@@ -64,10 +62,6 @@ void rose_dump(unsigned char *data, int length, int hexdump)
 		len = 4;
 		hlen = (((data[3] >> 4) & 0x0F) + 1) / 2;
 		hlen += (((data[3] >> 0) & 0x0F) + 1) / 2;
-		if (hlen == 10) {
-			dest = data + 4;
-			source = data + 9;
-		}
 		len += hlen;
 		data += len;
 		length -= len;
@@ -326,7 +320,7 @@ static char *dump_ax25_call(unsigned char *data, int l_data)
 static void facility(unsigned char *data, int lgtot)
 {
 	int lgfac, l, lg, fct, lgdigi, lgaddcall;
-	int lgad, lgaddr, lgadind, digi_fac;
+	int lgad, lgadind, digi_fac;
 	char digis[80], digid[80];
 	char indorig[10], inddest[10];
 	char addstorig[20], addstdest[20];
@@ -430,7 +424,6 @@ static void facility(unsigned char *data, int lgtot)
 			data += 3;
 			lgad = *data++;
 			lg -= 6;
-			lgaddr = lgad;
 
 			if (fct == 0xCB)
 				strcpy(addstorig, dump_x25_addr(data));

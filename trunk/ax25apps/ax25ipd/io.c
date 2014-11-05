@@ -126,13 +126,13 @@ void io_init(void)
  * address structure.  Since both to and from are static, they are
  * already clear.
  */
-	bzero((char *) &to, sizeof(struct sockaddr));
+	bzero(&to, sizeof(struct sockaddr));
 	to.sin_family = AF_INET;
 
-	bzero((char *) &from, sizeof(struct sockaddr));
+	bzero(&from, sizeof(struct sockaddr));
 	from.sin_family = AF_INET;
 
-	bzero((char *) &udpbind, sizeof(struct sockaddr));
+	bzero(&udpbind, sizeof(struct sockaddr));
 	udpbind.sin_family = AF_INET;
 }
 
@@ -424,7 +424,9 @@ out_ttyfd:
 					n = recvfrom(udpsock, buf, MAX_FRAME, 0, (struct sockaddr *) &from, &fromlen);
 				}
 				while (io_error(n, buf, n, READ_MSG, UDP_MODE, __LINE__));
-				LOGL4("udpdata from=%s port=%d l=%d\n", (char *) inet_ntoa(from.  sin_addr), ntohs(from.  sin_port), n);
+				LOGL4("udpdata from=%s port=%d l=%d\n", 
+				      inet_ntoa(from.  sin_addr), 
+				      ntohs(from.  sin_port), n);
 				stats.udp_in++;
 				if (n > 0)
 					from_ip(buf, n, &from);
@@ -440,7 +442,8 @@ out_ttyfd:
 				while (io_error(n, buf, n, READ_MSG, IP_MODE, __LINE__));
 				ipptr = (struct iphdr *) buf;
 				hdr_len = 4 * ipptr-> ihl;
-				LOGL4("ipdata from=%s l=%d, hl=%d\n", (char *) inet_ntoa(from.  sin_addr), n, hdr_len);
+				LOGL4("ipdata from=%s l=%d, hl=%d\n", 
+				      inet_ntoa(from.  sin_addr), n, hdr_len);
 				stats.ip_in++;
 				if (n > hdr_len)
 					from_ip(buf + hdr_len, n - hdr_len, &from);
@@ -454,7 +457,8 @@ out_ttyfd:
 				while (io_error(n, buf, n, READ_MSG, ICMP_MODE, __LINE__));
 				ipptr = (struct iphdr *) buf;
 				hdr_len = 4 * ipptr-> ihl;
-				LOGL4("icmpdata from=%s l=%d, hl=%d\n", (char *) inet_ntoa(from.  sin_addr), n, hdr_len);
+				LOGL4("icmpdata from=%s l=%d, hl=%d\n", 
+				      inet_ntoa(from.  sin_addr), n, hdr_len);
 			}
 #endif
 		}
@@ -473,11 +477,10 @@ void send_ip(unsigned char *buf, int l, unsigned char *targetip)
 	if (* (unsigned *) targetip == 0){ /* If the ip is set to 0 don't send anything. I'm not sure what sending to 0 does, but I don't like the idea. */
 		return; 
 	}
-	memcpy((char *) &to.sin_addr,
-	       targetip, 4);
-	memcpy((char *) &to.sin_port,
-	       &targetip[4], 2);
-	LOGL4("sendipdata to=%s %s %d l=%d\n", (char *) inet_ntoa(to.  sin_addr), to.sin_port ? "udp" : "ip", ntohs(to.sin_port), l);
+	memcpy(&to.sin_addr, targetip, 4);
+	memcpy(&to.sin_port, &targetip[4], 2);
+	LOGL4("sendipdata to=%s %s %d l=%d\n", inet_ntoa(to.  sin_addr), 
+	      to.sin_port ? "udp" : "ip", ntohs(to.sin_port), l);
 	if (to.sin_port) {
 		if (udp_mode) {
 			stats.udp_out++;
@@ -629,9 +632,9 @@ int io_error(
 				fprintf (stderr, "message was %d bytes long.\n", bufsize);
 				return 0;
 			}
-			if (errno == ENETDOWN || ENETRESET || ENETUNREACH || EHOSTDOWN || EHOSTUNREACH || ENONET  ) {   /* host closed his udp receiver or dropped the line */
-				perror("icmp reply from user after writing to udp socket");
-				LOGL1("icmp reply from user after writing to udp socket. ignoring. errno=%d!\n", errno);
+			if (errno == ENETDOWN || ENETRESET || ENETUNREACH || EHOSTDOWN || EHOSTUNREACH || ENONET  ) {   /* host closed his axip receiver or dropped the line */
+				perror("error after sending on to axip partner. ignoring.");
+				LOGL4("error after sending on to axip partner: %s; ignoring!\n", strerror(errno));
 				return 0;
 			}
 			if (errno == ENOBUFS) {	/* congestion; sleep + retry */
@@ -652,9 +655,9 @@ int io_error(
 				fprintf(stderr, "message was %d bytes long.\n", bufsize);
 				return 0;
 			}
-			if (errno == ENETDOWN || ENETRESET || ENETUNREACH || EHOSTDOWN || EHOSTUNREACH || ENONET  ) {   /* host closed his udp receiver or dropped the line */
-				perror("icmp reply from user after writing to udp socket");
-				LOGL1("icmp reply from user after writing to udp socket. ignoring. errno=%d!\n", errno);
+			if (errno == ENETDOWN || ENETRESET || ENETUNREACH || EHOSTDOWN || EHOSTUNREACH || ENONET  ) {   /* host closed his axudp receiver or dropped the line */
+				perror("error after sending to axudp partner. ignoring.");
+				LOGL4("error after sending to axudp partner: %s; ignoring!\n", strerror(errno));
 				return 0;
 			}
 			if (errno == ENOBUFS) {	/* congestion; sleep + retry */

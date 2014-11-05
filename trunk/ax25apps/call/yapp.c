@@ -291,7 +291,7 @@ static int yapp_download_data(int *filefd, unsigned char *buffer)
 			char *hptr, *hfield[3];
 			if ((length = buffer[1]) == 0)
 				length = 256;
-			hptr = (char *) buffer + 2;
+			hptr = buffer + 2;
 			while (length > 0) {
 				int hlen;
 				hlen = strlen(hptr) + 1;
@@ -549,7 +549,7 @@ static int yapp_upload_data(int filefd, char *filename, int filelength,
 			len = buffer[1];
 			if (buffer[len] == 'C')
 				yappc = 1;
-			rpos = atol((char *) buffer + 4);
+			rpos = atol(buffer + 4);
 			lseek(filefd, rpos, SEEK_SET);
 			buffer[0] = ACK;
 			buffer[1] = yappc ? ACK : 0x02;

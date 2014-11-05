@@ -479,7 +479,7 @@ WINDOW *opnstatw(int mode, wint * wintab, char *s, int lines, int cols)
 
 void wrdstatw(WINDOW * win, char s[])
 {
-	int y, x;
+	int y;
 
 	if (win == NULL) {
 		printf("  %s\n", s);
@@ -487,7 +487,7 @@ void wrdstatw(WINDOW * win, char s[])
 		return;
 	}
 	waddstr(win, s);
-	getyx(win, y, x);
+	y = getcury(win);
 	wmove(win, y + 1, 2);
 	wrefresh(win);
 }
@@ -799,8 +799,8 @@ int ab_down(int mode, WINDOW * swin, wint * wintab, char buf[], int *bytes,
 int start_screen(char *call[])
 {
 	int cnt;
-	char idString[11];
-	sprintf(idString, " %8s ", call[0]);
+	char idString[12];
+	sprintf(idString, " %9.9s ", call[0]);
 
 	if ((win = initscr()) == NULL)
 		return -1;
@@ -1587,7 +1587,6 @@ int cmd_call(char *call[], int mode)
 	int upldp = 0;
 	int upllen = 0;
 	char *c, *t;
-	int extrach = 0;
 	t_gp gp;
 	t_win win_in;
 	t_win win_out;
@@ -1759,7 +1758,6 @@ int cmd_call(char *call[], int mode)
 								  &gp,
 								  call);
 						restbytes = 0;
-						extrach = 0;
 					}
 					break;
 				case 2:
