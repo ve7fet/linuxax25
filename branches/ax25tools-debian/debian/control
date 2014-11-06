@@ -12,8 +12,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, libax25 (>= 0.0.12)
 Suggests: ax25apps
 Conflicts: ax25utils
 Replaces: ax25utils
-Description: A collection of AX.25 drivers and interface tools for Amateur Radio (non-X)
- A collection of drivers and interface configureation tools to support 
+Description: Provides a collection of AX.25 drivers and interface tools (non-X)
+ Provides a collection of drivers and interface configureation tools to support 
  AX.25 Amateur Radio programs. This version does not have any X programs 
  or depencies on X included.
 

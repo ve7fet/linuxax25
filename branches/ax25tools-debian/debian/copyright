@@ -1,9 +1,9 @@
 This package was debianized by Lee Woldanski <ve7fet@tparc.org> on
-Sun, 30 Jan 2011 21:00:00 -0800.
+Thu, 06 Nov 2014 14:00:00 -0800.
 
 It was downloaded from http://linuxax25.googlecode.com 
 
-Upstream Author(s):
+Upstream Authors:
 
     Joerg Reuter DL1BKE <jreuter@poboxes.com>
     Rob Mayfield VK5XXX <mayfieldrob@mail.dec.com>
@@ -45,5 +45,3 @@ Public License can be found in `/usr/share/common-licenses/LGPL'.
 The Debian packaging is (C) 2011, Lee Woldanski <ve7fet@tparc.org> and
 is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
 
-# Please also look if there are files or directories which have a
-# different copyright/license attached and list them here.

@@ -1,14 +1,14 @@
 The Debian Package ax25tools
 ----------------------------
 
-This version is a modified version of the August 2011 CVS source
+This version is a modified version of the November 2014 GIT source
 from http://www.linux-ax25.org/wiki/Main_Page
 
 It re-arranges the source code in to proper directorys, updates to
 current autotools, corrects build dependencies, and installs the
 conf files from libax25.
 
-Until the modified source makes it into CVS, it will be available
+Until the modified source makes it into GIT, it will be available
 from http://linuxax25.googlecode.com
 
- -- Lee Woldanski <ve7fet@tparc.org>  Sat, 27 Aug 2011 15:00:00 -0800
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 06 Nov 2014 14:00:00 -0800
