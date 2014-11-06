@@ -1,3 +1,14 @@
+ax25apps (1.0.4)
+	* Updating source to sync with upstream official source
+
+-- Lee Woldanski <ve7fet@tparc.org>  Wed, 05 Nov 2014 08:00:00 -0800
+
+ax25apps (1.0.3)
+	* Changed ax25ipd to be a little less verbose in the log files (per F6BVP)
+	* Changed ax25ipd to better check control byte (see Debian bug #606338)
+
+-- Lee Woldanski <ve7fet@tparc.org> Tue, 31 Jul 2012 14:00:00 -0800
+
 ax25apps (1.0.2)
 	* Reverted ax25ipd to compile with -DTERMIO vs. -DTERMIOS. Using the latter 
 	  causes ax25ipd to randomly send garbage traffic on some platforms.
@@ -59,6 +70,7 @@ ax25-apps (0.0.8)
 	* Support for UNIX98 pseudo terminals.
 	* New option -S to silence call for use in shell scripts.
 	* Add support for building rpm packages.
+        * Relicense listen/ripdump.c to permit commercial use and distribution.
 
 ax25-apps (0.0.7)
 	* Added opentrac to listen, Thanks to Scott Miller

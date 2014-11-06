@@ -81,7 +81,7 @@ void lprintf(int dtype, char *fmt, ...)
 
 int initcolor(void)
 {
-	if (!has_colors)
+	if (!has_colors())
 		return 0;
 	initscr();		/* Start ncurses */
 	start_color();		/* Initialize color support */

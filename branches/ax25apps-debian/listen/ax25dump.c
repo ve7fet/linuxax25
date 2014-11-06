@@ -373,6 +373,8 @@ char *pax25(char *buf, unsigned char *data)
 static int ftype(unsigned char *data, int *type, int *ns, int *nr, int *pf,
 		 int extseq)
 {
+	*ns = *nr = 0;				/* To avoid warnings  */
+
 	if (extseq) {
 		if ((*data & 0x01) == 0) {	/* An I frame is an I-frame ... */
 			*type = I;

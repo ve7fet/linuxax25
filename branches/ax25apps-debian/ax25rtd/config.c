@@ -1,5 +1,4 @@
-/* $Id: config.c,v 1.7 2009/06/27 22:30:23 ralf Exp $
- *
+/*
  * Copyright (c) 1996 Joerg Reuter (jreuter@poboxes.com)
  *
  * This program is free software; you can redistribute it and/or modify
@@ -670,8 +669,7 @@ void interpret_command(int fd, unsigned char *buf)
 	} else if (!strcmp(cmd, "save")) {
 		save_cache();
 	} else if (!strcmp(cmd, "version")) {
-		char buf[256];
-		sprintf(buf, "%s\n", Version);
+		char buf[] = "ax25rtd version " VERSION "\n";
 		write(fd, buf, strlen(buf));
 	} else if (!strcmp(cmd, "quit")) {
 		close(fd);

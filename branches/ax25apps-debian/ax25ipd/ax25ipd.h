@@ -43,6 +43,11 @@
   Lee Woldanski ve7fet, Jan 2011
 */
 
+/*
+  Version 1.1.1
+  added syslog changes from upstream source per Ralf Baechle
+  Lee Woldanski ve7fet, Nov 2014
+
 /* Define the current version number
  *
  * The first digit represents the major release (0 is a prototype release)
@@ -55,7 +60,7 @@
  *
  */
 
-#define VERS2 "Version 1.1.0"
+#define VERS2 "Version 1.1.1"
 
 #define IPPROTO_AX25 93
 #define DEFAULT_UDP_PORT 10093
@@ -129,10 +134,12 @@ struct {
 
 #define MAX_FRAME 2048
 
-#define LOGL1(arg...) if(loglevel>0)syslog(LOG_DAEMON | LOG_WARNING, ##arg)
-#define LOGL2(arg...) if(loglevel>1)syslog(LOG_DAEMON | LOG_WARNING, ##arg)
-#define LOGL3(arg...) if(loglevel>2)syslog(LOG_DAEMON | LOG_WARNING, ##arg)
-#define LOGL4(arg...) if(loglevel>3)(void)syslog(LOG_DAEMON | LOG_DEBUG, ##arg)
+extern void LOGLn(int level, const char *str, ...);
+
+#define LOGL1(arg...) LOGLn(1, ##arg)
+#define LOGL2(arg...) LOGLn(2, ##arg)
+#define LOGL3(arg...) LOGLn(3, ##arg)
+#define LOGL4(arg...) LOGLn(4, ##arg)
 
 #define	AXRT_BCAST	1
 #define	AXRT_DEFAULT	2

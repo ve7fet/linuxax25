@@ -70,7 +70,7 @@ void assemble_kiss(unsigned char *buf, int l)
 		if (c == FEND) {
 			if (ifcount > 0) {
 				/* Make sure that the control byte is zero */
-				if (*iframe == '\0' || *iframe == 0x10) {
+				if ((*iframe & 0xf) == '\0') {
 					/* Room for CRC in buffer? */
 					if (ifcount < (MAX_FRAME - 2)) {
 						stats.kiss_in++;

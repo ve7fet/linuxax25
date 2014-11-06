@@ -1,5 +1,4 @@
-/* $Id: ax25rtd.c,v 1.8 2009/06/27 22:30:23 ralf Exp $
- *
+/*
  * Copyright (c) 1996 Joerg Reuter (jreuter@poboxes.com)
  *
  * This program is free software; you can redistribute it and/or modify
@@ -58,7 +57,6 @@
 #include "../pathnames.h"
 #include "ax25rtd.h"
 
-const char *Version = "ax25rtd $Revision: 1.8 $";
 config *Config = NULL;
 
 int reload = 0;
