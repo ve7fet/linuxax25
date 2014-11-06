@@ -106,13 +106,13 @@ static int add_node(int s, unsigned char *buffer, struct nr_route_struct *nr_nod
 		return FALSE;
 	}
 
-	if (best_quality < port_list[index].worst_qual) {
+	nr_node->quality = ((quality * best_quality) + 128) / 256;
+
+	if (nr_node->quality < port_list[index].worst_qual) {
 		if (debug && logging)
 			syslog(LOG_DEBUG, "netromr: add_node: quality less than worst_qual");
 		return FALSE;
 	}
-
-	nr_node->quality = ((quality * best_quality) + 128) / 256;
 
 	/* log this only when logging verbosely */
 	if (debug > 1 && logging) {

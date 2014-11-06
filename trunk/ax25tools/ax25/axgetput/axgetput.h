@@ -1,5 +1,3 @@
-/* @(#) $Id: axgetput.h,v 1.2 2007/01/23 13:40:01 ralf Exp $ */
-
 /*
  * (c) 2002 Thomas Osterried  DL9SAU <thomas@x-berg.in-berlin.de>
  *   License: GPL. See http://www.fsf.org/

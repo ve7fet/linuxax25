@@ -37,8 +37,6 @@
 
 #include <config.h>
 
-#define RCS_ID "$Id: bpqparms.c,v 1.3 2007/01/23 13:40:01 ralf Exp $"
-
 void usage(void)
 {
 		fprintf(stderr, "usage   : bpqparms dev -d address [-a address]\n");
@@ -46,8 +44,6 @@ void usage(void)
 		fprintf(stderr, "          bpqparms bpq0 -d broadcast -a 00:80:AD:1B:05:26\n");
 		exit(1);
 }
-
-char *Version = "$Revision: 1.3 $";
 
 int get_hwaddr(unsigned char *k, char *s)
 {
@@ -100,7 +96,7 @@ int main(int argc, char **argv)
 				break;
 
 			case 'V':
-				printf("bpqparms version %s\n", Version);
+				printf("bpqparms version " VERSION "\n");
 				printf("Copyright 1996, Jörg Reuter (jreuter@poboxes.com)\n");
 				printf("This program is free software; you can redistribute it and/or modify\n");
 				printf("it under the terms of the GNU General Public License as published by\n");

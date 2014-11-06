@@ -44,7 +44,7 @@ extern struct dest_struct dest_list[];
 extern int dest_count;
 
 extern int debug;
-extern int restrict;
+extern int route_restrict;
 extern int logging;
 
 /* In rip98d.c */

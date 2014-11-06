@@ -1,7 +1,4 @@
 /*
- *
- * $Id: axspawn.c,v 1.24 2010/03/31 08:06:59 dl9sau Exp $
- *
  * axspawn.c - run a program from ax25d.
  *
  * Copyright (c) 1996 Joerg Reuter DL1BKE (jreuter@poboxes.com)
@@ -166,6 +163,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/file.h>
+#include <sys/wait.h>
 
 #include <config.h>
 
@@ -440,6 +438,7 @@ char   secure_home = 0;
 
 gid_t  user_gid =  400;
 char   *user_shell = "/bin/bash";
+int    user_shell_configured = 0;
 char   *start_home = "/home/hams";
 char   *guest = "guest";
 int    start_uid = 400;
@@ -1023,6 +1022,22 @@ void cleanup(char *tty)
 }
 
 
+/* On debian wheezy, useradd (from passwd / shadow package) is buggy.
+ * Short before end of main, it starts the external program nscd for
+ * cleaning user / group cache. Their handler for waiting the forked
+ * process waits for child's or -1 and errno EINTR with waitpid() - else
+ * it loops again.
+ * When useradd is started by axspawn, their waitpid() returns -1 errno ECHILD,
+ * which leads their do-while-function go into an endless loop, eating
+ * 100% CPU power.
+ * If we mask SIGCHLD before execve(), useradd works as it should.
+ */
+
+void signal_handler_sigchild(int dummy)
+{
+	exit(0);
+}
+			
 /* 
  * add a new user to /etc/passwd and do some init
  */
@@ -1137,9 +1152,10 @@ end_mkdirs:
 	 */
 
 	if (policy_add_prog_useradd) {
-		char *opt_shell = "";
+
+		pid_t pid = -1;
 		struct stat statbuf;
-		if (stat(USERADD_CONF, &statbuf) == -1) {
+		if (!user_shell_configured && stat(USERADD_CONF, &statbuf) == -1) {
 			 /* some programs need a shell explicitely specified
 			  * in /etc/passwd, although this field is not required
 			  * (and useradd does not set a shell when not
@@ -1149,14 +1165,56 @@ end_mkdirs:
 			  * explecitely give the shell option to useradd, when
 			  * no useradd config file is present.
 			  */
-			  opt_shell = " -s \"/bin/sh\"";
+			  user_shell_configured = 1;
 		}
-        	sprintf(command,"/usr/sbin/useradd -p \"%s\" -c %s -d %s -u %d -g %d -m %s%s",
-			((policy_add_empty_password) ? "" : "+"),
-                	username, userdir, uid, user_gid, newuser, opt_shell);
-		if (system(command) != 0)
+
+		pid = fork();
+		if (pid == -1)
 			goto out;
+		else if (pid == 0) {
+			int chargc = 0;
+			char *chargv[20];
+			char *envp[] = { NULL };
+			char s_uid[32];
+			char s_gid[32];
+
+			sprintf(s_uid, "%d", uid);
+			sprintf(s_gid, "%d", user_gid);
+
+			chargv[chargc++] = "/usr/sbin/useradd";
+			chargv[chargc++] = "-p";
+			chargv[chargc++] = ((policy_add_empty_password) ? "" : "+");
+			chargv[chargc++] = "-c";
+			chargv[chargc++] = username;
+			chargv[chargc++] = "-d";
+			chargv[chargc++] = userdir;
+			chargv[chargc++] = "-u";
+			chargv[chargc++] = s_uid;
+			chargv[chargc++] = "-g";
+			chargv[chargc++] = s_gid;
+			chargv[chargc++] = "-m";
+			chargv[chargc++] = newuser;
+			if (user_shell_configured) {
+		  		chargv[chargc++] = "-s";
+		  		chargv[chargc++] = user_shell;
+			}
+			chargv[chargc]   = NULL;
+			
+			/* signal SIGCHLD: see description above */
+			signal(SIGCHLD, signal_handler_sigchild);
+                	execve(chargv[0], chargv, envp);
+		} else {
+			int status;
+			pid_t wpid = -1;
+			wpid = waitpid(-1, &status, 0);
+			if (wpid == -1)
+				goto out;
+			if (!WIFEXITED(status))
+				goto out;
+		}
+
 	} else {
+
 		fp = fopen(PASSWDFILE, "a+");
 		if (fp == NULL)
 			goto out;
@@ -1175,6 +1233,7 @@ end_mkdirs:
 			goto out;
 	
 		fclose(fp);
+
 	}
 
 	/*
@@ -1232,8 +1291,8 @@ void read_config(void)
 	while (!feof(fp))
 	{
 		fgets(buf, sizeof(buf), fp);
-		p = strchr(buf, '#');
-		if (p) *p='\0';
+		if ((p = strchr(buf, '#')) || (p = strchr(buf, '\n')))
+			*p='\0';
 		
 		if (buf[0] != '\0')
 		{
@@ -1312,6 +1371,7 @@ void read_config(void)
 			{
 				user_shell = (char *) malloc(strlen(param)+1);
 				strcpy(user_shell, param);
+				user_shell_configured = 1;
 			} else
 			{
 				printf("error in config: ->%s %s<-\n", cmd, param);
@@ -1331,7 +1391,7 @@ void signal_handler(int dummy)
 	cleanup(ptyslave+5);
 	exit(1);
 }
-			
+
 int main(int argc, char **argv)
 {
 	char call[20], user[20], as_user[20];
@@ -1544,6 +1604,11 @@ int main(int argc, char **argv)
 			new_user(as_user);
 			pw = getpwnam(as_user);
 			endpwent();
+			if (pw == NULL) {
+				syslog(LOG_NOTICE, "%s (callsign: %s) not found in /etc/passwd, even aver new_user()\n", as_user, call);
+				sleep(EXITDELAY);
+				return 1;
+			}
 		}
 		
 		if (pw == NULL && policy_guest)

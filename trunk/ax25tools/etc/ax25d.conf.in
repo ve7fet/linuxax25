@@ -37,6 +37,10 @@ default  * * * * * *  -	root  @prefix@/sbin/node	node
 NOCALL   * * * * * *  L
 default  * * * * * *  -	root  @prefix@/sbin/axwrapper	axwrapper /usr/bin/finger finger
 #
+[N0ONE-9]
+NOCALL	 * * * * * *  L
+default	 * * * * * *  - root  @prefix@/sbin/node	node
+#
 # NET/ROM Ports begin with a '<'.
 #
 #<netrom>

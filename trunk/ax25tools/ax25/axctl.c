@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	ax25_ctl.digi_count = 0;
 	
 	if (ioctl(s, SIOCAX25CTLCON, &ax25_ctl) != 0) {
-		perror("axctl: SIOAX25CTLCON");
+		perror("axctl: SIOCAX25CTLCON");
 		return 1;
 	}
 	

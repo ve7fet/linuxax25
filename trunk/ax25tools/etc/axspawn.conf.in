@@ -43,7 +43,9 @@ home      /home/hams
 # secure homedirectories (g-rwx)
 #secure_home yes
 #
-# user shell
+# user's shell (if not configured, it's /bin/bash, or if
+# create_with_useradd is set, useradd uses the shell
+# configured in /etc/default/useradd).
 shell     /bin/bash
 #
 # bind user id to callsign for outgoing connects.

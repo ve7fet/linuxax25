@@ -65,7 +65,7 @@
 #ifdef HDRVC_KERNEL
 static int kernel_mode = 1;
 #endif /* HDRVC_KERNEL */
-static char *if_name = "bcsf0";
+static const char *if_name = "bcsf0";
 static char *prg_name;
 static int fd = -1;
 static struct ifreq ifr_h;
@@ -171,14 +171,14 @@ int hdrvc_getfd(void)
 
 /* ---------------------------------------------------------------------- */
 
-char *hdrvc_ifname(void)
+const char *hdrvc_ifname(void)
 {
 	return if_name;
 }
 
 /* ---------------------------------------------------------------------- */
 
-void hdrvc_args(int *argc, char *argv[], char *def_if)
+void hdrvc_args(int *argc, char *argv[], const char *def_if)
 {
 	int ac, i;
 

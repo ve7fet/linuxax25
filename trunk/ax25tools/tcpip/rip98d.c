@@ -32,9 +32,9 @@ struct dest_struct dest_list[50];
 
 int dest_count = 0;
 
-int debug      = FALSE;
-int restrict   = FALSE;
-int logging    = FALSE;
+int debug            = FALSE;
+int route_restrict   = FALSE;
+int logging          = FALSE;
 
 struct route_struct *first_route = NULL;
 
@@ -203,7 +203,7 @@ static int read_routes(void)
 			continue;
 		}
 
-		if (restrict) {
+		if (route_restrict) {
 			if (inet_netof(address) != 44) {
 				if (debug && logging)
 					syslog(LOG_DEBUG, "rejecting route to %s/%ld - not ampr.org\n", inet_ntoa(address), netmask);
@@ -286,7 +286,7 @@ int main(int argc, char **argv)
 				logging = TRUE;
 				break;
 			case 'r':
-				restrict = TRUE;
+				route_restrict = TRUE;
 				break; 
 			case 't':
 				interval = atoi(optarg) * 60;
