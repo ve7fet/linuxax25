@@ -10,6 +10,6 @@ Package: ax25apps
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libax25 (>= 0.0.12)
 Suggests: ax25tools
-Description: A collection of user tools for AX.25 Amateur Radio applications 
+Description: AX.25 user tools for running Amateur Radio applications. 
  Provides a collection of user tools for AX.25 Amateur Radio applications.
 
