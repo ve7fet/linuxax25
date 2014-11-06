@@ -6,7 +6,7 @@ if [ $# = 1 ]; then
     ALL=y
 fi
 
-echo -en "Linux/ROSE 001. AX.25, NET/ROM and ROSE Users.\r"
+printf "Linux/ROSE 001. AX.25, NET/ROM and ROSE Users.\r"
 
 if [ -r /proc/net/ax25 ]; then
     cat /proc/net/ax25 | awk '
@@ -43,7 +43,7 @@ if [ -r /proc/net/ax25 ]; then
 		    }
 	       }' ALL=$ALL
 
-	echo -en "\r"
+	printf "\r"
 fi
 
 if [ -r /proc/net/nr ]; then
@@ -81,7 +81,7 @@ if [ -r /proc/net/nr ]; then
 		    }
 	       }' ALL=$ALL
 
-	echo -en "\r"
+	printf "\r"
 fi
 
 if [ -r /proc/net/rose ]; then
@@ -119,10 +119,10 @@ if [ -r /proc/net/rose ]; then
 		    }
 	       }' ALL=$ALL
 
-	echo -en "\r"
+	printf "\r"
 fi
 
-read
+read x
 
 exit 0
 

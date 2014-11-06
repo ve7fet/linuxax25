@@ -1,3 +1,15 @@
+ax25tools (1.0.3)
+	* Long overdue updating to bring codebase up to sync with official sources,
+	  will keep our file structure to make packaging easier
+	* Fixes bugs in axspawn that could eat 100% CPU when useradd called, 
+	  a bug when useradd failed, empty lines in axspawn.conf now valid, 
+	  and user_shell variable is now optional but will default to /bin/bash
+	* Current kernel no longer has limits for netrom/rose devices (previously
+	  4 netrom and 6 rose), nrattach and rsattach patched accordingly
+	* Fixes for other various compiler warnings and errors
+
+-- Lee Woldanski <ve7fet@tparc.org>  Thu, Nov 06 2014 10:00:00 -0800
+
 ax25tools (1.0.2)
 	* Fix for CVE-2011-2910: check return status of setuid()
 	* Manually patched against upstream source current as of August 27, 2011

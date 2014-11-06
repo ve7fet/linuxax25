@@ -79,7 +79,11 @@ home      /home/hams
 .br
 #
 .br
-# user's shell
+# user's shell (if not configured, it's /bin/bash, or if
+.br
+# create_with_useradd is set, useradd uses the shell
+.br
+# configured in /etc/default/useradd).
 .br
 shell     /bin/bash
 .br

@@ -80,7 +80,7 @@ static int readconfig(char *port)
 		if ((s = strchr(buffer, '\n')) != NULL)
 			*s = '\0';
 
-		if (strlen(buffer) > 0 && *buffer == '#')
+		if (*buffer == 0 || *buffer == '#')
 			continue;
 
 		if ((s = strtok(buffer, " \t\r\n")) == NULL) {

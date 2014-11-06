@@ -1,6 +1,4 @@
 /*
- * $Id: dmascc_cfg.c,v 1.4 2009/05/27 14:26:06 dl9sau Exp $
- *
  * Configuration utility for dmascc driver
  * Copyright (C) 1997,2000 Klaus Kudielka
  *

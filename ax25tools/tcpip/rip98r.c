@@ -128,7 +128,7 @@ void receive_routes(int s)
 			continue;
 		}
 
-		if (restrict) {
+		if (route_restrict) {
 			if (network != 44) {
 				if (debug && logging)
 					syslog(LOG_DEBUG, "    route to %s/%d metric %d - rejected\n", inet_ntoa(addr), bits, metric);
