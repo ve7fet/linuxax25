@@ -65,6 +65,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/ax25/ax25rtd/*
 
 %changelog
+* Wed Nov 05 2014 Lee Woldanski <ve7fet@tparc.org> 1.0.4-1
+- Sync with upstream sources
+
 * Mon Sep 12 2011 Lee Woldanski <ve7fet@tparc.org> 1.0.2-1
 - Change ax25ipd to compile with -DTERMIO
 
