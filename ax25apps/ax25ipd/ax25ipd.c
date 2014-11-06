@@ -155,14 +155,16 @@ int main(int argc, char **argv)
 	/* we need to close stdin, stdout, stderr: because otherwise
 	 * scripting like ttyname=$(ax25ipd | tail -1) does not work
 	 */
-	if (!isatty(1)) {
-		fflush(stdout);
-		fflush(stderr);
-		close(0);
-		close(1);
-		close(2);
-	}
-
+/* Commenting this out (with notes this time) as it isn't needed for Unix98 
+*  pty's and breaks logging when ax25ipd is run as a daemon - VE7FET
+*	if (!isatty(1)) {
+*		fflush(stdout);
+*		fflush(stderr);
+*		close(0);
+*		close(1);
+*		close(2);
+*	}
+*/
 	/* and let the games begin */
 	io_start();
 
