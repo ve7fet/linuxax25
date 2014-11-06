@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <ctype.h>
 #include <netdb.h>
+#include <limits.h>
 
 #include <config.h>
 
@@ -88,7 +89,7 @@ int getfreedev(char *dev)
 		return FALSE;
 	}
 
-	for (i = 0; i < 6; i++) {
+	for (i = 0; i < INT_MAX; i++) {
 		sprintf(dev, "rose%d", i);
 		strcpy(ifr.ifr_name, dev);
 	

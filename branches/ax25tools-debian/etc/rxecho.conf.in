@@ -9,5 +9,5 @@
 # tokens but the callsign field must not have any spaces in it. There can be
 # up to MAXCALLS callsigns in the callsign field.
 #
-vhfdrop		2	N0ONE-1,N0ONE-2
-uhfdrop		1	*
+vhfdrop		uhfdrop		N0ONE-1,N0ONE-2
+uhfdrop		vhfdrop		*

@@ -1,5 +1,3 @@
-/* @(#) $Id: util.h,v 1.1 2006/12/10 19:12:59 dl9sau Exp $ */
-
 /*
  * (c) 2002 Thomas Osterried  DL9SAU <thomas@x-berg.in-berlin.de>
  *   License: GPL. See http://www.fsf.org/

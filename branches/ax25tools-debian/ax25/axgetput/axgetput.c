@@ -1,5 +1,3 @@
-static const char rcsid[] = "@(#) $Id: axgetput.c,v 1.5 2009/06/23 22:13:51 ralf Exp $";
-
 /*
  * This is axgetput
  *
@@ -16,6 +14,9 @@ static const char rcsid[] = "@(#) $Id: axgetput.c,v 1.5 2009/06/23 22:13:51 ralf
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "includes.h"
 
@@ -46,16 +47,6 @@ static mode_t mode_tty = 0;
 #ifndef	MYNAME
 #define MYNAME "axgetput"
 #endif
-
-struct revision {
-  char number[16];
-  char date[16];
-  char time[16];
-  char author[16];
-  char state[16];
-};
-
-static struct revision revision;
 
 /*---------------------------------------------------------------------------*/
 
@@ -153,7 +144,7 @@ static void signal_handler(int sig)
 
 void do_version(void)
 {
-        fprintf(stderr, MYNAME " %s %s\n", revision.number, revision.date);
+        fprintf(stderr, MYNAME " " VERSION "\n");
 	fprintf(stderr, "  (c) 2002 Thomas Osterried <thomas@x-berg.in-berlin.de>\n");
 	fprintf(stderr, "  License: GPL. See http://www.fsf.org/\n");
 	fprintf(stderr, "  Sources: http://x-berg.in-berlin.de/cgi-bin/viewcvs.cgi/ampr/axgetput/\n");
@@ -216,15 +207,6 @@ int main(int argc, char *argv[])
   int ret = 0;
   int c;
   char *p;
-  char buf[1024];
-
-  strcpy(buf, rcsid);
-  sscanf(buf, "%*s %*s %*s %s %s %s %s %s",
-    revision.number,
-    revision.date,
-    revision.time,
-    revision.author,
-    revision.state);
 
   /* determine what to so in the way how we are called  */
   if ((p = strrchr(argv[0], '/')))

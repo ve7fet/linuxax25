@@ -68,7 +68,8 @@ static void PrintPortEntry(struct PortRecord *pr, int data)
 			call =  ax25_ntoa(&pr->entry.from_call);
 			if ((s = strstr(call, "-0")) != NULL)
 				*s = '\0';
-			printf("%-10s %-5s %5d   %s\n",
+			if (pr->entry.count != 0)
+				printf("%-10s %-5s %5d   %s\n",
 				call, pr->entry.portname, pr->entry.count, lh);
 			break;
 		case 1:
@@ -91,7 +92,8 @@ static void PrintPortEntry(struct PortRecord *pr, int data)
 			}
 			if (pr->entry.ndigis >= 4)
 				strcat(buffer, ",...");
-			printf("%-70s %-5s\n",
+			if (pr->entry.count != 0)
+				printf("%-70s %-5s\n",
 				buffer, pr->entry.portname);
 			break;
 		case 2:
@@ -102,14 +104,16 @@ static void PrintPortEntry(struct PortRecord *pr, int data)
 			call = ax25_ntoa(&pr->entry.from_call);
 			if ((s = strstr(call, "-0")) != NULL)
 				*s = '\0';
-			printf("%-10s %-5s %5d %5d %5d  %s  %s\n",
+			if (pr->entry.count != 0)
+				printf("%-10s %-5s %5d %5d %5d  %s  %s\n",
 				call, pr->entry.portname, pr->entry.iframes, pr->entry.sframes, pr->entry.uframes, fh, lh);
 			break;
 		case 3:
 			call = ax25_ntoa(&pr->entry.from_call);
 			if ((s = strstr(call, "-0")) != NULL)
 				*s = '\0';
-			printf("%-10s %-5s %5d %5s ",
+			if (pr->entry.count != 0) {
+				printf("%-10s %-5s %5d %5s ",
 				call, pr->entry.portname, pr->entry.count, types[pr->entry.type]);
 			if (pr->entry.mode & MHEARD_MODE_ARP)
 				printf(" ARP");
@@ -136,6 +140,7 @@ static void PrintPortEntry(struct PortRecord *pr, int data)
 			if (pr->entry.mode & MHEARD_MODE_UNKNOWN)
 				printf(" Unknown");
 			printf("\n");
+			}
 			break;
 	}
 }

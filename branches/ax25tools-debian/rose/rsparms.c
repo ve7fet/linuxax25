@@ -19,7 +19,7 @@
 
 #include "../pathnames.h"
 
-char nodes_usage[]  = "usage: rsparms -nodes add|del nodeaddr[/mask] port neighbour [digis...]\n       rsparms -node list\n";
+char nodes_usage[]  = "usage: rsparms -nodes add|del nodeaddr[/mask] port neighbour [digis...]\n       rsparms -nodes list\n";
 
 /* print the Rose neighbour whose number is supplied */
 void printnb(char *neigh)
@@ -34,9 +34,11 @@ void printnb(char *neigh)
 		exit(1);
 	}
 
-	while(fgets(buff, 80, fp)) {
-		addr[0]=(char)NULL; callsign[0]=(char)NULL;
-		port[0]=(char)NULL; digi[0]=(char)NULL;
+	while (fgets(buff, 80, fp)) {
+		addr[0] = '\0';
+		callsign[0] = '\0';
+		port[0] = '\0';
+		digi[0] = '\0';
 
 		args=sscanf(buff,"%9s %9s %9s %*s %*s %*s %*s %*s %*s %9s",addr,callsign,port,digi);
 
@@ -117,7 +119,7 @@ void nodes(int s, int argc, char *argv[])
 	}
 
 	if ((mask = strchr(argv[3], '/')) != NULL) {
-		*mask= (char)NULL;
+		*mask = '\0';
 		mask++;
 
 		if (sscanf(mask, "%hd", &rs_node.mask) != 1) {

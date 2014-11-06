@@ -87,8 +87,8 @@ struct hdrvc_channel_state {
 
 extern int hdrvc_recvpacket(char *pkt, int maxlen);
 extern int hdrvc_getfd(void);
-extern char *hdrvc_ifname(void);
-extern void hdrvc_args(int *argc, char *argv[], char *def_if);
+extern const char *hdrvc_ifname(void);
+extern void hdrvc_args(int *argc, char *argv[], const char *def_if);
 extern void hdrvc_init(void);
 extern int hdrvc_get_samples(void);
 extern int hdrvc_get_bits(void);

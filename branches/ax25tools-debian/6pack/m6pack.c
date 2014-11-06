@@ -6,50 +6,9 @@
  * Fake out AX.25 code into supporting 6pack TNC rings by routing serial
  * port data to/from pseudo ttys.
  *
- * @(#)m6pack.c  $Revision: 1.3 $  $Date: 2009/01/20 18:31:25 $
- *
  * Author(s):
  *
- *	Iñki Arenaza (EB2EBU) <iarenaza@escomposlinux.org>
- *
- * History:
- *
- * $Log: m6pack.c,v $
- * Revision 1.3  2009/01/20 18:31:25  dl9sau
- * 	Unix98 support.
- * 	Thanks to dk2crn.
- *
- * Revision 1.2  2009/01/20 16:18:02  dl9sau
- * 	Unix98 PTY support for mkiss and m6pack.
- *
- * Revision 1.1  2005/12/10 16:17:28  dl9sau
- *         support for 6pack tnc rings (patch found at sf.net)
- * 	from Iñaki Arenaza EB2EBU <iarenaza@escomposlinux.org>
- *
- * Revision 0.9  2002/04/28 15:05:39  hermes-team
- * Minor fixes to make it part of ax25-tools-0.0.8
- *
- * Revision 0.7  1999/04/25 11:03:51  hermes-team
- * Minor cosmetic changes.
- *
- * Revision 0.6  1999/04/25 10:30:51  hermes-team
- * TTY unlocking was missing from SIGTERM handler. Thanks to Tommi Manninen
- * for pointing it out.
- *
- * Revision 0.5  1999/04/07 09:16:06  hermes-team
- * First public beta release. It _seems_ to work with two TNC's in a ring 
- * (I only have two TNC's to test :-(
- *
- * Revision 0.4  1999/04/06 14:35:56  hermes-team
- * Removed the code that checked that trailing SEOF's address was equal to
- * leading SEOF's address (it seems this hasn't to be so, but it wasn't very
- * clear in DG2FEF & HB9JNX's paper)
- *
- * Revision 0.3  1999/01/31 23:02:09  hermes-team
- * Modified code that calls write(2) in sixpack_tx to handle big data blocks.
- *
- * Revision 0.2  1999/01/31 15:56:51  hermes-team
- * Initial Release. This is still alpha software.
+ *	Iñaki Arenaza (EB2EBU) <iarenaza@escomposlinux.org>
  *
  *********************************************************************
  *
@@ -94,8 +53,6 @@
 #include <netax25/daemon.h>
 
 #include <config.h>
-
-static char *version ="$Id: m6pack.c,v 1.3 2009/01/20 18:31:25 dl9sau Exp $";
 
 typedef unsigned char __u8;
 typedef enum {data, command} frame_t;
