@@ -12,6 +12,8 @@ basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
 AC_SUBST(BASEVERSION, [$basever])
 extraver=$(echo $PACKAGE_VERSION | sed -e 's@'$basever'@@' -e 's@^-@_@')
 AC_SUBST(EXTRAVERSION, [$extraver])
+define([svnversion], m4_esyscmd([svnversion -n]))dnl
+AC_SUBST(RELEASE, [$svnversion])
 
 # Checks for programs.
 AC_PROG_CC

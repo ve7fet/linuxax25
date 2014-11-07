@@ -1,6 +1,6 @@
 Name:           libax25
 Version:        @BASEVERSION@@EXTRAVERSION@
-Release:        1 
+Release:        @RELEASE@ 
 Summary:        AX.25 library for hamradio applications
 
 Group:          System Environment/Libraries
