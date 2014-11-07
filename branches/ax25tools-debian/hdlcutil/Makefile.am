@@ -2,7 +2,7 @@ if HAVE_X
 X11_bin_programs = smdiag
 endif
 
-SUBDIRS = fl
+SUBDIRS = . fl
 
 bin_PROGRAMS = sethdlc smmixer $(X11_bin_programs)
 
