@@ -1,0 +1,57 @@
+.TH M6PACK 8 "28 April 2002" Linux "Linux System Managers Manual"
+.SH NAME
+m6pack \- Attach multiples 6PACK interfaces
+.SH SYNOPSIS
+.B m6pack [-l] [-s speed] [-x n_ptmx] [-v] ttyinterface pty ..
+.SH DESCRIPTION
+.LP
+.B m6pack
+allows multiple 6PACK TNCs sharing the same serial port to be
+used with the Linux AX.25 kernel software. The AX.25 softare has no support
+for multiple TNCs sharing the same serial line. The
+different ports are addressed by encoding the port number in the control
+byte of every 6pack frame.
+.B m6pack
+watches a serial port, and routes 6pack frames to/from the pseudo ttys. The
+other side of the pseudo ttys are then attached with
+.B spattach
+as normal.
+.sp 1
+Statistics about the operation of
+.B m6pack
+may be obtained by sending the SIGUSR1 signal to the running program. On
+reception of such a signal
+.B m6pack
+will print a set of statistics to the system log if logging has been
+enabled.
+.sp 1
+Although mention is made of using pseudo ttys as the last arguments,
+these devices may be normal serial ports. However
+.B m6pack
+provides no way in which to set their speed, the speed must therefore be set
+by some other method.
+.SH OPTIONS
+.TP 10
+.BI \-l
+Enables system logging, the default is off.
+.TP 10
+.BI "\-s speed"
+Set the speed of the serial port.
+.TP 10
+.BI \-v
+Display the version.
+.TP 10
+.BI "\-x number"
+This option is for Unix98 PTYs. It allocates "number" ptys; their names are written to stdout. When -x is used, the pty arguments are optional.
+.SH "SEE ALSO"
+.BR spattach (8),
+.BR ifconfig (8),
+.BR kill (1).
+.SH AUTHORS
+Iñaki Arenaza EB2EBU <iarenaza@escomposlinux.org>, based in the work by:
+.br
+Tomi Manninen OH2BNS <oh2bns@sral.fi>
+.br
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+.br
+Kevin Uhlir N0BEL <kevinu@flochart.com>

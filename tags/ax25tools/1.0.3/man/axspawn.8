@@ -1,0 +1,125 @@
+.TH AXSPAWN 8 "25 August 1996" Linux "Linux System Managers Manual"
+.SH NAME
+axspawn \- Allow automatic login to a Linux system.
+.SH SYNOPSIS
+.B axspawn [--pwprompt PR0MPT, -p PR0MPT] [--changeuser, -c] [--rootlogin, -r] [--only-md5] [--wait, -w]
+.SH DESCRIPTION
+.LP
+.B Axspawn
+will check if the peer is an AX.25 connect, the callsign a valid Amateur
+Radio callsign, strip the SSID, check if UID/GID are valid, allow a
+password-less login if the password-entry in /etc/passwd is \(lq+\(rq or
+empty; in every other case login will prompt for a password.
+.LP
+.B Axspawn
+can create user accounts automatically. You may specify the user shell,
+first and maximum user id, group ID in the config file and (unlike WAMPES)
+create a file \(lq/etc/ax25/ax25.profile\(rq which will be copied to
+~/.profile.
+.SH SECURITY
+.LP
+Auto accounting is a security problem by definition. Unlike WAMPES, which
+creates an empty password field, Axspawn adds an \(lqimpossible\(rq ('+')
+password to /etc/passwd. Login gets called with the \(lq-f\(rq option, thus
+new users have the chance to login without a password. (I guess this won't
+work with the shadow password system).
+.LP
+Of course
+.B axspawn
+does callsign checking: Only letters and numbers are allowed, the callsign
+must be longer than 4 characters and shorter than 6 characters (without
+SSID). There must be at least one digit, and max. two digits within the
+call. The SSID must be within the range of 0 and 15. Please drop me a note
+if you know a valid Amateur Radio callsign that does not fit this pattern
+_and_ can be represented correctly in AX.25.
+.LP
+axspawn also has the well known authentication mechanisms of the AX.25 bbs
+.B baycom (sys)
+and
+.B md5
+standards.
+axspawn searches in /etc/ax25/bcpasswd (first) and ~user/.bcpasswd (second)
+for a match of the required authentication mechanism and password.
+md5 and baycom passwords may differ. md5 passwords gain over baycom passwords. 
+
+Note: you could "lock" special "friends" out by specifying an empty password
+in /etc/ax25/bcpasswd (line "n0call:md5:"). -> md5 Passwords are enforced. But
+the length is shorter than the minimum (len 8 for md5, len 20 for baycom);
+user's password file is not searched because in /etc/ax25/bcpasswd its already
+found..
+
+Syntax and caveeats for /etc/ax25/bcpasswd: 
+  - Has to be a regular file (no symlink). Not world-readable/writable.
+  - Example lines:
+    # Thomas
+    dl9sau:md5:abcdefgh
+    # Test
+    te1st:sys:12345678901234567890
+    # root
+    root:md5:ziz7AoxuAt6jeuthTheexet0uDa9iefuAeph3eelAetahmi0
+    # misconfiguration:
+    thisbadlineisignored
+    # With this line
+    systempasswordonly
+    # .. axspan will not look in user's homedir for his .bcpasswd
+
+Syntax and caveeats for user's .bcpasswd in his $HOME:
+  - Has to be a regular file (no symlink). Neither group- nor world-
+      read-/writable. Has to be owned by the user or uid 0 (root).
+  - Example lines:
+    # could be shorter
+    md5:abcdefgh
+    # should be longer
+    sys:12345678901234567890
+
+.SH OPTIONS
+.TP 5
+.B -p DB0FHN or --pwprompt DB0FHN
+While baycom or md5 password authentication (see above), the password prompt
+is set to the first argument (DB0FHN in this example). This may be needed
+for some packet-radio terminal programs for detecting the password prompt
+properly.
+.TP 5
+.B -c, --changeuser
+Allow connecting ax25 users to change their username for login. They'll be
+asked for their real login name. 
+.TP 5
+.B -e, --embedded
+Special treatment for axspawn on non-standard conform embedded devices.
+I.e. openwrt has no true /bin/login: if you use it as a real login program,
+it raises a security hole.
+.TP 5
+.B -r, --rootlogin
+Permit login as user root. Cave: only md5 or baycom style is allowed; no
+plaintext password.
+.TP 5
+.B --only-md5
+Insist in md5 authentication during login. If no password for the user is
+found, or it is not md5, then no other login mechanism is granted.
+This option, in combination with -c and -r, may be a useful configuration for
+systems where no ax25 user accounts are available, but you as sysop would
+like to have a login access for your administrative tasks.
+.TP 5
+.B -w, --wait
+Eats the first line the user sends. This feature is useful if you have
+TCP VC connects to the same Call+SSID. It is now obsolete, because
+ax25d is the right place for this and implements this functionality better.
+.TP 5
+Theses are options and not part of the preferences because you _may_ like to have on every interface definition in ax25d.conf (where axspawn is started from) a different behaviour.
+.SH FILES
+.nf
+/etc/passwd
+.br
+/etc/ax25/ax25.profile
+.br
+/etc/ax25/axspawn.conf
+.fi
+/etc/ax25/bcpasswd
+.fi
+~/.bcpasswd
+.fi
+.SH "SEE ALSO"
+.BR axspawn.conf (5),
+.BR ax25d (8).
+.SH AUTHOR
+Joerg Reuter DL1BKE <jreuter@poboxes.com>

@@ -1,0 +1,82 @@
+.\" Copyright 1996 Thomas Sailer (t.sailer@alumni.ethz.ch)
+.\" May be distributed under the GNU General Public License
+.\" "
+.TH SOUNDMODEM 9 "2 October 1996" "Linux 2.1.x" "Kernel Reference Guide"
+.SH NAME
+soundmodem \- amateur (AX.25) packet radio network driver for soundcards
+.SH SYNOPSIS
+
+.nf
+.B #include <linux/soundmodem.h>
+.B #include <linux/hdlcdrv.h>
+.fi
+
+.SH DESCRIPTION
+The driver currently supports both 1200 baud AFSK and 9600 baud FSK
+(G3RUH compatible) using a standard SoundBlaster compatible or 
+WindowsSoundSystem compatible soundcard. The whole decoding is done
+in software, so you definitely do not want to use it on a 386SX class
+machine.
+
+.SH "KEYING THE TRANSMITTER"
+Soundcards do not have a DC coupled output that could serve as a
+PTT signal. So there are basically for possibilities for
+obtaining a PTT signal. Sample schematic diagrams can be found on
+\fIhttp://www.ife.ee.ethz.ch/~sailer/pcf/ptt_circ/ptt.html\fP.
+.SS "VOX circuitry"
+A simple VOX circuitry that detects output signals at the output of
+the soundcard can be used, especially as it can be built with a single
+transistor plus a few passive components and typical soundcards have
+strong output signals.
+.SS "Parallel Port"
+A parallel port line can also be used to signal PTT. If selected,
+the PTT signal is output on the DATA0 line and DCD is output on the
+DATA1 line.
+.SS "Serial Port"
+A standard serial port (8250, 16450, 16550) can also be used to output
+PTT. PTT is output on RTS and TxD, while DCD is output on DTR.
+.SS "MPU401 MIDI Port"
+The MIDI port is basically an asynchronous serial interface and
+thus cannot output a straight DC level, however it may be used if
+connected through a retriggerable monoflop with about 15ms pulse
+duration. Note that only newer SoundBlaster models have a genuine
+MPU401 MIDI port. The older SB MIDI port cannot be used.
+
+.SH "IOCTL CALLS"
+The \fBioctl\fP calls follow the implementation in the \fIhdlcdrv\fP.
+
+.TP
+.B SMCTL_GETMODEMTYPE
+returns the modem type (i.e. \fISBC1200\fP, \fISBC9600\fP, \fIWSS1200\fP
+or \fIWSS9600\fP)
+.TP
+.B SMCTL_SETMODEMTYPE
+sets the modem type. Only superuser can do this.
+.TP
+.B SMCTL_GETMIXER
+returns the mixer type and the contents of the specified
+mixer register.
+.TP
+.B SMCTL_SETMIXER
+sets the specified mixer register, if the specified
+mixer type matches the mixer type of the soundcard. Only 
+superuser can do this.
+.TP
+.B SMCTL_DIAGNOSE
+returns the contents of the diagnose buffer, which is used by
+\fIsmdiag\fP to display the eye and oscilloscope diagrams.
+.TP
+.B SMCTL_GETDEBUG
+return some debugging values. Not always available.
+
+
+.SH "SEE ALSO"
+.BR baycom " (9), " soundmodem " (9)," smdiag " (8)," smmixer " (9),"
+linux/drivers/net/hdlcdrv.c,
+
+.SH AUTHOR
+soundmodem was written by Thomas Sailer, HB9JNX/AE4WA, (t.sailer@alumni.ethz.ch).
+
+
+
+

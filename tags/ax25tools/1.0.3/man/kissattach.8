@@ -1,0 +1,72 @@
+.TH KISSATTACH 8 "4 July 1999" Linux "Linux System Managers Manual"
+.SH NAME
+kissattach, spattach \- Attach a KISS or 6PACK interface
+.SH SYNOPSIS
+.B kissattach [-b] [-6] [-l] [-m mtu] [-v] tty port [inetaddr]
+.sp
+.B spattach [-b] [-l] [-m mtu] [-v] tty port [inetaddr]
+.SH DESCRIPTION
+.LP
+Attach a KISS or a 6PACK interface to what is normally a tty line connected
+to a TNC in KISS or 6PACK mode. This program will turn itself into a
+background process. To down an interface send its attach process a SIGTERM.
+.LP
+.B Kissattach
+takes many of the parameters for the port from the axports(5) file. If the
+speed parameter in the file is not equal to zero then it is used for the
+serial port speed, a zero value means that no speed is set. The paclen
+parameter is used for the device mtu unless overridden by a value on the
+command line.
+.LP
+The tty argument will typically be that of a serial port with a KISS or 6PACK
+TNC attached, although it could be a pseudo tty or a KISS port emulator such as
+an SCC card. Kissattach supports BSD-style pseudo-terminals as well as
+the Unix98 pty's. If the tty argument is "/dev/ptmx", then Unix98 behaviour
+will automaticaly take effekt. With Unix98 pty's, the slave tty name
+could not be forseen. That's why kissattach will print the corresponding slave
+pty name as a separate line on stdout.
+.LP
+The port argument is the name of a port as given in the
+axports(5) file.
+.LP
+The optional inetaddr argument is the IP address of the new interface. Some
+time it was mandatory argument (although due to historical reasons this
+restriction is lifted if the old -i option is used). But there's really not
+a need for the interface to have an IP address assigned to.
+.SH OPTIONS
+.TP 16
+.BI "\-6"
+Use the 6PACK line discipline instead of KISS. This is the default if
+the program is called as spattach.
+.TP 16
+.BI "\-i inetaddr"
+Set the internet address of the interface. This address may either be a
+dotted decimal address or a host name. This option is now depreciated and
+the program will complain about it, though still work.
+.TP 16
+.BI \-l
+Log messages to the system log, the default is not to.
+.TP 16
+.BI \-b
+Allow broadcasts on the interface (default no - because for e.g. samba
+broadcasts are a pain..)
+.TP 16
+.BI "\-m mtu"
+Sets the mtu of the interface. If this value is not given then the value is
+taken from the paclen parameter in axports.
+.TP 16
+.BI \-v
+Display the version.
+.SH "SEE ALSO"
+.BR kill (1),
+.BR stty (1),
+.BR ax25 (4),
+.BR axparms (4),
+.BR axports (5),
+.BR ifconfig (8).
+.SH AUTHOR
+.nf
+Alan Cox GW4PTS <alan@cymru.net>
+.br
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+.fi

@@ -1,0 +1,63 @@
+.TH RSPARMS 8 "25 July 1997" Linux "Linux System Managers Manual"
+.SH NAME
+rsparms \- Configure the Rose interface.
+.SH SYNOPSIS
+.B rsparms -nodes add|del address[/mask] port neigh [digis...]
+.LP
+.B rsparms -nodes list
+.LP
+.B rsparms -call <callsign>|none
+.LP
+.B rsparms -version
+.SH DESCRIPTION
+.LP
+This program is used to manipulate the routing tables of the Rose network
+layer. To set up a new route to a Rose node in the routing tables you must
+use the nodes option. All of the parameters are needed to add the node. It
+is probably best to illustrate with an example:
+.LP
+.B 	rsparms -nodes add 2080192303 144 F1OAT-11
+.LP
+This creates a new route to a distant node with the address 2080192303 and
+the packets for that node should be sent on AX.25 port 144 to my immediate
+neighbour F1OAT-11 without going through any digi-praters. For
+example to set up the same node but via a digi-peater I would use:
+.LP
+.B 	rsparms -nodes add 2080192303 144 F1OAT-11 F6PRA-9
+.LP
+It is also possible to remove a route to a distant node with the same
+command except that the \(lqadd\(rq is replaced by a \(lqdel\(rq. The other
+parameters must also be present. If the node has no other routes then the
+node will be deleted, and the neighbour node that the connections go via may
+also be deleted if no other node route uses it.
+.LP
+You may list the configured Rose routes using the following syntax:
+.LP
+.B 	rsparms -nodes list
+.LP
+This program may also be used to set up a common AX.25 level 2 callsign that
+will be used for the ROSE node. By default no special level 2 callsign is
+set, but setting it will replace any existing level 2 callsign and register
+another one. Setting the callsign to \(lqnone\(rq will remove the level 2
+callsign. For example:
+.LP
+.B 	rsparms -call VK2KTJ-10
+.LP
+would set the callsign used by Rose internode traffic to VK2KTJ-10.
+.SH OPTIONS
+.TP 10
+.BI \-version
+Display the version information.
+.SH FILES
+.LP
+/etc/ax25/axports
+.br
+/etc/ax25/rsports
+.SH "SEE ALSO"
+.BR call (1),
+.BR rose (4),
+.BR axports (5),
+.BR rsports (5),
+.BR rsparms (8).
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

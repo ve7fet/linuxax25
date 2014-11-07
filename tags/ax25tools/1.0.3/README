@@ -1,0 +1,22 @@
+AX25 Tools
+==========
+To compile this I used:
+  * A Debian GNU/Linux system
+  * autoconf 2.69
+  * automake 1.11.6
+  * libtool 2.4.2
+  * libc 2.12
+  * gcc 4.7.2
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 06 Nov 2014 10:00:00 -0800
+
+Note that kissattch has changed its command line format slight.  While the
+old format will work, the -i option is now, err, not optional.  This was
+done to stop the million or so emails we get on linux-hams email list
+saying why do people get axports unconfigured even after a kissattach 
+command.
+
+
+  - Craig Small <csmall@small.dropbear.id.au>
+
+

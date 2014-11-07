@@ -1,0 +1,148 @@
+ax25tools (1.0.3)
+	* Long overdue updating to bring codebase up to sync with official sources,
+	  will keep our file structure to make packaging easier
+	* Fixes bugs in axspawn that could eat 100% CPU when useradd called, 
+	  a bug when useradd failed, empty lines in axspawn.conf now valid, 
+	  and user_shell variable is now optional but will default to /bin/bash
+	* Current kernel no longer has limits for netrom/rose devices (previously
+	  4 netrom and 6 rose), nrattach and rsattach patched accordingly
+	* Fixes for other various compiler warnings and errors
+
+-- Lee Woldanski <ve7fet@tparc.org>  Thu, Nov 06 2014 10:00:00 -0800
+
+ax25tools (1.0.2)
+	* Fix for CVE-2011-2910: check return status of setuid()
+	* Manually patched against upstream source current as of August 27, 2011
+	* Minor grammar fixes
+
+-- Lee Woldanski <ve7fet@tparc.org>  Sat, 27 Aug 2011 15:00:00 -0800
+
+ax25tools (1.0.1)
+	* Modified the spec file to handle different dependency names for Mandriva
+
+-- Lee Woldanski <ve7fet@tparc.org>  Mon, 14 Feb 2011 10:30:00 -0800
+
+ax25tools (1.0.1)
+	* Changed package name from ax25-tools to ax25tools for better compliance with 
+	  most distributions package naming policies.
+        * Changed the way version is parsed in configure.ac to be passed to the rpm
+          spec file.
+        * Changed the spec file to install the package in the proper places as well
+          as the URL's to point to here. Also added dependency checking.
+
+-- Lee Woldanski <ve7fet@tparc.org>  Sun, 30 Jan 2011 16:00:00 -0800
+
+ax25-tools (1.0.0)
+	* This is a custom release, not associated with the official source.
+	* This package has been beta for so long, it is time to relase version 1.0.0.
+	* Moved axports, nrports, and rsports example config files to this 
+	  package from libax25. They should be in here where their associated 
+	  utilities reside (kissattach, nrattach, rsattach, etc), not in the 
+	  library distribution.
+	* Moved the related mans axports.5, nrports.5, and rsports.5 into this 
+	  package from libax25. The conf files are here, so the man pages had 
+	  to come too.
+	* Re-organized the package to put the /etc and /man files in their 
+	  own build directories.
+	* Put misc README's in /doc
+	* Re-checked build dependencies and updated configure.ac for:
+	  automake 1.10.1
+	  autoconf 2.61
+	* Removed un-necessary checks in configure.ac
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 27 Jan 2011 23:00:00 -0800
+
+ax25-tools (0.0.10)
+	* Version number 0.0.10 was used for several years in CVS.  To avoid
+	  confusion we decieded to not make a 0.0.9 tarball release.
+	* Fixed numerous build warnings and errors with modern distributions
+	  and compilers and other functional errors.
+	* Support for UNIX98 pseudo terminals.
+	* Support UNIX authentication for axspawn logins.
+	* Axspawn now support Hufman compression.
+	* An IP address is no longer mandatory for nrattach, kissattach.
+	* kissparms now allows to send a raw value to the driver and to set
+	  the CRC mode by command line option.
+	* axspawn now records the time at microsecond accuracy in utmp.
+	* removed old kernel patches for yum support for kernels 2.0.36 and
+	  2.2.1.  In the unexpected case somebody should still need them the
+	  patches can be found in older releases and the source archive.
+	* Add support for building rpm packages.
+
+ -- Ralf Baechle DL5RB <ralf@linux-mips.org>  Sat, 6 Jun 2009 17:36:01 +0100
+
+ax25-tools (0.0.9)
+	* Fix for mkiss pid problem 
+	* Removed inline statesment in hdrvcomm.c
+	* Added remaining missing sys/time.h
+	* Netromd now uses PF_SOCKET
+	* Changed sys_errlist[] to strerror()
+
+ -- Craig Small <csmall@small.dropbear.id.au>  NO RELEASE YET
+
+ax25-tools (0.0.8)
+	* kissattach now tells you where it thinks the config file is
+	* rip98r metric patch form Jean-Paul
+	* Fix for FTLK_LIB for configure.in from Hans
+	* Works better with newer GCCs (thanks again to Hans)
+	* Fixed sockaddr/osockaddr problem in ttylink
+	* Changed bcopy and bzero to memcpy and memset
+	* netromd was printing raw callsigns, now use ax25_ntoa()
+	* synced dmascc_cfg to Klauss' latest
+
+ -- Craig Small <csmall@small.dropbear.id.au>  
+
+ax25-tools (0.0.7)
+	* Fixed automake/autoconf stuff to sort out FLTK tools.
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Thu, 26 Oct 2000 14:19:32 +1100
+
+ax25-tools (0.0.6)
+	* Added the new fltk smdiag and friends and put the old non-X based
+	  ones back in.
+	* Changed all references of rip98.conf to rip98d.conf
+	* Attempted to hunt down and change all my email addresses
+	* Another Tomi's patch for nrparms and user_call
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Tue Jan  4 15:13:15 EST 2000
+
+ax25-tools (0.0.5)
+
+	* Added Tomi's patch to correctly detect broken headers
+
+ -- Craig Small <csmall@small.dropbear.id.au>  Mon, 23 Aug 1999 12:41:12 +1000
+
+ax25-tools (0.0.4)
+	
+	* Changed kissattach so that it demands an IP address
+	* The hdlc stuff now has -i in it
+	* mheardd.c patch for old glibc headers
+	* kissattach.c basename changed to kiss_bname due to conflict
+	* configure checks for linux/dmascc.h
+	* kiss/Makefile.am uses ln -sf instead of ln -s
+
+ --Craig Small <csmall@small.dropbear.id.au>  Tue, 10 Aug 1999 11:44:19 +1000,
+
+ax25-tools (0.0.3)
+
+  * Fixed configure.in so it doesn't check for libax25io
+  * Added dmascc configuration program
+  * Added spattach
+  * Added yamcfg
+  * Removed nrports, axports and rsports, they are in the library
+  * Had another crack at getting config locations portable
+
+ -- Craig Small <csmall@small.dropbear.id.au> 30 June 1999
+
+ax25-tools (0.0.2)
+
+  * First public release
+
+ -- Craig Small <csmall@small.dropbear.id.au> 21 April 1999
+
+ax25-tools (0.0.1)
+
+	* Initial version from Terry Dawson's code, split from the old
+	  ax25-utils package. Uses new ntoa aton calls.
+
+ -- Craig Small <csmall@small.dropbear.id.au>

@@ -1,0 +1,43 @@
+.TH ROSE 4 "27 August 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+AF_ROSE \- Rose amateur packet radio protocol family
+.SH DESCRIPTION
+.LP
+.B Rose
+is a protocol used extensively by radio amateurs. The Linux
+Rose protocol family permits access to these protocols via
+the standard networking
+.B socket
+metaphor.
+.LP
+The Rose protocol layer only supports connected mode.
+.LP
+The only mode of operation is connected mode which is the mode used for a
+socket of type SOCK_SEQPACKET (stream sockets are not available in Rose).
+This requires that the user ensures output data is suitably packetised, and
+that input data is read a packet at a time into a buffer of suitable size.
+.LP
+Rose addresses consist of 10 digits. These are encoded into a sockaddr_rose
+structure which is provided to the relevant system calls.
+.LP
+Rose has some unusual properties. Notably in a multi-user system an AX.25
+address is often associated with a user, and some users may not have such an
+association. a set of ioctl calls are provided to manage an association
+table.
+.LP 
+Rose supports the following socket options for SOL_ROSE. ROSE_T1 is the
+T11/T21 timer in 1/10ths of a second, ROSE_T2 is the T12/T22 timer in
+1/10ths of a second. ROSE_T3, is the T13/T23 timer in 1/10ths of a second.
+It is possible for an application to request that the Rose layer return
+the Rose header as well as the application data, this is done via the
+ROSE_HDRINCL socket option.
+.SH "SEE ALSO"
+.BR call (1),
+.BR socket (2),
+.BR setsockopt(2),
+.BR getsockopt(2),
+.BR rsports (5),
+.BR rsparms (8).
+.LP
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

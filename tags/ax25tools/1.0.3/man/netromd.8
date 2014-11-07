@@ -1,0 +1,97 @@
+.TH NETROMD 8 "20 August 1996" Linux "Linux System Managers Manual"
+.SH NAME
+netromd \- Send and receive NET/ROM routing messages
+.SH SYNOPSIS
+.B netromd [-c] [-d] [-i] [-l] [-p pause] [-q quality] [-t interval] [-v]
+.SH DESCRIPTION
+.LP
+For a NET/ROM based network to operate correctly, a periodic broadcast of
+routing information needs to occur. Typically this occurs once every hour on
+every port which is expected to carry NET/ROM traffic. The purpose of
+.B netromd
+is to send and receive NET/ROM routing broadcasts. To operate correctly a
+set of parameters that corresponds to each AX.25 port needs to be passed to
+the program. This information is encoded in a configuration file, by default
+which is /etc/ax25/nrbroadcast with each line representing one
+port, see the manual page for
+.BR nrbroadcast (5).
+.LP
+To cut down the length of these routing broadcasts, only the information
+about the highest quality neighbour for a particular node is transmitted.
+The transmission is also limited to those node that have a certain minimum
+value in their obsolesence count, this value is decremented every time a
+routing broadcast is transmitted, and is refreshed by receiving a routing
+broadcast which contains that particular node.
+.LP
+The value of the default quality is traditionally assigned a value that
+represents the quality of the radio links on that port. A higher number
+representing better radio links with 255 (the maximum) reserved for wire
+connections. The practise in the UK is to set the default quality to a low
+value, typically 10, and manually set up the trusted neighbouring nodes in
+the neighbour list manually. The worst quality for auto-updates value is a
+way to filter out low quality (ie distant) nodes.
+.LP
+The verbose flag may be either 0 or 1, representing no and yes. By
+specifying no, the program will only generate a routing message containing
+information about the node on which it is running, by specifying the yes
+option, all the information in the nodes routing tables will be transmitted.
+The quality advertised for the other node callsigns on this machine may be
+set using the \-q option.
+.LP
+Between each transmission
+.B netromd
+pauses for five seconds (default) in order to avoid flooding the channels
+that it must broadcast on. The value of this delay is settable with the \-p
+option.
+.SH OPTIONS
+.TP 16
+.BI \-c
+Forces strict compliance to Software 2000 specifications. At present this
+only determines how node mnemonics with lower case characters will be handled.
+With compliance enabled mixed case node mnemonics will be ignored. The default
+is to accept node mnemonics of mixed case.
+.TP 16
+.BI \-d
+Switches on debugging messages, the default is off. Logging must be enabled
+for them to be output.
+.TP 16
+.BI \-i
+Transmit a routing broadcast immediately, the default is to wait for the
+time interval to elapse before transmitting the first routing broadcast.
+.TP 16
+.BI \-l
+Enables logging of errors and debug messages to the system log. The default
+is off.
+.TP 16
+.BI "\-p pause"
+Sets the delay between transmissions of individual routing broadcast
+packets. The default is five seconds.
+.TP 16
+.BI "\-q quality"
+Sets the quality of the subsidiary nodes relative to the main node. The
+default is 255.
+.TP 16
+.BI "\-t interval"
+The time interval between routing broadcasts, in minutes. The default is 60
+minutes.
+.TP 16
+.BI \-v
+Display the version.
+.SH FILES
+.nf
+/proc/net/nr_neigh
+.br
+/proc/net/nr_nodes
+.br
+/etc/ax25/axports
+.br
+/etc/ax25/nrbroadcast
+.fi
+.SH "SEE ALSO"
+.BR ax25 (4),
+.BR axports (5),
+.BR nrbroadcast (5),
+.BR netrom (4),
+.BR nrparms (8).
+.SH AUTHOR
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

@@ -1,0 +1,11 @@
+This shell utility is for up/downloading files via your ax25 unix login
+session which is managed by axspawn.
+you need a //BIN compatible axspawn, which has the functionality of making
+the stream 8bit compatible (normally the EOL-conversion <LF> <-> <CR>
+prevents this). see:
+  http://x-berg.in-berlin.de/cgi-bin/viewcvs.cgi/ampr/patches/linux-ax25/
+
+The location of these sources is
+  http://x-berg.in-berlin.de/cgi-bin/viewcvs.cgi/ampr/axgetput/
+
+Since 2006-12-10, axgetput is part of the ax25-tools (s. linux-ax25.org).
