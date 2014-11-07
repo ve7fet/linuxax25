@@ -71,8 +71,6 @@ void rose_dump(unsigned char *data, int length, int hexdump)
 			facility(data, length);
 			length -= flen;
 			data += flen;
-			if (length > 0)
-				data_dump(data, length, 1);
 		} else {
 			lprintf(T_ROSEHDR, "\n");
 		}
@@ -85,9 +83,6 @@ void rose_dump(unsigned char *data, int length, int hexdump)
 	case CLEAR_REQUEST:
 		lprintf(T_ROSEHDR, "CLEAR REQUEST - Cause %s - Diag %d\n",
 			clear_code(data[3]), data[4]);
-		if (length > 6) {
-			facility(data + 6, length - 6);
-		}
 		return;
 
 	case CLEAR_CONFIRMATION:
