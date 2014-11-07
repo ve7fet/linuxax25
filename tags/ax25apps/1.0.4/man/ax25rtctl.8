@@ -1,0 +1,76 @@
+.TH AX25RTCTL 8 "11 November 2003" Linux "Linux Programmer's Manual"
+.SH NAME
+ax25rtctl \- AX.25 routing control program
+.SH SYNOPSIS
+.B ax25rtctl [options]
+.SH DESCRIPTION
+.LP
+.B ax25rtctl
+is a program to control ax25rtd. There are several options:
+.TP
+.B -a, --add ax25 <callsign> <dev> <time> [digipeater]
+Add an entry to the AX.25 routing table. If time is "0"
+this entry will be marked permanent, hence: the daemon will not
+overwrite this route.
+.TP
+.B -d, --del ax25 <callsign> <dev>
+Remove an entry from the AX.25 routing table.
+.TP
+.B -a, --add ip <ip> <dev> <time> <call> <ipmode>
+Add an entry to the IP routing table. If time is "0" the
+entry will be marked permanent.
+.TP
+.B -d, --del ip <ip>
+Remove an entry from the IP routing table.
+.TP
+.B -l, --list ax25
+Lists the content of the cache for the AX.25 routing table.
+.TP
+.B -l, --list ip
+Lists the content of the cache for the IP routing table.
+.TP
+.B -e, --expire <minutes>
+Removes the entries older than <minutes> from the caches and
+the kernel routing tables.
+.TP
+.B -s, --save
+Saves the AX.25 and IP cache to /var/ax25/ax25rtd/ax25_routes and
+/var/ax25/ax25rtd/ip_routes (or the files specified in
+/etc/ax25/ax25rtd.conf).
+.TP
+.B -r, --reload
+Reloads the config file /etc/ax25/ax25rtd.conf. This will
+*not* affect the caches or the heard list.
+.TP
+.B -q, --shutdown
+Same as 'killall -TERM ax25rtd' ;-)
+.TP
+.B -V, --version
+Prints version.
+.PP
+Note that you can specify either the port name (as defined in
+/etc/ax25/axports) or the interface name (shown by ifconfig). If names
+conflict (i.e. port scc0 is in fact interface scc3, and vica versa), the
+interface name has precedence over the port name.  Example:
+
+   ax25rtctl --add ax25 dl0tha scc3 0 db0pra
+
+is equivalent to
+
+   ax25rtctl --add ax25 dl0tha 9k6 0 dbpra
+
+All commands return port names in their output, though.
+With one exception: ax25_routes and ip_routes use interface names.
+
+.SH FILES
+/etc/ax25/ax25rtd.conf
+.SH "SEE ALSO"
+.BR ax25rtd.conf (5),
+.BR ax25rtd (8).
+.LP
+.SH AUTHORS
+.nf
+Joerg Reuter <jreuter@poboxes.com>
+.br
+Llaus Kudielka OE1KIB
+.fi

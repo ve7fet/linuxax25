@@ -1,0 +1,28 @@
+ax25ipd:
+Michael Westerhof
+Michael Durrant VE3PNX <mdurrant@arcturusnetworks.com>
+D. Jeff Dionne VE3DJF <Jeff@lnx_rpi.ee.ryerson.ca>
+Rob Mayfield VK5XXX/VK5ZEU <mayfieldrob@mail.dec.com>
+Terry Dawson VK2KTJ <terry@animats.net>
+
+ax25rtd:
+Joerg Reuter <jreuter@poboxes.com>
+Llaus Kudielka OE1KIB
+
+listen:
+Phil Karn KA9Q <karn@qualcomm.com>
+Jeff White N0POY
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+Heikki Hannikainen OH7LZB <oh7lzb@sral.fi>
+Alan Cox GW4PTS <alan@cymru.net>
+Jean-Paul for rose decoding
+Jeroen Vreeken for INP decoding
+
+call:
+Alexander Tietzel DG6XA <TIETZE_A@etech.fh-hamburg.de>
+Alan Cox GW4PTS <alan@cymru.net>
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+Joerg Reuter DL1BKE <jreuter@poboxes.com>
+Steve Henson G6IXS <shenson@nyx.cs.du.edu>
+Mark Wahl
+Werner Almesberger

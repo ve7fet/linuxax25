@@ -1,0 +1,194 @@
+.TH CALL 1 "27 August 1996" Linux "Linux Programmer's Manual"
+.SH NAME
+call \- make an AX.25, NET/ROM or Rose connection.
+.SH SYNOPSIS
+For AX.25
+.br
+.B call [-b l|e] [-d] [-h] [-m s|e] [-p paclen] [-s mycall] [-r] [-t] [-T timeout] [-v] [-w window] [-W] port callsign [[via] digipeaters.....]
+.sp 1
+For NET/ROM
+.br
+.B call [-d] [-h] [-p paclen] [-r] [-t] [-v] port callsign
+.sp 1
+For Rose
+.br
+.B call [-d] [-h] [-r] [-t] [-v] port callsign address [[via] digipeater]
+.br
+.SH DESCRIPTION
+.LP
+.B Call
+is the general purpose AX.25, NET/ROM and Rose connection program. As is normal
+in AX.25 it runs entirely in line mode. All CR/LF translation is done
+transparently. The program provides ASCII, YAPP, YAPP-C and 7+ file
+transfer facilities. Some of the options are only valid in AX.25 mode,
+the program will quietly ignore them if given in NET/ROM mode or in Rose
+mode.
+.LP
+This version of
+.B call
+incorporates many changes that include a much improved user interface. The
+port name is mandatory and is the name of the port which the connection will
+be made on. The port name may be either an AX.25, a NET/ROM port or a Rose
+port,
+.B call
+will determine which automatically.
+.LP
+When using NET/ROM the use of digipeaters is meaningless and is not
+supported. However when using Rose up to one digipeater may be specified, as
+well as the Rose address of the distant node and the callsign of the remote
+station. The Rose address must be ten digits long and it must exist in the
+Rose node tables. For Rose connects to work
+.B axparms
+must have been used to set a callsign/uid mapping for the userid in use.
+.SH OPTIONS
+.TP 10
+.BI "\-b l|e"
+Sets the method of backoff to use with AX.25 connections. The default is
+taken from the port specification, but can be overridden by this option.
+Valid values are
+.B l
+for linear backoff, and
+.B e
+for exponential backoff.
+.TP 10
+.BI \-d
+Turn on socket level debugging.
+.TP 10
+.BI \-h
+Selects Slave mode.
+.TP 10
+.BI "\-m s|e"
+Sets the AX.25 mode to use. The default is taken from the port
+specification, but can be overridden by this option. Valid values are
+.B s
+for normal (modulus 8) AX.25 operation, or
+.B e
+for extended (modulus 128) AX.25 operation.
+.TP 10
+.BI "\-p paclen"
+Specify a specific maximum amount of data to be sent in each AX.25 packet. 
+.TP 10
+.BI "\-s mycall"
+Connect using the specified source call (you may need to be root).
+.TP 10
+.BI \-R
+Disable all remote commands like autobin (#BIN#), 7plus downloads, //echo, etc.
+This is useful for scripting where you just don't like the remote site to trigger uncaught conditions here.
+.TP 10
+.BI \-S
+Be silent. Useful for using call in shellscripts (together with option \-r) in order to be really transparent.
+.TP 10
+.BI "\-T timeout"
+Set idle timeout seconds after a connection will be closed automaticaly when there's no data being transferred (in- and outbound). If timeout is set to 3600, the connection will close after 1h inactivity. A value of 0.5 is 500ms.
+.TP 10
+.BI \-r
+Selects Raw mode.
+.TP 10
+.BI \-t
+Selects Talk mode.
+.TP 10
+.BI \-v
+Display the version.
+.TP 10
+.BI "\-w window"
+Specify a specific AX.25 window for this connection. Only valid in AX.25 mode.
+.TP 10
+.BI "\-W"
+Wait for remote disconnect even if stdin is closed. Normaly, "echo q | call ax0 db0fhn" closes immediately after "echo q" terminates; thus we never see the greeting from db0fhn. With the -W option, call waits until the ax25-connection is disconnected (i.e. db0fhn disconnects after "q" command). Very useful for scripting. You might like to combine it with the -T option.
+.LP
+The call program interprets lines beginning with a '~' specially.
+The following '~' escapes are available.
+.TP 16
+.BI ~?
+List escapes
+.TP 16
+.BI ~~
+A ~ symbol
+.TP 16
+.BI ~.
+Close connection
+.TP 16
+.BI "~! [command]"
+Run a command
+.TP 16
+.BI ~0
+Change to Raw mode
+.TP 16
+.BI ~1
+Change to Slave mode
+.TP 16
+.BI ~2
+Change to Talk mode
+.TP 16
+.BI ~a
+Start a file transfer (Autobin)
+.TP 16
+.BI ~b
+Start a file transfer (Binary)
+.TP 16
+.BI ~c
+Close the logfile
+.TP 16
+.BI ~h
+List escapes
+.TP 16
+.BI "~o [filename]"
+Open a logfile (default 'logfile.txt')
+.TP 16
+.BI ~r
+Reconnect to remote station
+.TP 16
+.BI ~s
+Stop an upload
+.TP 16
+.BI "~u [filename]"
+Upload a file (ASCII upload)
+.TP 16
+.BI "~yu [filename]"
+Upload a file (YAPP upload)
+.TP 16
+.BI "~yd [filename]"
+Download a file (YAPP download)
+.TP 16
+.BI ~z
+Suspend program
+.LP
+The program provides no terminal emulation features. These are left
+up to the console facilities of the terminal in use. The program is 
+however '8 bit clean'.
+.SH FILES
+.nf
+/proc/net/nr_nodes
+.br
+/proc/net/rose_nodes
+.br
+/etc/ax25/axports
+.br
+/etc/ax25/nrports
+.br
+/etc/ax25/rsports
+.fi
+.SH "SEE ALSO"
+.BR listen (1),
+.BR mheard (1),
+.BR ax25 (4),
+.BR netrom (4),
+.BR rose (4),
+.BR axports (5),
+.BR nrports (5),
+.BR rsports (5),
+.BR axparms (8),
+.BR nrparms (8),
+.BR rsparms (8).
+.SH AUTHORS
+.nf
+Alexander Tietzel DG6XA <TIETZE_A@etech.fh-hamburg.de>
+.br
+Joerg Reuter DL1BKE <jreuter@poboxes.com>
+.br
+Alan Cox GW4PTS <alan@cymru.net>
+.br
+Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+.br
+Steve Henson G6IXS <shenson@nyx.cs.du.edu>
+.fi
