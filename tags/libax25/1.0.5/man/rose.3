@@ -1,0 +1,50 @@
+.TH INET 3  "2008-Feb-04" "Linux" "Linux Programmer's Manual"
+.SH NAME
+rose_aton, rose_ntoa, rose_cmp \- ROSE Address manipulation routines
+.SH SYNOPSIS
+.nf
+.B #include <netrose/rose.h>
+.sp
+.BI "int rose_aton(const char *" cp ", char *" inp ");"
+.sp
+.BI "char * rose_ntoa(rose_address *" cp ");"
+.sp
+.BI "int rose_cmp(rose_address *" a1 ", rose_address *" a2 ");"
+.fi
+.SH DESCRIPTION
+The
+.BR rose_aton ()
+converts the ROSE address
+.I cp
+from an ASCII representation into network format.
+.PP
+The
+.BR rose_ntoa ()
+converts the ROSE address
+.I cp
+that is network format to a string that is the ASCII representation
+of the address.
+.PP
+The
+.BR rose_cmp ()
+compares the two ROSE address
+.I a1
+and
+.I a2
+that are in network format.
+.SH "RETURN VALUE"
+The
+.BR rose_ntoa ()
+and
+.BR rose_aton ()
+functions return zero if all went OK, -1 if not.
+.PP
+The
+.BR rose_cmp ()
+returns 0 if addresses pointer by
+.I a1
+and
+.I a2
+are identical, 1 otherwise.
+.SH "SEE ALSO"
+.BR ax25 "(4), " netrom "(4), " rose "(4)"

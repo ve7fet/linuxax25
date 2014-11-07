@@ -1,0 +1,25 @@
+AX25 Library
+============
+
+This library set is still really under test but is now released for
+general use. 
+
+You are supposed to use glibc 2.1 (libc6 unstable libraries) for this
+package.  I have attempted to cater for glibc 2.0 users here.
+
+To compile this I used:
+  * A Debian GNU/Linux system
+  * autoconf 2.69
+  * automake 1.11.6
+  * libtool 2.4.2
+  * libc 2.12
+  * gcc 4.7.2 
+
+  -- Lee Woldanski <ve7fet@tparc.org>  Tue, Nov 04 2014 14:30:00 -0800
+
+This library is copyright by the respective authors (see AUTHORS for a list)
+and licensed under the GNU LGPL (see COPYING for more information).
+
+  -- Craig Small <csmall@small.dropbear.id.au>
+
+
