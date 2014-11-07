@@ -12,8 +12,12 @@ basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
 AC_SUBST(BASEVERSION, [$basever])
 extraver=$(echo $PACKAGE_VERSION | sed -e 's@'$basever'@@' -e 's@^-@_@')
 AC_SUBST(EXTRAVERSION, [$extraver])
-define([svnversion], m4_esyscmd([svnversion -n]))dnl
-AC_SUBST(RELEASE, [$svnversion])
+SVNREV=`( svnversion -n $srcdir )`
+if { ! ( svnversion ) >/dev/null 2>&1 || test "$SVNREV" = "exported"; } ;
+	then SVNREV=`cat $srcdir/SVNREV`
+	else echo $SVNREV>$srcdir/SVNREV
+fi
+AC_SUBST(SVNREV)
 
 # Checks for programs.
 AC_PROG_CC
