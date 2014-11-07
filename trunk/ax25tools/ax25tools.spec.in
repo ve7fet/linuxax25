@@ -1,6 +1,6 @@
 Name:          	@PACKAGE_NAME@ 
 Version:        @BASEVERSION@@EXTRAVERSION@
-Release:        1 
+Release:        @SVNREV@ 
 Summary:        Tools used to configure an ax.25 enabled computer
 
 Group:          Applications/Communications
