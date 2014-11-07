@@ -1,6 +1,6 @@
 Name:          	@PACKAGE_NAME@ 
 Version:        @BASEVERSION@@EXTRAVERSION@
-Release:        1 
+Release:        @SVNREV@ 
 Summary:        AX.25 ham radio applications
 
 Group:          Applications/Communications
