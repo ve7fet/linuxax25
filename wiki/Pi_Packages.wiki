@@ -53,7 +53,7 @@ Now we are going to mount the Raspbian .img on our host system.
 
 # mount -o bind /sys /mnt/sys
 
-# mount -o loop /dev/pts /mnt/dev/pts
+# mount -o bind /dev/pts /mnt/dev/pts
 }}}
 
 Now that our chroot environment is set up, we can enter it.
@@ -91,6 +91,12 @@ You need to edit /etc/ld.so.preload and comment out the first line that is in th
      #/usr/lib/arm-linux-gnueabihf/libcofi_rpi.so
 }}}
 
+Locales don't seem to be set up properly. You probably want to fix that and pick one for your locale.
+
+{{{
+# dpkg-reconfigure locales
+}}}
+
 We also need to create a user to build the packages under.
 
 {{{
@@ -104,6 +110,8 @@ In order to build the .deb's from scratch, you will need to make sure you have i
 
 {{{
 # apt-get update
+
+# apt-get upgrade
 
 # apt-get install build-essential autotools-dev libtool autoconf2.13 \
 gnu-standards automake zlib1g-dev dpkg-dev debhelper devscripts \
