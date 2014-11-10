@@ -79,7 +79,7 @@ To get out of the chroot and kill it, you'll need to do something like this when
 
 # umount /mnt
 
-# kpartx -d debian6-17-02-2012/debian6-17-02-2012.img
+# kpartx -d ./2014-09-09-wheezy-raspbian.img
 }}}
 
 A couple other housekeeping things to do once you get inside the chroot...
