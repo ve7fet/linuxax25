@@ -16,8 +16,9 @@ fi
 
 # products from autoreconf
 rm -Rf autom4te.cache
+rm -f ./m4/*
 rm -f Makefile.in aclocal.m4 compile config.guess config.sub configure \
-      config.h.in depcomp install-sh ltconfig ltmain.sh missing
+      config.h.in depcomp install-sh ltconfig ltmain.sh missing ar-lib
 rm -f `find . -name "Makefile.in"`
 
 
