@@ -811,6 +811,46 @@ diff -rub ./ve7fet/ax25apps/listen/rosedump.c ./official/ax25-apps/listen/rosedu
         case CLEAR_CONFIRMATION:
 }}}
 
+Patch listen to fix a segfault when listen is called with the -c (color) option. This changes a patch made in the official source that was done to fix a compiler warning. Also fix listen to print the warning to stderr when we ask for color and it isn't available
+
+{{{
+diff -rub ./ve7fet/ax25apps/listen/utils.c ./official/ax25-apps/listen/utils.c
+--- ./ve7fet/ax25apps/listen/utils.c    2014-12-01 13:28:17.886361647 -0800
++++ ./official/ax25-apps/listen/utils.c 2014-12-01 13:31:12.436455802 -0800
+@@ -81,12 +81,9 @@
+
+ int initcolor(void)
+ {
+-       initscr();
+-       if (has_colors() == FALSE )
+-       {
+-               endwin();
++       if (!has_colors())
+                return 0;
+-       }
++       initscr();              /* Start ncurses */
+        start_color();          /* Initialize color support */
+        refresh();              /* Clear screen */
+        noecho();               /* Don't echo */
+
+}}}
+
+
+{{{
+diff -rub ./ve7fet/ax25apps/listen/listen.c ./official/ax25-apps/listen/listen.c
+--- ./ve7fet/ax25apps/listen/listen.c   2014-12-01 13:28:17.886361647 -0800
++++ ./official/ax25-apps/listen/listen.c        2014-12-01 13:31:12.436455802 -0800
+@@ -138,7 +138,7 @@
+        if (color) {
+                color = initcolor();    /* Initialize color support */
+                if (!color)
+-                       fprintf(stderr, "listen: Could not initialize color support.\n");
++                       printf("Could not initialize color support.\n");
+        }
+
+        setservent(1);
+}}}
+
 Remove the unnecessary stuff from pathnames.h
 
 {{{
