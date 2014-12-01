@@ -65,6 +65,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/ax25/ax25rtd/*
 
 %changelog
+* Mon Dec 01 2014 Lee Woldanski <ve7fet@tparc.org> 1.0.5-1
+- Fix segfault in listen
+
 * Wed Nov 05 2014 Lee Woldanski <ve7fet@tparc.org> 1.0.4-1
 - Sync with upstream sources
 

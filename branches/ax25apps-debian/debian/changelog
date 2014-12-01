@@ -1,3 +1,11 @@
+ax25apps (1.0.5) unstable; urgency=low
+
+  * Fix segfault in listen. initscr() must be called before has_colors()
+    is checked. Also changed warning to print to stderr when no color
+    support found if color support requested.
+
+ -- Lee Woldanski <ve7fet.tparc.org>  Mon, 01 Dec 2014 12:00:00 -0800
+
 ax25apps (1.0.4) unstable; urgency=low
 
   * Updating source to sync with upstream official source
