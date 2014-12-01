@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 	if (color) {
 		color = initcolor();	/* Initialize color support */
 		if (!color)
-			printf("Could not initialize color support.\n");
+			fprintf(stderr, "listen: Could not initialize color support.\n");
 	}
 
 	setservent(1);
