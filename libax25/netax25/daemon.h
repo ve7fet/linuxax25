@@ -1,7 +1,7 @@
 /* LIBAX25 - Library for AX.25 programs
  * Copyright (C) 1997-1999 Jonathan Naylor, Tomi Manninen, Jean-Paul Roubelat
  * and Alan Cox.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -20,7 +20,7 @@
 /*
  * Function to convert a running process into a "proper" daemon.
  */
- 
+
 #ifndef _DAEMON_H
 #define	_DAEMON_H
 
@@ -38,7 +38,7 @@ extern "C" {
 
 /*
  * The argument is whether to ignore the death of child processes. The function
- * return non-zero if all was OK, else zero if there was a problem. 
+ * return non-zero if all was OK, else zero if there was a problem.
  */
 extern int daemon_start(int);
 

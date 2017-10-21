@@ -45,7 +45,7 @@ static char *safe_strncpy(char *dest, char *src, int n)
 /*
  * Our version of strtok(). This one does not touch the original string,
  * reports the identity of the delimitting character and does not
- * retain any state info. 
+ * retain any state info.
  */
 static char *token(char **ptr, const char *delim)
 {
@@ -381,7 +381,7 @@ struct proc_nr_nodes *read_proc_nr_nodes(void)
 		safe_strncpy(new->alias, cp, 6);
 		new->w = 1;             /* local node w */
 		new->qual1 = 255;       /* obviously, local node quality should be set to maximum value */
-		new->obs1 = 6;          /* persist */ 
+		new->obs1 = 6;          /* persist */
 
 		/*
 		 * n == 0 indicates a local node.
@@ -426,7 +426,7 @@ struct proc_rs *read_proc_rs(void)
 	errno = 0;
 	if ((fp = fopen(PROC_RS_FILE, "r")) == NULL)
 		return NULL;
-	while (fgets(buffer, 256, fp) != NULL) 
+	while (fgets(buffer, 256, fp) != NULL)
 	{
 		if (!i++) continue;
 		if ((p = calloc(1, sizeof(struct proc_rs))) == NULL)
@@ -478,7 +478,7 @@ struct proc_rs_neigh *read_proc_rs_neigh(void)
 	errno = 0;
 	if ((fp = fopen(PROC_RS_NEIGH_FILE, "r")) == NULL)
 		return NULL;
-	while (fgets(buffer, 256, fp) != NULL) 
+	while (fgets(buffer, 256, fp) != NULL)
 	{
 		if (!i++) continue;
 		if ((p = calloc(1, sizeof(struct proc_rs_neigh))) == NULL)
@@ -521,7 +521,7 @@ struct proc_rs_nodes *read_proc_rs_nodes(void)
 	errno = 0;
 	if ((fp = fopen(PROC_RS_NODES_FILE, "r")) == NULL)
 		return NULL;
-	while (fgets(buffer, 256, fp) != NULL) 
+	while (fgets(buffer, 256, fp) != NULL)
 	{
 		if (!i++) continue;
 		if ((p = calloc(1, sizeof(struct proc_rs_nodes))) == NULL)
@@ -561,7 +561,7 @@ struct proc_rs_route *read_proc_rs_routes(void)
 	errno = 0;
 	if ((fp = fopen(PROC_RS_ROUTES_FILE, "r")) == NULL)
 		return NULL;
-	while (fgets(buffer, 256, fp) != NULL) 
+	while (fgets(buffer, 256, fp) != NULL)
 	{
 		if (!i++) continue;
 		if ((p = calloc(1, sizeof(struct proc_rs_route))) == NULL)
@@ -669,5 +669,5 @@ struct proc_nr_nodes *find_node(char *addr, struct proc_nr_nodes *nodes)
 	}
 	if (!nodes)
 		free_proc_nr_nodes(list);
-        return p;
+	return p;
 }

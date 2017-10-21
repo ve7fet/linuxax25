@@ -13,7 +13,7 @@ static inline int send_iac_iac(ax25io *p);
 static inline int send_iac_cmd(ax25io *p, unsigned char cmd, unsigned char opt);
 static inline int send_linemode(ax25io *p);
 
-static ax25io *Iolist = NULL;
+static ax25io *Iolist;
 
 /* --------------------------------------------------------------------- */
 
@@ -70,7 +70,6 @@ void axio_end(ax25io *p)
 	close(p->ofd);
 	p->ifd = -1;
 	p->ofd = -1;
-	return;
 }
 
 void axio_end_all(void)
@@ -592,7 +591,7 @@ char *axio_getline(ax25io *p)
 	int ret;
 
 	ret = axio_gets((char *) p->gbuf + p->gbuf_usage,
-	                AXBUFLEN - p->gbuf_usage, p);
+			AXBUFLEN - p->gbuf_usage, p);
 	if (ret > 0 || (ret == 0 && errno == 0)) {
 		p->gbuf_usage = 0;
 		return (char *) p->gbuf;
@@ -704,5 +703,3 @@ static inline int send_linemode(ax25io *p)
 }
 
 /* --------------------------------------------------------------------- */
-
-

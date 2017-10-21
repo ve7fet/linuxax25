@@ -1,6 +1,6 @@
 /* AX25IO - Library for io manuipulation for AX.25 programs
  * Copyright (C) 1998 Tomi Manninen
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -39,7 +39,7 @@ typedef struct ax25io_s {
 	int optr;		/* output pointer                       */
 	void *zptr;		/* pointer to the compression struct	*/
 
-        struct ax25io_s *next;	/* linked list pointer			*/
+	struct ax25io_s *next;	/* linked list pointer			*/
 } ax25io;
 
 #define EOLMODE_TEXT	0

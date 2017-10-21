@@ -1,7 +1,7 @@
 /* LIBAX25 - Library for AX.25 programs
  * Copyright (C) 1997-1999 Jonathan Naylor, Tomi Manninen, Jean-Paul Roubelat
  * and Alan Cox.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -50,7 +50,7 @@ struct mheard_struct {
 #define	MHEARD_TYPE_UI		10
 #define	MHEARD_TYPE_UNKNOWN	11
 	unsigned int type;
-	
+
 #define	MHEARD_MODE_TEXT	0x0001
 #define	MHEARD_MODE_ARP		0x0002
 #define	MHEARD_MODE_IP_DG	0x0004

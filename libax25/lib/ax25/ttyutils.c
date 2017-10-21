@@ -46,11 +46,11 @@ int tty_raw(int fd, int hwflag)
 
 	term.c_cc[VMIN]  = 1;
 	term.c_cc[VTIME] = 0;
-	
+
 	term.c_iflag = IGNBRK | IGNPAR;
 	term.c_oflag = 0;
 	term.c_lflag = 0;
-	
+
 #ifdef CIBAUD
 	term.c_cflag = (term.c_cflag & (CBAUD | CIBAUD)) | CREAD | CS8 | CLOCAL;
 #else
@@ -108,12 +108,12 @@ int tty_is_locked(char *tty)
 		s++;
 	else
 		s = tty;
-	
+
 	sprintf(buffer, "%s/LCK..%s", LOCK_SERIAL_DIR, s);
-	
+
 	if ((fp = fopen(buffer, "r")) == NULL)
 		return FALSE;
-		
+
 	if (fscanf(fp, "%d", &pid) != 1) {
 		fclose(fp);
 		return FALSE;
@@ -138,12 +138,12 @@ int tty_lock(char *tty)
 		s = tty;
 
 	sprintf(buffer, "%s/LCK..%s", LOCK_SERIAL_DIR, s);
-	
+
 	if ((fp = fopen(buffer, "w")) == NULL)
 		return FALSE;
 
 	fprintf(fp, "%10d\n", getpid());
-	
+
 	fclose(fp);
 
 	return TRUE;

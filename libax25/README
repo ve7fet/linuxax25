@@ -8,18 +8,24 @@ You are supposed to use glibc 2.1 (libc6 unstable libraries) for this
 package.  I have attempted to cater for glibc 2.0 users here.
 
 To compile this I used:
-  * A Debian GNU/Linux system
+  * A Mageia GNU/Linux system
   * autoconf 2.69
-  * automake 1.11.6
-  * libtool 2.4.2
-  * libc 2.12
-  * gcc 4.7.2 
+  * automake 1.15.1
+  * libtool 2.4.6
+  * Gnu C  5.4.0 (Mageia 5.4.0-5.mga6) 
+  * Gnu make               4.1
+  * Linux C Library        Dynamic linker (ldd)   2.22
 
-  -- Lee Woldanski <ve7fet@tparc.org>  Tue, Nov 04 2014 14:30:00 -0800
+  -- Bernard Pidoux <f6bvp@amsat.org>  Sat, Oct 21 2017 17:00 
 
 This library is copyright by the respective authors (see AUTHORS for a list)
 and licensed under the GNU LGPL (see COPYING for more information).
 
   -- Craig Small <csmall@small.dropbear.id.au>
 
+
+If some fields are empty or look unusual you may have an old version.
+Compare to the current minimal requirements in Documentation/Changes.
+ 
+Linux RaspBerry-Pi-f6bvp-8 4.9.50-desktop-1.mga6 #1 SMP Wed Sep 13 23:14:20 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
 

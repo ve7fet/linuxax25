@@ -1,3 +1,11 @@
+
+libax25 1.1.0
+	* Updating to bring codebase up to sync with official sources,
+	  will keep our file structure to make packaging easier
+	* Already had most of the patches applied, some minor format changes 
+
+-- Bernard Pidoux <f6bvp@amsat.org> Sat, 21 Oct 2017 16:00:00 -0800
+
 libax25 1.0.5
 	* Long overdue updating to bring codebase up to sync with official sources,
 	  will keep our file structure to make packaging easier

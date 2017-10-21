@@ -1,5 +1,3 @@
-#define _LINUX_STRING_H_
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,8 +29,8 @@ typedef struct _axport
 	char *Description;
 } AX_Port;
 
-static AX_Port *ax25_ports     = NULL;
-static AX_Port *ax25_port_tail = NULL;
+static AX_Port *ax25_ports;
+static AX_Port *ax25_port_tail;
 
 static int is_same_call(char *call1, char *call2)
 {
@@ -50,7 +48,7 @@ static int is_same_call(char *call1, char *call2)
 		return 1;
 	if (!*call2 && !strcmp(call1, "-0"))
 		return 1;
-	return (!strcmp(call1, call2) ? 1 : 0);
+	return !strcmp(call1, call2) ? 1 : 0;
 }
 
 static AX_Port *ax25_port_ptr(char *name)
@@ -74,21 +72,21 @@ static AX_Port *ax25_port_ptr(char *name)
 char *ax25_config_get_next(char *name)
 {
 	AX_Port *p;
-	
+
 	if (ax25_ports == NULL)
 		return NULL;
-		
+
 	if (name == NULL)
 		return ax25_ports->Name;
-	
+
 	if ((p = ax25_port_ptr(name)) == NULL)
 		return NULL;
-			
+
 	p = p->Next;
 
 	if (p == NULL)
 		return NULL;
-		
+
 	return p->Name;
 }
 
@@ -134,7 +132,7 @@ char *ax25_config_get_port(ax25_address *callsign)
 
 	if (ax25_cmp(callsign, &null_ax25_address) == 0)
 		return "*";
-		
+
 	while (p != NULL) {
 		if (p->Call != NULL) {
 			ax25_aton_entry(p->Call, (char *)&addr);
@@ -239,13 +237,13 @@ static int ax25_config_init_port(int fd, int lineno, char *line, const char **if
 	found = 0;
 	char *cp;
 	if ((cp = strstr(call, "-0")) != NULL)
-	  *cp = '\0';
+		*cp = '\0';
 	for (;ifcalls && *ifcalls; ++ifcalls, ++ifdevs) {
-          if (strcmp(call, *ifcalls) == 0) {
-	    found = 1;
-	    dev = *ifdevs;
-	    break;
-	  }
+		if (strcmp(call, *ifcalls) == 0) {
+			found = 1;
+			dev = *ifdevs;
+			break;
+		}
 	}
 
 	if (!found) {
@@ -296,93 +294,93 @@ int ax25_config_load_ports(void)
 
 
 	if ((fd = socket(PF_FILE, SOCK_DGRAM, 0)) < 0) {
-	  fprintf(stderr, "axconfig: unable to open socket (%s)\n", strerror(errno));
-	  goto cleanup;
+		fprintf(stderr, "axconfig: unable to open socket (%s)\n", strerror(errno));
+		goto cleanup;
 	}
 
 	if ((fp = fopen("/proc/net/dev", "r"))) {
-	  /* Two header lines.. */
-	  s = fgets(buffer, sizeof(buffer), fp);
-	  s = fgets(buffer, sizeof(buffer), fp);
-	  /* .. then network interface names */
-	  while (!feof(fp)) {
-	    if (!fgets(buffer, sizeof(buffer), fp))
-	      break;
-	    s = strchr(buffer, ':');
-	    if (s) *s = 0;
-	    s = buffer;
-	    while (isspace(*s & 0xff)) ++s;
+		/* Two header lines.. */
+		s = fgets(buffer, sizeof(buffer), fp);
+		s = fgets(buffer, sizeof(buffer), fp);
+		/* .. then network interface names */
+		while (!feof(fp)) {
+			if (!fgets(buffer, sizeof(buffer), fp))
+				break;
+			s = strchr(buffer, ':');
+			if (s) *s = 0;
+				s = buffer;
+			while (isspace(*s & 0xff)) ++s;
 
-	    memset(&ifr, 0, sizeof(ifr));
-	    strncpy(ifr.ifr_name, s, IFNAMSIZ-1); 	 
-            ifr.ifr_name[IFNAMSIZ-1] = 0;
+			memset(&ifr, 0, sizeof(ifr));
+			strncpy(ifr.ifr_name, s, IFNAMSIZ-1);
+			ifr.ifr_name[IFNAMSIZ-1] = 0;
 
-	    if (ioctl(fd, SIOCGIFHWADDR, &ifr) < 0) {
-	      fprintf(stderr, "axconfig: SIOCGIFHWADDR: %s\n", strerror(errno));
-	      return FALSE;
-	    }
+			if (ioctl(fd, SIOCGIFHWADDR, &ifr) < 0) {
+				fprintf(stderr, "axconfig: SIOCGIFHWADDR: %s\n", strerror(errno));
+				return FALSE;
+			}
 
-	    if (ifr.ifr_hwaddr.sa_family != ARPHRD_AX25)
-	      continue;
+			if (ifr.ifr_hwaddr.sa_family != ARPHRD_AX25)
+				continue;
 
-	    /* store found interface callsigns */
-	    /* ax25_ntoa() returns pointer to static buffer */
-	    s = ax25_ntoa((void*)ifr.ifr_hwaddr.sa_data);
+			/* store found interface callsigns */
+			/* ax25_ntoa() returns pointer to static buffer */
+			s = ax25_ntoa((void*)ifr.ifr_hwaddr.sa_data);
 
-	    if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0) {
-	      fprintf(stderr, "axconfig: SIOCGIFFLAGS: %s\n", strerror(errno));
-	      return FALSE;
-	    }
+			if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0) {
+				fprintf(stderr, "axconfig: SIOCGIFFLAGS: %s\n", strerror(errno));
+				return FALSE;
+			}
 
-	    if (!(ifr.ifr_flags & IFF_UP))
-	      continue;
+			if (!(ifr.ifr_flags & IFF_UP))
+				continue;
 
-            if ((pp = realloc(calllist, sizeof(char *) * (callcount+2))) == 0)
-              break;
-	    calllist = pp;
-	    if ((pp = realloc(devlist,  sizeof(char *) * (callcount+2))) == 0)
-              break;
-	    devlist  = pp;
-	    if ((calllist[callcount] = strdup(s)) != NULL) {
-              if ((devlist[callcount] = strdup(ifr.ifr_name)) != NULL) {
-	        ++callcount;
-	        calllist[callcount] = NULL;
-	        devlist [callcount] = NULL;
-              } else {
-                free((void*)calllist[callcount]);
-                calllist[callcount] = NULL;
-              }
-            }
-	  }
-	  fclose(fp);
-	  fp = NULL;
+			if ((pp = realloc(calllist, sizeof(char *) * (callcount+2))) == 0)
+				break;
+			calllist = pp;
+			if ((pp = realloc(devlist,  sizeof(char *) * (callcount+2))) == 0)
+			break;
+			devlist  = pp;
+			if ((calllist[callcount] = strdup(s)) != NULL) {
+				if ((devlist[callcount] = strdup(ifr.ifr_name)) != NULL) {
+					++callcount;
+					calllist[callcount] = NULL;
+					devlist [callcount] = NULL;
+				} else {
+					free((void*)calllist[callcount]);
+					calllist[callcount] = NULL;
+				}
+			}
+		}
+		fclose(fp);
+		fp = NULL;
 	}
 
 
 	if ((fp = fopen(CONF_AXPORTS_FILE, "r")) == NULL) {
-	  fprintf(stderr, "axconfig: unable to open axports file %s (%s)\n", CONF_AXPORTS_FILE, strerror(errno));
-	  goto cleanup;
+		fprintf(stderr, "axconfig: unable to open axports file %s (%s)\n", CONF_AXPORTS_FILE, strerror(errno));
+		goto cleanup;
 	}
 
 	while (fp && fgets(buffer, 255, fp)) {
-	  if ((s = strchr(buffer, '\n')))
-	    *s = '\0';
+		if ((s = strchr(buffer, '\n')))
+			*s = '\0';
 
-	  if (strlen(buffer) > 0 && *buffer != '#')
-	    if (ax25_config_init_port(fd, lineno, buffer, calllist, devlist))
-	      n++;
+		if (strlen(buffer) > 0 && *buffer != '#')
+			if (ax25_config_init_port(fd, lineno, buffer, calllist, devlist))
+				n++;
 
-	  lineno++;
+		lineno++;
 	}
 
  cleanup:;
 	if (fd >= 0) close(fd);
 	if (fp) fclose(fp);
 
-	for(i = 0; calllist && calllist[i]; ++i) {
-	  free((void*)calllist[i]);
-	  if (devlist[i] != NULL)
-	    free((void*)devlist[i]);
+	for (i = 0; calllist && calllist[i]; ++i) {
+		free((void*)calllist[i]);
+		if (devlist[i] != NULL)
+			free((void*)devlist[i]);
 	}
 	if (calllist) free(calllist);
 	if (devlist) free(devlist);

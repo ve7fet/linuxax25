@@ -1,7 +1,7 @@
 /* LIBAX25 - Library for AX.25 programs
  * Copyright (C) 1997-1999 Jonathan Naylor, Tomi Manninen, Jean-Paul Roubelat
  * and Alan Cox.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -160,7 +160,7 @@ extern void free_proc_ax25_route(struct proc_ax25_route *rp);
 
 extern struct proc_nr *read_proc_nr(void);
 extern void free_proc_nr(struct proc_nr *);
- 
+
 extern struct proc_nr_neigh *read_proc_nr_neigh(void);
 extern void free_proc_nr_neigh(struct proc_nr_neigh *np);
 
