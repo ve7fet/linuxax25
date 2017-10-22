@@ -1,5 +1,5 @@
 #!/bin/bash
-# script updated December-8-2015 for VE7FET new AX.25 github repository (F6BVP)
+# script updated October-22-2017 for VE7FET new AX.25 github repository (F6BVP)
 # Copy this script file in /usr/local/src/ax25/updAX25.sh
 # cd into /usr/local/src/ax25
 # and execute command : sudo chmod a+x updAX25.sh
@@ -20,7 +20,7 @@ Blue='\e[34m'
 White='\e[37m'
 BluW='\e[37;44m'
 
-echo -e "${BluW}\t\n\t Script provided by Charles S. Schuman modified by F6BVP for updating AX.25 libraries and applications\t\n\t\t\t ${Red} November-30-2015    \n \t\t${Yellow}       k4gbb1@gmail.com \n${Reset}"
+echo -e "${BluW}\t\n\t Script provided by Charles S. Schuman modified by F6BVP for updating AX.25 libraries and applications\t\n\t\t\t ${Red} October-22-2017    \n \t\t${Yellow}       k4gbb1@gmail.com \n${Reset}"
 
   if ! uid=0
    then su
@@ -94,6 +94,10 @@ echo -e "${Green} Now unarchiving AX.25 files ${Reset}"
      echo -e "${Green} Libax25 Installed${Reset}"
      rm liberror.txt
   fi
+
+# AX25 libraries symbolic name needed for some applications
+  cd /usr/local/lib/
+  ln -s libax25.so libax25.so.0
 
 # AX25 libraries declaration (into ld.so.conf)
   echo "/usr/local/lib" >> /etc/ld.so.conf && /sbin/ldconfig
