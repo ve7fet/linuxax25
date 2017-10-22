@@ -5,7 +5,7 @@ Summary:        AX.25 library for hamradio applications
 
 Group:          System Environment/Libraries
 License:        LGPLv2+
-URL:		http://linuxax25.googlecode.com/
+URL:		http://github.com/ve7fet/linuxax25
 Source0:	%{name}-@VERSION@.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-@BASEVERSION@@EXTRAVERSION@-%{release}-root-%(%{__id_u} -n)
 %if 0%{?mdkversion}
@@ -62,6 +62,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*.so
 
 %changelog
+* Oct 21 2017 Bernard Pidoux <f6bvp@amsat.org> 1.1.0
+- Sync with upstream sources
+
 * Tue Nov 04 2014 Lee Woldanski <ve7fet@tparc.org> 1.0.5-1
 - Sync with upstream sources
 
