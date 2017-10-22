@@ -16,16 +16,13 @@ To compile this I used:
   * Gnu make               4.1
   * Linux C Library        Dynamic linker (ldd)   2.22
 
-  -- Bernard Pidoux <f6bvp@amsat.org>  Sat, Oct 21 2017 17:00 
+Briefly, the shell command './autogen.sh && ./configure && make && make install'
+will install AX25 library
+
+  -- Bernard Pidoux <f6bvp@amsat.org>  Sat, Oct 22 2017 11:15 
 
 This library is copyright by the respective authors (see AUTHORS for a list)
 and licensed under the GNU LGPL (see COPYING for more information).
 
   -- Craig Small <csmall@small.dropbear.id.au>
-
-
-If some fields are empty or look unusual you may have an old version.
-Compare to the current minimal requirements in Documentation/Changes.
- 
-Linux RaspBerry-Pi-f6bvp-8 4.9.50-desktop-1.mga6 #1 SMP Wed Sep 13 23:14:20 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
 
