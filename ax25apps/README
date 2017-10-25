@@ -1,8 +1,14 @@
 AX25 Apps
 ========
 
-ax25ipd now supports baud rates of 57600 and 115200. Previous versions (<1.1.0) will
-default to 9600 if:
+ax25ipd is a custom release, not associated with the official source.
+       Steve Fraser vk5asf, introduced in Jun 2005 supporting of dynamic DNS hosts
+       additionally Cathryn Mataga added ability to route packets over axip links 
+       that are not from the gateway callsign.
+       Read more information in related ChangeLog.
+
+ax25ipd supports baud rates of 57600 and 115200. Previous versions (<1.1.0) will
+       default to 9600 if:
 	* your system does not support rates >9600
 	* if you try and set a speed >38400
 
