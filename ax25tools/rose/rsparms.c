@@ -68,7 +68,7 @@ void nodes(int s, int argc, char *argv[])
 	int args;
 
 	if (argc < 3) {
-		fprintf(stderr, nodes_usage);
+		fprintf(stderr, "%s", nodes_usage);
 		exit(1);
 	}
 
@@ -114,7 +114,7 @@ void nodes(int s, int argc, char *argv[])
 	}
 
 	if (argc < 6) {
-		fprintf(stderr, nodes_usage);
+		fprintf(stderr, "%s", nodes_usage);
 		exit(1);
 	}
 

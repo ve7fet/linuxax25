@@ -1,0 +1,93 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: ax25tools
+Source: https://github.com/ve7fet/linuxax25 
+
+Files: m6pack
+Copyright: 19990-2018 Iñki Arenaza EB2EBU <iarenaza@escomposlinux.org>
+License: LGPL-3.0+
+
+Files: yamcfg
+Copyright: 1999-2018 Jean-Paul Roubelat F6FBB <jpr@f6fbb.org>
+License: LGPL-3.0+
+
+Files: dmascc_cfg
+Copyright: 1999-2018 Klaus Kudielka
+License: LGPL-3.0+
+
+Files: ttylinkd
+Copyright: 1999-2018 Craig Small VK2XLZ <csmall@small.dropbear.id.au>
+License: LGPL-3.0+
+
+Files: piconfig
+Copyright: 1999-2018 John Paul Morrison VE7JPM <jmorriso@bogomips.com>
+License: LGPL-3.0+
+
+Files: nrsdrv pms
+Copyright: 1999-2018 Dave Brown N2RJT <dcb@vectorbd.com>
+License: LGPL-3.0+
+
+Files: listen
+Copyright: 1999-2018 Heikki Hannikainen OH7LZB <oh7lzb@sral.fi>
+License: LGPL-3.0+
+
+Files: kissnetd
+Copyright: 1999-2018 Frederic Rible F1OAT <frible@teaser.fr>
+License: LGPL-3.0+
+
+Files: mkiss node nodesave rxecho
+Copyright: 1999-2018 Tomi Manninen OH2BNS <oh2bns@sral.fi>
+License: LGPL-3.0+
+
+Files: call
+Copyright: 1999-2018 Alexander Tietzel DG6XA <tietze_a@etech.fh-hamburg.de>
+License: LGPL-3.0+
+
+Files: ax25rtd
+Copyright: 1999-2018 Klaus Kudielka <oe1kib@oe1xtu.ampr.org>
+License: LGPL-3.0+
+
+Files: ax25ipd
+Copyright: 1997-2018 Rob Mayfield VK5XXX <mayfieldrob@mail.dec.com>
+           2014 Ralf Baechle
+           2005 Steve Fraser VK5ASF
+           1991 Michael Westerhof, Sun Microsystems, Inc.
+           1995 Michael Durrant VE3PNX  
+           1995 D. Jeff Dionne
+           1997 Terry Dawson VK2KTJ 
+License: LGPL-3.0+
+
+Files: axspawn bpqparms                
+Copyright: 1999-2018 Joerg Reuter DL1BKE <jreuter@poboxes.com>
+License: LGPL-3.0+
+
+Files: net2kiss setcrystal sethdlc smdiag smmixer xfhdlcchpar xfhdlcst xfsmdiag xfsmmixer
+Copyright: 1999-2018 Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
+License: LGPL-3.0+
+
+Files: *
+Copyright: 1999-2018 Jonathon Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+           1999-2018 Craig Small VK2XLZ <csmall@small.dropbear.id.au>
+           2002 Thomas Osterried DL9SAU <thomas@x-berg.in-berlin.de>
+           2011-2018 Lee Woldanski <ve7fet@tparc.org> 
+License: LGPL-3.0+
+
+Files: debian/*
+Copyright: 2018 Lee Woldanski <ve7fet@tparc.org>
+License: LGPL-3.0+
+
+License: LGPL-3.0+
+ This package is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 3 of the License, or (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ .
+ On Debian systems, the complete text of the GNU Lesser General
+ Public License can be found in "/usr/share/common-licenses/LGPL-3".

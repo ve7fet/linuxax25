@@ -139,7 +139,7 @@ PROC_AX25_ROUTE_FILE);
 			return 1;
 		}
 		while (fgets(routebuf,80,fp))
-			printf(routebuf);
+			printf("%s", routebuf);
 		puts("");
 	}
 

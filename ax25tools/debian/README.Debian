@@ -1,0 +1,11 @@
+ax25tools for Debian
+--------------------
+
+The biggest change that really breaks compatibility with upstream is 
+that we moved the axports, rsports, and nrports (and their associated 
+man pages) from being installed in libax25 to here. This is where 
+they rightly belong (in our opinion), as this is where the binaries 
+that use them are made. The libax25 should only have the libraries 
+in it, and the necessary header files if you use the -dev package.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Wed, 08 Aug 2018 03:44:06 +0000

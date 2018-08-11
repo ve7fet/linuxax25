@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 	
 	if (strncmp(argv[1], "-n", 2) == 0) {
 		if (argc < 9) {
-			fprintf(stderr, nodes_usage);
+			fprintf(stderr, "%s", nodes_usage);
 			close(s);
 			return 1;
 		}
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 
 	if (strncmp(argv[1], "-r", 2) == 0) {
 		if (argc < 6) {
-			fprintf(stderr, routes_usage);
+			fprintf(stderr, "%s", routes_usage);
 			close(s);
 			return 1;
 		}

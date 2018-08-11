@@ -444,18 +444,18 @@ int main(int argc, char *argv[])
 			return 1;
 		case ':':
 		case '?':
-			fprintf(stderr, usage_string);
+			fprintf(stderr, "%s", usage_string);
 			return 1;
 		}
 	}
 
 	if ((argc - optind) < 2 && ptmxdevices == 0) {
-		fprintf(stderr, usage_string);
+		fprintf(stderr, "%s", usage_string);
 		return 1;
 	}
 
 	if ((argc - optind) < 1 && ptmxdevices > 0) {
-		fprintf(stderr, usage_string);
+		fprintf(stderr, "%s", usage_string);
 		return 1;
 	}
 
