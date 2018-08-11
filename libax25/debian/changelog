@@ -1,0 +1,60 @@
+libax25 (1.1.1) unstable; urgency=low
+
+  * Packaging for Debian. 
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Mon, 06 Aug 2018 08:00:00 -0800 
+
+libax25 (1.1.0) unstable; urgency=low
+
+  * Updating to bring codebase up to sync with official sources,
+    will keep our file structure to make packaging easier
+  * Already had most of the patches applied, some minor format changes 
+
+ -- Bernard Pidoux <f6bvp@amsat.org>  Sat, 21 Oct 2017 16:00:00 -0800
+
+libax25 (1.0.5) unstable; urgency=low
+
+  * Long overdue updating to bring codebase up to sync with official sources,
+    will keep our file structure to make packaging easier
+  * Already had most of the patches applied, some minor format changes 
+  * Notes from official source indicate SSID -0 patch was reverted (yay!)
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Tue, 04 Nov 2014 14:30:00 -0800
+
+libax25 (1.0.4) unstable; urgency=low
+
+  * Modify axutils.c to better detect and abort on an empty callsign,
+    preventing a segfault (per F6BVP)
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Tue, 31 Jul 2012 14:00:00 -0800
+
+libax25 (1.0.3) unstable; urgency=low
+
+  * Identified an installation issue. Add a note during install to remind 
+    users to run ldconfig as root to update cache.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 08 Sep 2011 19:30:00 -0800
+
+libax25 (1.0.2) unstable; urgency=low
+
+  * Added versioning to the shared libs to differentiate the ones generated 
+    by this source.
+  * Revert a patch from the linux-ax25.org source to axutils.c (version 1.5) that 
+    changed the behaviour of the ax25_ntoa function (breaking it). aton should 
+    only convert the callsign, not modify it. Specifically, if the callsign has 
+    a -0 SSID, DON'T DROP IT! This breaks existing software that does use -0! If 
+    some program doesn't like SSID -0, then IT should be modified to drop it or do 
+    whatever you want. The AX.25 spec says callsigns MUST have an SSID from 0-15. 
+    The ax25_ntoa function strictly should perform the conversion to ascii, and 
+    that is it. 
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Wed, 24 Aug 2011 22:00:00 -0800
+
+libax25 (1.0.1) unstable; urgency=low
+
+  * Initial release.
+  * This version is a modified version of the January 2011 CVS source
+    from http://www.linux-ax25.org/wiki/Main_Page
+  * The forked code is now available from http://linuxax25.googlecode.com
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Sun, 30 Jan 2011 21:00:00 -0800
