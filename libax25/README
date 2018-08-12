@@ -1,6 +1,10 @@
 AX25 Library
 ============
 
+This library is consistent with the official source, available at:
+http://http://git.linux-ax25.org/cgit/libax25.git/ 
+Master/head, up to patches applied on 2017-09-08. Verified 2018-08-11.
+
 This library set is still really under test but is now released for
 general use. 
 
