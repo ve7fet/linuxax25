@@ -18,13 +18,13 @@
 #include <netax25/axconfig.h>
 #include <netax25/rsconfig.h>
 
-void alarm_handler(int sig)
+static void alarm_handler(int sig)
 {
 }
 
 int main(int argc, char **argv)
 {
-	unsigned char buffer[512], *addr, *p;
+	char buffer[512], *addr, *p;
 	char rose_address[11];
 	fd_set read_fd;
 	int n, s, dnicindex = -1, addrindex = -1;
@@ -82,7 +82,8 @@ int main(int argc, char **argv)
 	roseconnect.srose_ndigis = rosebind.srose_ndigis = 0;
 	addrlen = sizeof(struct sockaddr_rose);
 
-	if ((addr = rs_config_get_addr(argv[1])) == NULL) {
+	addr = rs_config_get_addr(argv[1]);
+	if (addr == NULL) {
 		syslog(LOG_ERR, "invalid Rose port name - %s\n", argv[1]);
 		closelog();
 		return 1;
@@ -102,21 +103,22 @@ int main(int argc, char **argv)
 
 	for (n = 0; n < ax25peer.fsa_ax25.sax25_ndigis; n++) {
 		addr = ax25_ntoa(&ax25peer.fsa_digipeater[n]);
-		
+
 		if (strspn(addr, "0123456789-") == strlen(addr)) {
-			if ((p = strchr(addr, '-')) != NULL)
+			p = strchr(addr, '-');
+			if (p != NULL)
 				*p = '\0';
 			switch (strlen(addr)) {
-				case 4:
-					memcpy(rose_address + 0, addr, 4);
-					dnicindex = n;
-					break;
-				case 6:
-					memcpy(rose_address + 4, addr, 6);
-					addrindex = n;
-					break;
-				default:
-					break;
+			case 4:
+				memcpy(rose_address + 0, addr, 4);
+				dnicindex = n;
+				break;
+			case 6:
+				memcpy(rose_address + 4, addr, 6);
+				addrindex = n;
+				break;
+			default:
+				break;
 			}
 		}
 	}
@@ -168,7 +170,8 @@ int main(int argc, char **argv)
 	/*
 	 * Open the socket into the kernel.
 	 */
-	if ((s = socket(AF_ROSE, SOCK_SEQPACKET, 0)) < 0) {
+	s = socket(AF_ROSE, SOCK_SEQPACKET, 0);
+	if (s < 0) {
 		syslog(LOG_ERR, "cannot open ROSE socket, %s\n", strerror(errno));
 		closelog();
 		return 1;
@@ -208,18 +211,18 @@ int main(int argc, char **argv)
 	 */
 	if (connect(s, (struct sockaddr *)&roseconnect, addrlen) != 0) {
 		switch (errno) {
-			case ECONNREFUSED:
-				strcpy(buffer, "*** Disconnected - 0100 - Number Busy\r");
-				break;
-			case ENETUNREACH:
-				strcpy(buffer, "*** Disconnected - 0D00 - Not Obtainable\r");
-				break;
-			case EINTR:
-				strcpy(buffer, "*** Disconnected - 3900 - Ship Absent\r");
-				break;
-			default:
-				sprintf(buffer, "*** Disconnected - %d - %s\r", errno, strerror(errno));
-				break;
+		case ECONNREFUSED:
+			strcpy(buffer, "*** Disconnected - 0100 - Number Busy\r");
+			break;
+		case ENETUNREACH:
+			strcpy(buffer, "*** Disconnected - 0D00 - Not Obtainable\r");
+			break;
+		case EINTR:
+			strcpy(buffer, "*** Disconnected - 3900 - Ship Absent\r");
+			break;
+		default:
+			sprintf(buffer, "*** Disconnected - %d - %s\r", errno, strerror(errno));
+			break;
 		}
 
 		close(s);
@@ -249,17 +252,18 @@ int main(int argc, char **argv)
 		FD_ZERO(&read_fd);
 		FD_SET(STDIN_FILENO, &read_fd);
 		FD_SET(s, &read_fd);
-		
+
 		select(s + 1, &read_fd, NULL, NULL, NULL);
 
 		if (FD_ISSET(s, &read_fd)) {
-			if ((n = read(s, buffer, 512)) == -1) {
+			n = read(s, buffer, 512);
+			if (n == -1) {
 				strcpy(buffer, "\r*** Disconnected - 0000 - DTE Originated\r");
 				write(STDOUT_FILENO, buffer, strlen(buffer));
 				break;
 			}
 			if (buffer[0] == 0) {		/* Q Bit not set */
-				buffer[0] = 0xF0;
+				buffer[0] = (char) 0xF0;
 				write(STDOUT_FILENO, buffer, n);
 			} else {
 				/* Lose the leading 0x7F */
@@ -268,7 +272,8 @@ int main(int argc, char **argv)
 		}
 
 		if (FD_ISSET(STDIN_FILENO, &read_fd)) {
-			if ((n = read(STDIN_FILENO, buffer + 2, sizeof(buffer)-2)) == -1) {
+			n = read(STDIN_FILENO, buffer + 2, sizeof(buffer) - 2);
+			if (n == -1) {
 				close(s);
 				break;
 			}

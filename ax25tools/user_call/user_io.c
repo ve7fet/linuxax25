@@ -11,7 +11,7 @@
 
 #define BUFLEN	8192
 
-int compression		= 0;
+int compression;
 int paclen_in		= 256;
 int paclen_out		= 256;
 
@@ -22,7 +22,7 @@ static unsigned char buf[BUFLEN];
 #include <zlib.h>
 
 /* Error in (de)compression happened? */
-static int compression_error = 0;
+static int compression_error;
 
 /* These are for the (de)compressor */
 static unsigned char input_buffer[BUFLEN];
@@ -62,12 +62,13 @@ void end_compress(void)
 
 static int flush_output(int fd, const void *buf, size_t count)
 {
+	const unsigned char *byte = buf;
 	int cnt = count;
 
 	while (cnt > 0) {
-		if (write(fd, buf, min(paclen_out, cnt)) < 0)
+		if (write(fd, byte, min(paclen_out, cnt)) < 0)
 			return -1;
-		buf += paclen_out;
+		byte += paclen_out;
 		cnt -= paclen_out;
 	}
 
@@ -162,7 +163,8 @@ int user_read(int fd, void *buf, size_t count)
 		incoming_stream.next_in = input_buffer;
 		incoming_stream.avail_in = 0;
 
-		if ((len = read(fd, input_buffer, BUFLEN)) <= 0)
+		len = read(fd, input_buffer, BUFLEN);
+		if (len <= 0)
 			return len;
 
 		incoming_stream.avail_in = len;
@@ -193,7 +195,7 @@ int select_loop(int s)
 		FD_ZERO(&read_fd);
 		FD_SET(STDIN_FILENO, &read_fd);
 		FD_SET(s, &read_fd);
-		
+
 		select(s + 1, &read_fd, NULL, NULL, NULL);
 
 		if (FD_ISSET(s, &read_fd)) {

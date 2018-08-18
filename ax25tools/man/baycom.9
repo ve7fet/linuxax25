@@ -17,10 +17,10 @@ par97.
 .SS ser12
 This is a very simple 1200 baud AFSK modem. The modem consists only
 of a modulator/demodulator chip, usually a TI TCM3105. The computer
-is responsible for regenerating the receiver bit clock. The modem 
+is responsible for regenerating the receiver bit clock. The modem
 connects to a serial port, hence the name. Since the serial port is
 not used as an async serial port, the kernel driver for serial ports
-cannot be used, and this driver only supports standard serial 
+cannot be used, and this driver only supports standard serial
 hardware (8250, 16450, 16550).
 .SS par96
 This is a modem for 9600 baud FSK compatible to the G3RUH standard.
@@ -40,7 +40,7 @@ The \fBioctl\fP calls follow the implementation in the \fIhdlcdrv\fP.
 
 .TP
 .B BAYCOMCTL_GETMODEMTYPE
-returns the modem type (i.e. \fIser12\fP or \fIpar96\fP) and the 
+returns the modem type (i.e. \fIser12\fP or \fIpar96\fP) and the
 options in effect (currently only the source of the DCD signal)
 .TP
 .B BAYCOMCTL_SETMODEMTYPE
@@ -56,7 +56,3 @@ linux/drivers/net/hdlcdrv.c,
 
 .SH AUTHOR
 baycom was written by Thomas Sailer, HB9JNX/AE4WA, (t.sailer@alumni.ethz.ch).
-
-
-
-

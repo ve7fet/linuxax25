@@ -40,17 +40,17 @@ int main(int argc, char **argv)
 
 	while ((s = getopt(argc, argv, "p:v")) != -1) {
 		switch (s) {
-			case 'p':
-				sprintf(buf, "%s/nrparms", optarg);
-				Nrparms = strdup(buf);
-				break;
-			case 'v':
-				printf("nodesave: %s\n", VERSION);
-				return 0;
-			case ':':
-			case '?':
-				fputs(Usage, stderr);
-				return 1;
+		case 'p':
+			sprintf(buf, "%s/nrparms", optarg);
+			Nrparms = strdup(buf);
+			break;
+		case 'v':
+			printf("nodesave: %s\n", VERSION);
+			return 0;
+		case ':':
+		case '?':
+			fputs(Usage, stderr);
+			return 1;
 		}
 	}
 
@@ -60,7 +60,8 @@ int main(int argc, char **argv)
 	}
 
 	if ((argc - optind) == 1) {
-		if ((fp = fopen(argv[optind], "w")) == NULL) {
+		fp = fopen(argv[optind], "w");
+		if (fp == NULL) {
 			fprintf(stderr, "nodesave: cannot open file %s\n", argv[optind]);
 			return 1;
 		}

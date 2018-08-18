@@ -21,7 +21,7 @@
 
 #include "user_io.h"
 
-void alarm_handler(int sig)
+static void alarm_handler(int sig)
 {
 }
 
@@ -78,7 +78,8 @@ int main(int argc, char **argv)
 	nrbind.fsa_ax25.sax25_ndigis    = 1;
 	nrconnect.fsa_ax25.sax25_ndigis = 0;
 
-	if ((addr = nr_config_get_addr(argv[optind])) == NULL) {
+	addr = nr_config_get_addr(argv[optind]);
+	if (addr == NULL) {
 		sprintf(buffer, "ERROR: invalid NET/ROM port name - %s\r", argv[optind]);
 		err(buffer);
 	}
@@ -106,7 +107,8 @@ int main(int argc, char **argv)
 	/*
 	 * Open the socket into the kernel.
 	 */
-	if ((s = socket(AF_NETROM, SOCK_SEQPACKET, 0)) < 0) {
+	s = socket(AF_NETROM, SOCK_SEQPACKET, 0);
+	if (s < 0) {
 		sprintf(buffer, "ERROR: cannot open NET/ROM socket, %s\r", strerror(errno));
 		err(buffer);
 	}
@@ -134,18 +136,18 @@ int main(int argc, char **argv)
 	 */
 	if (connect(s, (struct sockaddr *)&nrconnect, addrlen) != 0) {
 		switch (errno) {
-			case ECONNREFUSED:
-				strcpy(buffer, "*** Connection refused - aborting\r");
-				break;
-			case ENETUNREACH:
-				strcpy(buffer, "*** No known route - aborting\r");
-				break;
-			case EINTR:
-				strcpy(buffer, "*** Connection timed out - aborting\r");
-				break;
-			default:
-				sprintf(buffer, "ERROR: cannot connect to NET/ROM node, %s\r", strerror(errno));
-				break;
+		case ECONNREFUSED:
+			strcpy(buffer, "*** Connection refused - aborting\r");
+			break;
+		case ENETUNREACH:
+			strcpy(buffer, "*** No known route - aborting\r");
+			break;
+		case EINTR:
+			strcpy(buffer, "*** Connection timed out - aborting\r");
+			break;
+		default:
+			sprintf(buffer, "ERROR: cannot connect to NET/ROM node, %s\r", strerror(errno));
+			break;
 		}
 
 		err(buffer);

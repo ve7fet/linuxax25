@@ -21,7 +21,6 @@
 #include <termios.h>
 #include <signal.h>
 #include <time.h>
-#include <sys/types.h>
 #include <utime.h>
 
 #endif /* INCLUDES_H */

@@ -2,7 +2,7 @@
 .SH NAME
 mheard \- display AX.25 calls recently heard.
 .SH SYNOPSIS
-.B mheard [-d cmns] [-n] [-o cfpt] [-v] [port...]
+.B mheard [-d cmnsa] [-n] [-o cfpt] [-v] [port...]
 .SH DESCRIPTION
 .LP
 .B Mheard
@@ -15,7 +15,7 @@ settings of the arguments. Information on specific ports can be displayed by
 giving the port names as arguments.
 .SH OPTIONS
 .TP 13
-.BI "\-d cmns"
+.BI "\-d cmnsa"
 Sets the information that is displayed for each AX.25 callsign heard. The
 different arguments are:
 .RS
@@ -37,6 +37,9 @@ heard and the date and time last heard.
 Displays statistics about the station heard, the from-callsign, port name,
 no I frames, no S frames, no U frames, time first heard, and time last
 heard.
+.TP 5
+.BI a
+Display the data from c and s combined in one view. Requires wide screen.
 .RE
 .TP 13
 .BI \-n

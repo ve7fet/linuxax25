@@ -28,14 +28,14 @@
  *            callsign didn't match (and the frame wasn't echoed anywhere).
  *
  * *** 20021206 dl9sau:
- * 	      - fixed a bug preventing echo to multible ports; it may also
+ *            - fixed a bug preventing echo to multible ports; it may also
  *              lead to retransmission on the interface where it came from
  *            - fixed problem that frames via sendto(...,alen) had a wrong
  *              protocol (because alen became larger than the size of
  *              struct sockaddr).
  *            - sockaddr_pkt is the right struct for recvfrom/sendto on
  *              type SOCK_PACKET family AF_INET sockets.
- *	      - added support for new PF_PACKET family with sockaddr_ll
+ *            - added support for new PF_PACKET family with sockaddr_ll
  *
  * ***
  *
@@ -86,7 +86,6 @@
 #endif
 
 #include <features.h>    /* for the glibc version number */
-#if __GLIBC__ >= 2
 #ifdef	USE_SOCKADDR_SPKT
 #include <net/if_packet.h>
 #endif
@@ -96,13 +95,6 @@
 #include <netpacket/packet.h>
 #endif
 #include <net/ethernet.h>
-#else
-#if defined(USE_SOCKADDR_SPKT) || defined(USE_SOCKADDR_SLL)
-#include <asm/types.h>
-#include <linux/if_packet.h>
-#endif
-#include <linux/if_ether.h>
-#endif
 
 #include <netinet/in.h>
 
@@ -136,7 +128,7 @@ static void terminate(int sig)
 		syslog(LOG_INFO, "terminating on SIGTERM\n");
 		closelog();
 	}
-	
+
 	exit(0);
 }
 
@@ -183,7 +175,8 @@ static struct config *readconfig(void)
 	char line[80], *cp, *dev;
 	struct config *p, *list = NULL;
 
-	if ((fp = fopen(CONF_RXECHO_FILE, "r")) == NULL) {
+	fp = fopen(CONF_RXECHO_FILE, "r");
+	if (fp == NULL) {
 		fprintf(stderr, "rxecho: cannot open config file\n");
 		return NULL;
 	}
@@ -194,12 +187,14 @@ static struct config *readconfig(void)
 		if (cp == NULL || cp[0] == '#')
 			continue;
 
-		if ((p = calloc(1, sizeof(struct config))) == NULL) {
+		p = calloc(1, sizeof(struct config));
+		if (p == NULL) {
 			perror("rxecho: malloc");
 			return NULL;
 		}
 
-		if ((dev = ax25_config_get_dev(cp)) == NULL) {
+		dev = ax25_config_get_dev(cp);
+		if (dev == NULL) {
 			fprintf(stderr, "rxecho: invalid port name - %s\n", cp);
 			return NULL;
 		}
@@ -207,12 +202,14 @@ static struct config *readconfig(void)
 		strcpy(p->from, dev);
 		p->from_idx = -1;
 
-		if ((cp = strtok(NULL, " \t\r\n")) == NULL) {
+		cp = strtok(NULL, " \t\r\n");
+		if (cp == NULL) {
 			fprintf(stderr, "rxecho: config file error.\n");
 			return NULL;
 		}
 
-		if ((dev = ax25_config_get_dev(cp)) == NULL) {
+		dev = ax25_config_get_dev(cp);
+		if (dev == NULL) {
 			fprintf(stderr, "rxecho: invalid port name - %s\n", cp);
 			return NULL;
 		}
@@ -238,7 +235,7 @@ static struct config *readconfig(void)
 }
 
 /*
- *	Slightly modified from linux/include/net/ax25.h and 
+ *	Slightly modified from linux/include/net/ax25.h and
  *	linux/net/ax25/ax25_subr.c:
  */
 
@@ -264,13 +261,13 @@ typedef struct {
 static unsigned char *ax25_parse_addr(unsigned char *buf, int len, ax25_address *src, ax25_address *dest, ax25_digi *digi)
 {
 	int d = 0;
-	
+
 	if (len < 14) return NULL;
-		
+
 #if 0
 	if (flags != NULL) {
 		*flags = 0;
-	
+
 		if (buf[6] & LAPB_C) {
 			*flags = C_COMMAND;
 		}
@@ -279,16 +276,16 @@ static unsigned char *ax25_parse_addr(unsigned char *buf, int len, ax25_address 
 			*flags = C_RESPONSE;
 		}
 	}
-		
-	if (dama != NULL) 
+
+	if (dama != NULL)
 		*dama = ~buf[13] & DAMA_FLAG;
 #endif
-		
+
 	/* Copy to, from */
-	if (dest != NULL) 
+	if (dest != NULL)
 		memcpy(dest, buf + 0, AX25_ADDR_LEN);
 
-	if (src != NULL)  
+	if (src != NULL)
 		memcpy(src,  buf + 7, AX25_ADDR_LEN);
 
 	buf += 2 * AX25_ADDR_LEN;
@@ -296,7 +293,7 @@ static unsigned char *ax25_parse_addr(unsigned char *buf, int len, ax25_address 
 
 	digi->lastrepeat = -1;
 	digi->ndigi      = 0;
-	
+
 	while (!(buf[-1] & LAPB_E)) {
 		if (d >= AX25_MAX_DIGIS)  return NULL;	/* Max of 6 digis */
 		if (len < 7) return NULL;		/* Short packet */
@@ -370,7 +367,7 @@ int main(int argc, char **argv)
 	const int sa_len = sizeof(struct sockaddr_pkt);
 #else
 	struct sockaddr sa_generic;
-	struct sockaddr *psa = (struct sockaddr *)&sa_generic;
+	struct sockaddr *psa = &sa_generic;
 	const int sa_len = sizeof(struct sockaddr);
 #endif
 	char from_dev_name[sizeof(psa->sa_data)];
@@ -382,15 +379,15 @@ int main(int argc, char **argv)
 
 	while ((s = getopt(argc, argv, "lv")) != -1) {
 		switch (s) {
-			case 'l':
-				logging = TRUE;
-				break;
-			case 'v':
-				printf("rxecho: %s\n", VERSION);
-				return 0;
-			default:
-				fprintf(stderr, "usage: rxecho [-l] [-v]\n");
-				return 1;
+		case 'l':
+			logging = TRUE;
+			break;
+		case 'v':
+			printf("rxecho: %s\n", VERSION);
+			return 0;
+		default:
+			fprintf(stderr, "usage: rxecho [-l] [-v]\n");
+			return 1;
 		}
 	}
 
@@ -401,11 +398,13 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	if ((list = readconfig()) == NULL)
+	list = readconfig();
+	if (list == NULL)
 		return 1;
 
 #ifdef	USE_SOCKADDR_SLL
-	if ((s = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_AX25))) == -1) {
+	s = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_AX25));
+	if (s == -1) {
 #else
 	if ((s = socket(AF_INET, SOCK_PACKET, htons(ETH_P_AX25))) == -1) {
 #endif
@@ -455,9 +454,10 @@ int main(int argc, char **argv)
 	}
 
 	for (;;) {
- 		alen = sa_len;
+		alen = sa_len;
 
-		if ((size = recvfrom(s, buf, 1500, 0, psa, &alen)) == -1) {
+		size = recvfrom(s, buf, 1500, 0, psa, &alen);
+		if (size == -1) {
 			if (logging) {
 				syslog(LOG_ERR, "recvfrom: %m");
 				closelog();
@@ -479,11 +479,11 @@ int main(int argc, char **argv)
 
 		for (p = list; p != NULL; p = p->next)
 #ifdef	USE_SOCKADDR_SLL
- 			if (p->from_idx == from_idx && (check_calls(p, buf, size) == 0)) {
- 				sll.sll_ifindex = p->to_idx;
+			if (p->from_idx == from_idx && (check_calls(p, buf, size) == 0)) {
+				sll.sll_ifindex = p->to_idx;
 #else
- 			if ((strcmp(p->from, from_dev_name) == 0) && (check_calls(p, buf, size) == 0)) {
- 				strcpy(psa->sa_data, p->to);
+			if ((strcmp(p->from, from_dev_name) == 0) && (check_calls(p, buf, size) == 0)) {
+				strcpy(psa->sa_data, p->to);
 #endif
 				/*
 				 * cave: alen (set by recvfrom()) may > salen

@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,12 +22,12 @@
 
 #include "../pathnames.h"
 
-void usage(void)
+static void usage(void)
 {
 	fprintf(stderr, "usage: axparms --assoc|--forward|--route|--setcall|--version ...\n");
 }
 
-void usageassoc(void)
+static void usageassoc(void)
 {
 	fprintf(stderr, "usage: axparms --assoc show\n");
 	fprintf(stderr, "usage: axparms --assoc policy default|deny\n");
@@ -34,25 +35,25 @@ void usageassoc(void)
 	fprintf(stderr, "usage: axparms --assoc [callsign] delete\n");
 }
 
-void usageforward(void)
+static void usageforward(void)
 {
 	fprintf(stderr, "usage: axparms --forward <portfrom> <portto>\n");
 	fprintf(stderr, "usage: axparms --forward <portfrom> delete\n");
 }
 
-void usageroute(void)
+static void usageroute(void)
 {
 	fprintf(stderr, "usage: axparms --route add port callsign [digi ...] [--ipmode mode]\n");
 	fprintf(stderr, "usage: axparms --route del port callsign\n");
 	fprintf(stderr, "usage: axparms --route list\n");
 }
 
-void usagesetcall(void)
+static void usagesetcall(void)
 {
 	fprintf(stderr, "usage: axparms --setcall interface callsign\n");
 }
 
-int routes(int s, int argc, char *argv[], ax25_address *callsign)
+static int routes(int s, int argc, char *argv[], ax25_address *callsign)
 {
 	struct ax25_routes_struct ax25_route;
 	struct ax25_route_opt_struct ax25_opt;
@@ -79,17 +80,17 @@ int routes(int s, int argc, char *argv[], ax25_address *callsign)
 					return 1;
 				}
 				switch (*argv[i]) {
-					case 'd':
-					case 'D':
-						ip_mode = 'D';
-						break;
-					case 'v':
-					case 'V':
-						ip_mode = 'V';
-						break;
-					default:
-						ip_mode = ' ';
-						break;
+				case 'd':
+				case 'D':
+					ip_mode = 'D';
+					break;
+				case 'v':
+				case 'V':
+					ip_mode = 'V';
+					break;
+				default:
+					ip_mode = ' ';
+					break;
 				}
 			} else {
 				if (ax25_aton_entry(argv[i], (char *)&ax25_route.digi_addr[j]) == -1)
@@ -103,18 +104,18 @@ int routes(int s, int argc, char *argv[], ax25_address *callsign)
 			perror("axparms: SIOCADDRT");
 			return 1;
 		}
-		
+
 		ax25_opt.port_addr = *callsign;
 		ax25_opt.dest_addr = ax25_route.dest_addr;
 		ax25_opt.cmd = AX25_SET_RT_IPMODE;
 		ax25_opt.arg = ip_mode;
-		
+
 		if (ioctl(s, SIOCAX25OPTRT, &ax25_opt) != 0) {
 			perror("axparms: SIOCAX25OPTRT");
 			return 1;
 		}
 	}
-	
+
 	if (strcmp(argv[2], "del") == 0) {
 		ax25_route.port_addr  = *callsign;
 		ax25_route.digi_count = 0;
@@ -133,7 +134,8 @@ int routes(int s, int argc, char *argv[], ax25_address *callsign)
 	}
 
 	if (strcmp(argv[2], "list") == 0) {
-		if ((fp=fopen(PROC_AX25_ROUTE_FILE,"r")) == NULL) {
+		fp = fopen(PROC_AX25_ROUTE_FILE, "r");
+		if (fp == NULL) {
 			fprintf(stderr, "axparms: route: cannot open %s\n",
 PROC_AX25_ROUTE_FILE);
 			return 1;
@@ -146,18 +148,18 @@ PROC_AX25_ROUTE_FILE);
 	return 0;
 }
 
-int setifcall(int s, char *ifn, char *name)
+static int setifcall(int s, char *ifn, char *name)
 {
 	char call[7];
 	struct ifreq ifr;
-	
+
 	if (ax25_aton_entry(name, call) == -1)
 		return 1;
 
 	strcpy(ifr.ifr_name, ifn);
 	memcpy(ifr.ifr_hwaddr.sa_data, call, 7);
 	ifr.ifr_hwaddr.sa_family = AF_AX25;
-	
+
 	if (ioctl(s, SIOCSIFHWADDR, &ifr) != 0) {
 		perror("axparms: SIOCSIFHWADDR");
 		return 1;
@@ -166,22 +168,24 @@ int setifcall(int s, char *ifn, char *name)
 	return 0;
 }
 
-int associate(int s, int argc, char *argv[])
+static int associate(int s, int argc, char *argv[])
 {
-	char buffer[80], *u, *c;
+	char buffer[80], *u, *c, *endp;
 	struct sockaddr_ax25 sax25;
 	struct passwd *pw;
+	uid_t uid;
 	int opt;
 	FILE *fp;
 
-	
+
 	if (strcmp(argv[2], "show") == 0) {
 		if (argc < 3) {
 			usageassoc();
 			exit(1);
 		}
 
-		if ((fp = fopen(PROC_AX25_CALLS_FILE, "r")) == NULL) {
+		fp = fopen(PROC_AX25_CALLS_FILE, "r");
+		if (fp == NULL) {
 			fprintf(stderr, "axparms: associate: cannot open %s\n", PROC_AX25_CALLS_FILE);
 			return 1;
 		}
@@ -193,7 +197,8 @@ int associate(int s, int argc, char *argv[])
 		while (fgets(buffer, 80, fp) != NULL) {
 			u = strtok(buffer, " \t\n");
 			c = strtok(NULL, " \t\n");
-			if ((pw = getpwuid(atoi(u))) != NULL)
+			pw = getpwuid(atoi(u));
+			if (pw != NULL)
 				printf("%-10s %s\n", pw->pw_name, c);
 		}
 
@@ -239,7 +244,7 @@ int associate(int s, int argc, char *argv[])
 		usageassoc();
 		exit(1);
 	}
-	
+
 	if (ax25_aton_entry(argv[2], (char *)&sax25.sax25_call) == -1) {
 		fprintf(stderr, "axparms: associate: invalid callsign %s\n", argv[2]);
 		return 1;
@@ -254,13 +259,26 @@ int associate(int s, int argc, char *argv[])
 		return 0;
 	}
 
-	if ((pw = getpwnam(argv[3])) == NULL) {
-		fprintf(stderr, "axparms: associate: unknown username %s\n", argv[3]);
-		return 1;
+	/*
+	 * Tolerate spaces following a UID, it may happen in scripts
+	 */
+	errno = 0;
+	uid = strtol(argv[3], &endp, 0);
+	if (!errno && (*endp == '\0' || isspace(*endp))) {
+		sax25.sax25_uid = uid;
+	} else {
+		pw = getpwnam(argv[3]);
+
+		if (pw == NULL) {
+			fprintf(stderr,
+				"axparms: associate: unknown username %s\n",
+				argv[3]);
+			return 1;
+		}
+
+		sax25.sax25_uid = pw->pw_uid;
 	}
 
-	sax25.sax25_uid = pw->pw_uid;
-		
 	if (ioctl(s, SIOCAX25ADDUID, &sax25) == -1) {
 		perror("axparms: SIOCAX25ADDUID");
 		return 1;
@@ -269,7 +287,7 @@ int associate(int s, int argc, char *argv[])
 	return 0;
 }
 
-int forward(int s, int argc, char *argv[])
+static int forward(int s, int argc, char *argv[])
 {
 #ifdef HAVE_AX25_FWD_STRUCT
 	struct ax25_fwd_struct ax25_fwd;
@@ -285,7 +303,8 @@ int forward(int s, int argc, char *argv[])
 		return 1;
 	}
 
-	if ((addr = ax25_config_get_addr(argv[2])) == NULL) {
+	addr = ax25_config_get_addr(argv[2]);
+	if (addr == NULL) {
 		fprintf(stderr, "axparms: invalid port name - %s\n", argv[2]);
 		return 1;
 	}
@@ -304,7 +323,8 @@ int forward(int s, int argc, char *argv[])
 		return 0;
 	}
 
-	if ((addr = ax25_config_get_addr(argv[3])) == NULL) {
+	addr = ax25_config_get_addr(argv[3]);
+	if (addr == NULL) {
 		fprintf(stderr, "axparms: invalid port name - %s\n", argv[3]);
 		return 1;
 	}
@@ -319,7 +339,7 @@ int forward(int s, int argc, char *argv[])
 		return 1;
 	}
 #else
-        fprintf(stderr, "axparms: Not compiled in with forwarding option.\n");
+	fprintf(stderr, "axparms: Not compiled in with forwarding option.\n");
 #endif /* HAVE_AX25_FWD_STRUCT */
 
 	return 0;
@@ -348,7 +368,8 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-		if ((s = socket(AF_AX25, SOCK_SEQPACKET, 0)) < 0) {
+		s = socket(AF_AX25, SOCK_SEQPACKET, 0);
+		if (s < 0) {
 			perror("axparms: socket");
 			return 1;
 		}
@@ -366,7 +387,8 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-		if ((s = socket(AF_AX25, SOCK_SEQPACKET, 0)) < 0) {
+		s = socket(AF_AX25, SOCK_SEQPACKET, 0);
+		if (s < 0) {
 			perror("axparms: socket");
 			return 1;
 		}
@@ -383,7 +405,7 @@ int main(int argc, char **argv)
 			usageroute();
 			return 1;
 		}
-		
+
 		if (strcmp(argv[2], "add") != 0 && strcmp(argv[2], "del") != 0 && strcmp(argv[2], "list") != 0) {
 			usageroute();
 			return 1;
@@ -393,13 +415,14 @@ int main(int argc, char **argv)
 			usageroute();
 			return 1;
 		}
-		
+
 		if (ax25_config_load_ports() == 0) {
 			fprintf(stderr, "axparms: no AX.25 port data configured\n");
 			return 1;
 		}
 
-		if ((addr = ax25_config_get_addr(argv[3])) == NULL) {
+		addr = ax25_config_get_addr(argv[3]);
+		if (addr == NULL) {
 			fprintf(stderr, "axparms: invalid port name - %s\n", argv[3]);
 			return 1;
 		}
@@ -407,7 +430,8 @@ int main(int argc, char **argv)
 		if (ax25_aton_entry(addr, callsign.ax25_call) == -1)
 			return 1;
 
-		if ((s = socket(AF_AX25, SOCK_SEQPACKET, 0)) < 0) {
+		s = socket(AF_AX25, SOCK_SEQPACKET, 0);
+		if (s < 0) {
 			perror("axparms: socket");
 			return 1;
 		}
@@ -415,7 +439,7 @@ int main(int argc, char **argv)
 		n = routes(s, argc, argv, &callsign);
 
 		close(s);
-		
+
 		return n;
 	}
 
@@ -424,8 +448,9 @@ int main(int argc, char **argv)
 			usagesetcall();
 			return 1;
 		}
-	
-		if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+
+		s = socket(AF_INET, SOCK_DGRAM, 0);
+		if (s < 0) {
 			perror("axparms: socket");
 			return 1;
 		}

@@ -30,6 +30,7 @@ extern struct port_struct port_list[];
 extern int port_count;
 extern int debug;
 extern int logging;
+extern int compliant;
 
 extern ax25_address my_call;
 extern ax25_address node_call;

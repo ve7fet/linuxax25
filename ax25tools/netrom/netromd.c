@@ -17,11 +17,7 @@
 
 #include <net/if.h>
 
-#ifdef __GLIBC__ 
 #include <net/ethernet.h>
-#else
-#include <linux/if_ether.h>
-#endif
 
 #include <netax25/ax25.h>
 #include <netrom/netrom.h>
@@ -40,7 +36,7 @@ struct port_struct port_list[20];
 int port_count = FALSE;
 int compliant  = FALSE;
 int logging    = FALSE;
-int debug      = 0;
+int debug;
 
 ax25_address my_call;
 ax25_address node_call;
@@ -51,7 +47,7 @@ static void terminate(int sig)
 		syslog(LOG_INFO, "terminating on SIGTERM\n");
 		closelog();
 	}
-	
+
 	exit(0);
 }
 
@@ -59,14 +55,16 @@ static int bcast_config_load_ports(void)
 {
 	char buffer[255], port[32], *s;
 	FILE *fp;
-	
-	if ((fp = fopen(CONF_NETROMD_FILE, "r")) == NULL) {
+
+	fp = fopen(CONF_NETROMD_FILE, "r");
+	if (fp == NULL) {
 		fprintf(stderr, "netromd: cannot open config file\n");
 		return -1;
 	}
-		
+
 	while (fgets(buffer, 255, fp) != NULL) {
-		if ((s = strchr(buffer, '\n')) != NULL)
+		s = strchr(buffer, '\n');
+		if (s != NULL)
 			*s = '\0';
 
 		if (strlen(buffer) == 0 || buffer[0] == '#')
@@ -109,16 +107,16 @@ static int bcast_config_load_ports(void)
 			fprintf(stderr, "netromd: invalid verbose setting\n");
 			return -1;
 		}
-		
+
 		port_count++;
 	}
-	
+
 	fclose(fp);
 
 	if (port_count == 0)
 		return -1;
-	
-	return 0;	
+
+	return 0;
 }
 
 int main(int argc, char **argv)
@@ -138,46 +136,46 @@ int main(int argc, char **argv)
 
 	while ((i = getopt(argc, argv, "cdilp:q:t:v")) != -1) {
 		switch (i) {
-			case 'c':
-				compliant = TRUE;
-				break;
-			case 'd':
-				debug++;
-				break;
-			case 'i':
-				timelast = 0;
-				break;
-			case 'l':
-				logging = TRUE;
-				break;
-			case 'p':
-				pause = atoi(optarg);
-				if (pause < 1 || pause > 120) {
-					fprintf(stderr, "netromd: invalid pause value\n");
-					return 1;
-				}
-				break;
-			case 'q':
-				localval = atoi(optarg);
-				if (localval < 10 || localval > 255) {
-					fprintf(stderr, "netromd: invalid local quality\n");
-					return 1;
-				}
-				break;
-			case 't':
-				interval = atoi(optarg) * 60;
-				if (interval < 60 || interval > 7200) {
-					fprintf(stderr, "netromd: invalid time interval\n");
-					return 1;
-				}
-				break;
-			case 'v':
-				printf("netromd: %s\n", VERSION);
-				return 0;
-			case '?':
-			case ':':
-				fprintf(stderr, "usage: netromd [-d] [-i] [-l] [-q quality] [-t interval] [-v]\n");
+		case 'c':
+			compliant = TRUE;
+			break;
+		case 'd':
+			debug++;
+			break;
+		case 'i':
+			timelast = 0;
+			break;
+		case 'l':
+			logging = TRUE;
+			break;
+		case 'p':
+			pause = atoi(optarg);
+			if (pause < 1 || pause > 120) {
+				fprintf(stderr, "netromd: invalid pause value\n");
 				return 1;
+			}
+			break;
+		case 'q':
+			localval = atoi(optarg);
+			if (localval < 10 || localval > 255) {
+				fprintf(stderr, "netromd: invalid local quality\n");
+				return 1;
+			}
+			break;
+		case 't':
+			interval = atoi(optarg) * 60;
+			if (interval < 60 || interval > 7200) {
+				fprintf(stderr, "netromd: invalid time interval\n");
+				return 1;
+			}
+			break;
+		case 'v':
+			printf("netromd: %s\n", VERSION);
+			return 0;
+		case '?':
+		case ':':
+			fprintf(stderr, "usage: netromd [-d] [-i] [-l] [-q quality] [-t interval] [-v]\n");
+			return 1;
 		}
 	}
 
@@ -187,7 +185,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "netromd: no AX.25 ports defined\n");
 		return 1;
 	}
-	
+
 	if (nr_config_load_ports() == 0) {
 		fprintf(stderr, "netromd: no NET/ROM ports defined\n");
 		return 1;
@@ -200,8 +198,9 @@ int main(int argc, char **argv)
 
 	ax25_aton_entry(nr_config_get_addr(NULL), (char *)&my_call);
 	ax25_aton_entry("NODES", (char *)&node_call);
-	
-	if ((s = socket(PF_PACKET, SOCK_PACKET, htons(ETH_P_AX25))) == -1) {
+
+	s = socket(PF_PACKET, SOCK_PACKET, htons(ETH_P_AX25));
+	if (s == -1) {
 		perror("netromd: socket");
 		return 1;
 	}
@@ -210,7 +209,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "netromd: cannot become a daemon\n");
 		return 1;
 	}
-	
+
 	if (logging) {
 		openlog("netromd", LOG_PID, LOG_DAEMON);
 		syslog(LOG_INFO, "starting");
@@ -222,14 +221,16 @@ int main(int argc, char **argv)
 
 		timeout.tv_sec  = 30;
 		timeout.tv_usec = 0;
-	
+
 		if (select(s + 1, &fdset, NULL, NULL, &timeout) == -1)
 			continue;		/* Signal received ? */
 
 		if (FD_ISSET(s, &fdset)) {
 			asize = sizeof(sa);
 
-			if ((size = recvfrom(s, buffer, sizeof(buffer), 0, &sa, &asize)) == -1) {
+			size = recvfrom(s, buffer, sizeof(buffer), 0, &sa,
+					&asize);
+			if (size == -1) {
 				if (logging) {
 					syslog(LOG_ERR, "recvfrom: %m");
 					closelog();
@@ -238,7 +239,7 @@ int main(int argc, char **argv)
 			}
 
 			if (ax25_cmp((ax25_address *)(buffer + 1), &node_call) == 0 &&
-			    ax25_cmp((ax25_address *)(buffer + 8), &my_call)   != 0 && 
+			    ax25_cmp((ax25_address *)(buffer + 8), &my_call)   != 0 &&
 			    buffer[16] == NETROM_PID && buffer[17] == NODES_SIG) {
 				for (i = 0; i < port_count; i++) {
 					if (strcmp(port_list[i].device, sa.sa_data) == 0) {

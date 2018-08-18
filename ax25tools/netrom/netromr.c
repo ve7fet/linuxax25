@@ -14,11 +14,7 @@
 #include <netinet/in.h>
 #include <net/if.h>
 
-#ifdef __GLIBC__ 
 #include <net/ethernet.h>
-#else
-#include <linux/if_ether.h>
-#endif
 
 #include <netax25/ax25.h>
 #include <netrom/netrom.h>
@@ -28,8 +24,6 @@
 #include "../pathnames.h"
 
 #include "netromd.h"
-
-extern int compliant;
 
 static int validcallsign(ax25_address *a)
 {
@@ -48,7 +42,7 @@ static int validcallsign(ax25_address *a)
 		}
 
 		return FALSE;
-        }
+	}
 
 	return TRUE;
 }
@@ -79,7 +73,8 @@ static int add_node(int s, unsigned char *buffer, struct nr_route_struct *nr_nod
 	best_quality = buffer[20];
 
 	nr_node->mnemonic[MNEMONIC_LEN] = '\0';
-	if ((p = strchr(nr_node->mnemonic, ' ')) != NULL)
+	p = strchr(nr_node->mnemonic, ' ');
+	if (p != NULL)
 		*p = '\0';
 
 	if (!validcallsign(&nr_node->callsign)) {
@@ -140,7 +135,7 @@ void receive_nodes(unsigned char *buffer, int length, ax25_address *neighbour, i
 	FILE *fp;
 	int s;
 	int quality, obs_count, qual, lock;
-	char *addr, *callsign, *device;
+	char *callsign, *device;
 
 	if (!validcallsign(neighbour)) {
 		if (debug && logging)
@@ -153,25 +148,28 @@ void receive_nodes(unsigned char *buffer, int length, ax25_address *neighbour, i
 
 	sprintf(neigh_buffer, "%s/obsolescence_count_initialiser", PROC_NR_SYSCTL_DIR);
 
-	if ((fp = fopen(neigh_buffer, "r")) == NULL) {
+	fp = fopen(neigh_buffer, "r");
+	if (fp == NULL) {
 		if (logging)
 			syslog(LOG_ERR, "netromr: cannot open %s\n", neigh_buffer);
 		return;
 	}
 
 	fgets(neigh_buffer, 90, fp);
-	
+
 	obs_count = atoi(neigh_buffer);
 
 	fclose(fp);
 
-	if ((s = socket(AF_NETROM, SOCK_SEQPACKET, 0)) < 0) {
+	s = socket(AF_NETROM, SOCK_SEQPACKET, 0);
+	if (s < 0) {
 		if (logging)
 			syslog(LOG_ERR, "netromr: socket: %m");
 		return;
 	}
 
-	if ((fp = fopen(PROC_NR_NEIGH_FILE, "r")) == NULL) {
+	fp = fopen(PROC_NR_NEIGH_FILE, "r");
+	if (fp == NULL) {
 		if (logging)
 			syslog(LOG_ERR, "netromr: cannot open %s\n", PROC_NR_NEIGH_FILE);
 		close(s);
@@ -179,13 +177,13 @@ void receive_nodes(unsigned char *buffer, int length, ax25_address *neighbour, i
 	}
 
 	fgets(neigh_buffer, 90, fp);
-	
+
 	portcall = ax25_ntoa(neighbour);
 
 	quality = port_list[index].default_qual;
 
 	while (fgets(neigh_buffer, 90, fp) != NULL) {
-		addr     = strtok(neigh_buffer, " ");
+		strtok(neigh_buffer, " ");	/* skip addr field */
 		callsign = strtok(NULL, " ");
 		device   = strtok(NULL, " ");
 		qual     = atoi(strtok(NULL, " "));
@@ -205,7 +203,8 @@ void receive_nodes(unsigned char *buffer, int length, ax25_address *neighbour, i
 	memcpy(nr_node.mnemonic, buffer, MNEMONIC_LEN);
 	nr_node.mnemonic[MNEMONIC_LEN] = '\0';
 
-	if ((p = strchr(nr_node.mnemonic, ' ')) != NULL)
+	p = strchr(nr_node.mnemonic, ' ');
+	if (p != NULL)
 		*p = '\0';
 
 	if (!validmnemonic(nr_node.mnemonic)) {

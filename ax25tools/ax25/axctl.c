@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 	struct ax25_ctl_struct ax25_ctl;
 	char *addr;
 	int s;
-	
+
 	if (argc == 2 && strncmp(argv[1], "-v", 2) == 0) {
 		printf("axctl: %s\n", VERSION);
 		return 0;
@@ -39,7 +39,8 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	if ((addr = ax25_config_get_addr(argv[1])) == NULL) {
+	addr = ax25_config_get_addr(argv[1]);
+	if (addr == NULL) {
 		fprintf(stderr, "axctl: invalid port name - %s\n", argv[1]);
 		return 1;
 	}
@@ -50,8 +51,9 @@ int main(int argc, char **argv)
 		return 1;
 	if (ax25_aton_entry(argv[3], (char *)&ax25_ctl.source_addr) == -1)
 		return 1;
-		
-	if ((s = socket(AF_AX25, SOCK_SEQPACKET, 0)) < 0) {
+
+	s = socket(AF_AX25, SOCK_SEQPACKET, 0);
+	if (s < 0) {
 		perror("axctl: socket");
 		return 1;
 	}
@@ -65,7 +67,7 @@ int main(int argc, char **argv)
 			return 1;
 		}
 		ax25_ctl.arg = atoi(argv[5]);
-		
+
 		if (strcmp(argv[4], "t1") == 0 || strcmp(argv[4], "-t1") == 0)
 			ax25_ctl.cmd = AX25_T1;
 		else if (strcmp(argv[4], "t2") == 0 || strcmp(argv[4], "-t2") == 0)
@@ -83,12 +85,11 @@ int main(int argc, char **argv)
 	}
 
 	ax25_ctl.digi_count = 0;
-	
+
 	if (ioctl(s, SIOCAX25CTLCON, &ax25_ctl) != 0) {
 		perror("axctl: SIOCAX25CTLCON");
 		return 1;
 	}
-	
+
 	return 0;
 }
-

@@ -44,14 +44,9 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <signal.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <net/if.h>
-#ifdef __GLIBC__
 #include <netinet/if_ether.h>
-#else
-#include <linux/if_ether.h>
-#endif
 #include <endian.h>
 #include <netinet/in.h>
 
@@ -75,7 +70,7 @@ static unsigned char bitswap (unsigned char c)
 static int in2hex (char *ptr)
 {
 	char str[3];
-	int val;
+	unsigned int val;
 
 	memcpy (str, ptr, 2);
 	str[2] = '\0';
@@ -324,7 +319,8 @@ int main (int argc, char *argv[])
 
 	strcpy (name, argv[1]);
 
-	if ((sock = socket (PF_INET, SOCK_PACKET, htons (ETH_P_AX25))) < 0)
+	sock = socket(PF_INET, SOCK_PACKET, htons(ETH_P_AX25));
+	if (sock < 0)
 	{
 		fprintf (stderr, "%s: Error %s (%i), cannot open %s\n",
 				 argv[0], strerror (errno), errno, name);

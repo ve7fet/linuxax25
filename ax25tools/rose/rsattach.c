@@ -28,38 +28,42 @@
 
 #include "../pathnames.h"
 
-char *address;
-int  mtu = 128;
+static char *address;
+static int  mtu = 128;
 
-int readconfig(char *port)
+static int readconfig(char *port)
 {
 	FILE *fp;
 	char buffer[90], *s;
 	int n = 0;
-	
-	if ((fp = fopen(CONF_RSPORTS_FILE, "r")) == NULL) {
+
+	fp = fopen(CONF_RSPORTS_FILE, "r");
+	if (fp == NULL) {
 		fprintf(stderr, "rsattach: cannot open rsports file\n");
 		return FALSE;
 	}
 
 	while (fgets(buffer, 90, fp) != NULL) {
 		n++;
-	
-		if ((s = strchr(buffer, '\n')) != NULL)
+
+		s = strchr(buffer, '\n');
+		if (s != NULL)
 			*s = '\0';
 
 		if (strlen(buffer) > 0 && *buffer == '#')
 			continue;
 
-		if ((s = strtok(buffer, " \t\r\n")) == NULL) {
+		s = strtok(buffer, " \t\r\n");
+		if (s == NULL) {
 			fprintf(stderr, "rsattach: unable to parse line %d of the rsports file\n", n);
 			return FALSE;
 		}
-		
+
 		if (strcmp(s, port) != 0)
 			continue;
-			
-		if ((s = strtok(NULL, " \t\r\n")) == NULL) {
+
+		s = strtok(NULL, " \t\r\n");
+		if (s == NULL) {
 			fprintf(stderr, "rsattach: unable to parse line %d of the rsports file\n", n);
 			return FALSE;
 		}
@@ -67,24 +71,25 @@ int readconfig(char *port)
 		address = strdup(s);
 
 		fclose(fp);
-		
+
 		return TRUE;
 	}
-	
+
 	fclose(fp);
 
 	fprintf(stderr, "rsattach: cannot find port %s in rsports\n", port);
-	
+
 	return FALSE;
 }
 
-int getfreedev(char *dev)
+static int getfreedev(char *dev)
 {
 	struct ifreq ifr;
 	int fd;
 	int i;
-	
-	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (fd < 0) {
 		perror("rsattach: socket");
 		return FALSE;
 	}
@@ -92,7 +97,7 @@ int getfreedev(char *dev)
 	for (i = 0; i < INT_MAX; i++) {
 		sprintf(dev, "rose%d", i);
 		strcpy(ifr.ifr_name, dev);
-	
+
 		if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0) {
 			perror("rsattach: SIOCGIFFLAGS");
 			return FALSE;
@@ -109,22 +114,23 @@ int getfreedev(char *dev)
 	return FALSE;
 }
 
-int startiface(char *dev, struct hostent *hp)
+static int startiface(char *dev, struct hostent *hp)
 {
 	struct ifreq ifr;
 	char addr[5];
 	int fd;
-	
-	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (fd < 0) {
 		perror("rsattach: socket");
 		return FALSE;
 	}
 
 	strcpy(ifr.ifr_name, dev);
-	
+
 	if (hp != NULL) {
 		ifr.ifr_addr.sa_family = AF_INET;
-		
+
 		ifr.ifr_addr.sa_data[0] = 0;
 		ifr.ifr_addr.sa_data[1] = 0;
 		ifr.ifr_addr.sa_data[2] = hp->h_addr_list[0][0];
@@ -144,7 +150,7 @@ int startiface(char *dev, struct hostent *hp)
 
 	ifr.ifr_hwaddr.sa_family = ARPHRD_ROSE;
 	memcpy(ifr.ifr_hwaddr.sa_data, addr, 5);
-	
+
 	if (ioctl(fd, SIOCSIFHWADDR, &ifr) != 0) {
 		perror("rsattach: SIOCSIFHWADDR");
 		return FALSE;
@@ -170,12 +176,12 @@ int startiface(char *dev, struct hostent *hp)
 		perror("rsattach: SIOCSIFFLAGS");
 		return FALSE;
 	}
-	
+
 	close(fd);
-	
+
 	return TRUE;
 }
-	
+
 
 int main(int argc, char *argv[])
 {
@@ -185,22 +191,23 @@ int main(int argc, char *argv[])
 
 	while ((fd = getopt(argc, argv, "i:m:v")) != -1) {
 		switch (fd) {
-			case 'i':
-				if ((hp = gethostbyname(optarg)) == NULL) {
-					fprintf(stderr, "rsattach: invalid internet name/address - %s\n", optarg);
-					return 1;
-				}
-				break;
-			case 'v':
-				printf("rsattach: %s\n", VERSION);
-				return 0;
-			case ':':
-			case '?':
-				fprintf(stderr, "usage: rsattach [-i inetaddr] [-v] port\n");
+		case 'i':
+			hp = gethostbyname(optarg);
+			if (hp == NULL) {
+				fprintf(stderr, "rsattach: invalid internet name/address - %s\n", optarg);
 				return 1;
+			}
+			break;
+		case 'v':
+			printf("rsattach: %s\n", VERSION);
+			return 0;
+		case ':':
+		case '?':
+			fprintf(stderr, "usage: rsattach [-i inetaddr] [-v] port\n");
+			return 1;
 		}
 	}
-	
+
 	if ((argc - optind) != 1) {
 		fprintf(stderr, "usage: rsattach [-i inetaddr] [-v] port\n");
 		return 1;
@@ -213,11 +220,11 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "rsattach: cannot find free Rose device\n");
 		return 1;
 	}
-	
+
 	if (!startiface(dev, hp))
-		return 1;		
+		return 1;
 
 	printf("Rose port %s bound to device %s\n", argv[optind], dev);
-		
+
 	return 0;
 }

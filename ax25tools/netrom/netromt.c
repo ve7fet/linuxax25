@@ -23,10 +23,10 @@
 #include "../pathnames.h"
 #include "netromd.h"
 
-static int build_header(unsigned char *message)
+static int build_header(char *message)
 {
-	message[0] = NODES_SIG;
-	
+	message[0] = (char) NODES_SIG;
+
 	strcpy(message + 1, nr_config_get_alias(NULL));
 	strncat(message + 1, "       ", MNEMONIC_LEN - strlen(message + 1));
 
@@ -35,21 +35,23 @@ static int build_header(unsigned char *message)
 
 static void build_mine(int s, struct full_sockaddr_ax25 *dest, int dlen, int localval, int pause)
 {
-	unsigned char message[100];
+	char message[100];
 	char buffer[255], *port, *p;
 	FILE *fp;
 	int len;
 
 	len = build_header(message);
 
-	if ((fp = fopen(CONF_NRPORTS_FILE, "r")) == NULL) {
+	fp = fopen(CONF_NRPORTS_FILE, "r");
+	if (fp == NULL) {
 		if (logging)
 			syslog(LOG_ERR, "netromt: cannot open nrports file\n");
 		return;
 	}
 
 	while (fgets(buffer, 255, fp) != NULL) {
-		if ((p = strchr(buffer, '\n')) != NULL)
+		p = strchr(buffer, '\n');
+		if (p != NULL)
 			*p = '\0';
 
 		if (strlen(buffer) == 0 || buffer[0] == '#')
@@ -83,32 +85,34 @@ static void build_mine(int s, struct full_sockaddr_ax25 *dest, int dlen, int loc
 	}
 
 	fclose(fp);
-	
+
 	if (sendto(s, message, len, 0, (struct sockaddr *)dest, dlen) == -1) {
 		if (logging)
 			syslog(LOG_ERR, "netromt: sendto: %m");
 	}
-	
+
 	sleep(pause);
 }
 
 static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, int dlen, int port, int pause)
 {
-	unsigned char message[300];
+	char message[300];
 	FILE *fpnodes, *fpneigh;
 	char nodes_buffer[90];
 	char neigh_buffer[90];
 	char *callsign, *mnemonic, *neighbour;
-	int  which, number, quality, neigh_no, obs_count;
+	int  quality, neigh_no, obs_count;
 	int  olen, len;
 
-	if ((fpnodes = fopen(PROC_NR_NODES_FILE, "r")) == NULL) {
+	fpnodes = fopen(PROC_NR_NODES_FILE, "r");
+	if (fpnodes == NULL) {
 		if (logging)
 			syslog(LOG_ERR, "netromt: cannot open %s\n", PROC_NR_NODES_FILE);
 		return;
 	}
 
-	if ((fpneigh = fopen(PROC_NR_NEIGH_FILE, "r")) == NULL) {
+	fpneigh = fopen(PROC_NR_NEIGH_FILE, "r");
+	if (fpneigh == NULL) {
 		if (logging)
 			syslog(LOG_ERR, "netromt: cannot open %s\n", PROC_NR_NEIGH_FILE);
 		fclose(fpnodes);
@@ -123,13 +127,13 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 		while (fgets(nodes_buffer, 90, fpnodes) != NULL) {
 			callsign  = strtok(nodes_buffer, " ");
 			mnemonic  = strtok(NULL, " ");
-			which     = atoi(strtok(NULL, " "));
-			number    = atoi(strtok(NULL, " "));
+			strtok(NULL, " ");	/* skip which field */
+			strtok(NULL, " ");	/* skip number field */
 			quality   = atoi(strtok(NULL, " "));
 			obs_count = atoi(strtok(NULL, " "));
 			neigh_no  = atoi(strtok(NULL, " "));
 			neighbour = NULL;
-			
+
 			if (obs_count < min_obs || quality == 0) continue;
 
 			/* "Blank" mnemonic */
@@ -139,7 +143,7 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 			fseek(fpneigh, 0L, SEEK_SET);
 
 			fgets(neigh_buffer, 90, fpneigh);
-			
+
 			while (fgets(neigh_buffer, 90, fpneigh) != NULL) {
 				if (atoi(strtok(neigh_buffer, " ")) == neigh_no) {
 					neighbour = strtok(NULL, " ");
@@ -155,7 +159,7 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 
 			if (ax25_aton_entry(callsign, message + len) == -1) {
 				if (logging)
-					syslog(LOG_ERR, "netromt: invalid callsign '%s' in /proc/net/nr_nodes\n", callsign);
+					syslog(LOG_ERR, "netromt: invalid callsign '%s' in "PROC_NR_NODES_FILE"\n", callsign);
 				continue;
 			}
 			len += CALLSIGN_LEN;
@@ -166,13 +170,13 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 
 			if (ax25_aton_entry(neighbour, message + len) == -1) {
 				if (logging)
-					syslog(LOG_ERR, "netromt: invalid callsign '%s' in /proc/net/nr_neigh\n", neighbour);
+					syslog(LOG_ERR, "netromt: invalid callsign '%s' in "PROC_NR_NEIGH_FILE"\n", neighbour);
 				len -= (CALLSIGN_LEN + MNEMONIC_LEN);
 				continue;
 			}
 			len += CALLSIGN_LEN;
 
-			message[len] = quality;		
+			message[len] = quality;
 			len += QUALITY_LEN;
 
 			/* No room for another entry? */
@@ -186,7 +190,7 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 				if (logging)
 					syslog(LOG_ERR, "netromt: sendto: %m");
 			}
-			
+
 			sleep(pause);
 		}
 
@@ -206,14 +210,14 @@ void transmit_nodes(int localval, int pause)
 	int i;
 
 	switch (fork()) {
-		case 0:
-			break;
-		case -1:
-			if (logging)
-				syslog(LOG_ERR, "netromt: fork: %m\n");
-			return;
-		default:
-			return;
+	case 0:
+		break;
+	case -1:
+		if (logging)
+			syslog(LOG_ERR, "netromt: fork: %m\n");
+		return;
+	default:
+		return;
 	}
 
 	dlen = ax25_aton("NODES", &dest);
@@ -232,7 +236,8 @@ void transmit_nodes(int localval, int pause)
 		ax25_aton(path, &src);
 		slen = sizeof(struct full_sockaddr_ax25);
 
-		if ((s = socket(AF_AX25, SOCK_DGRAM, NETROM_PID)) < 0) {
+		s = socket(AF_AX25, SOCK_DGRAM, NETROM_PID);
+		if (s < 0) {
 			if (logging)
 				syslog(LOG_ERR, "netromt: socket: %m");
 			continue;
@@ -253,7 +258,8 @@ void transmit_nodes(int localval, int pause)
 		close(s);
 	}
 
-	if ((s = socket(AF_NETROM, SOCK_SEQPACKET, 0)) < 0) {
+	s = socket(AF_NETROM, SOCK_SEQPACKET, 0);
+	if (s < 0) {
 		if (logging)
 			syslog(LOG_ERR, "netromt: socket: %m");
 		exit(1);

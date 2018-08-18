@@ -42,6 +42,8 @@
 #include <net/if.h>
 #include "hdrvcomm.h"
 
+#include <config.h>
+
 /* ---------------------------------------------------------------------- */
 
 static char *progname;
@@ -69,7 +71,8 @@ static unsigned char get_mixer_reg(unsigned char addr)
 	struct sm_mixer_data mixdat;
 
 	mixdat.reg = addr;
-	if ((i = do_mix_ioctl(SMCTL_GETMIXER, &mixdat)) < 0) {
+	i = do_mix_ioctl(SMCTL_GETMIXER, &mixdat);
+	if (i < 0) {
 		perror("do_mix_ioctl: SMCTL_GETMIXER");
 		exit(1);
 	}
@@ -105,7 +108,7 @@ static void display_mixer_ad1848(void)
 {
 	static const char *src[4] = { "Line", "Aux1", "Mic", "Dac" };
 	unsigned char data;
-	
+
 	data = get_mixer_reg(0);
 	printf("Left input:  Source: %-4s Gain: %3ddB\n", src[(data>>6)&3],
 	       (((data & 0xe0) == 0xa0) ? 20 : 0) + (data & 0xf) * 3 / 2);
@@ -114,31 +117,31 @@ static void display_mixer_ad1848(void)
 	       (((data & 0xe0) == 0xa0) ? 20 : 0) + (data & 0xf) * 3 / 2);
 	data = get_mixer_reg(2);
 	if (!(data & 0x80))
-		printf("Left Aux1 mixing:  Gain: %3ddB\n", 
+		printf("Left Aux1 mixing:  Gain: %3ddB\n",
 		       (8 - (int)(data & 0x1f)) * 3 / 2);
 	data = get_mixer_reg(3);
 	if (!(data & 0x80))
-		printf("Right Aux1 mixing: Gain: %3ddB\n", 
+		printf("Right Aux1 mixing: Gain: %3ddB\n",
 		       (8 - (int)(data & 0x1f)) * 3 / 2);
 	data = get_mixer_reg(4);
 	if (!(data & 0x80))
-		printf("Left Aux2 mixing:  Gain: %3ddB\n", 
+		printf("Left Aux2 mixing:  Gain: %3ddB\n",
 		       (8 - (int)(data & 0x1f)) * 3 / 2);
 	data = get_mixer_reg(5);
 	if (!(data & 0x80))
-		printf("Right Aux2 mixing: Gain: %3ddB\n", 
+		printf("Right Aux2 mixing: Gain: %3ddB\n",
 		       (8 - (int)(data & 0x1f)) * 3 / 2);
 	data = get_mixer_reg(6);
-	if (data & 0x80) 
+	if (data & 0x80)
 		printf("Left output:  muted\n");
-	else 
-		printf("Left output:  Gain: %3ddB\n", 
+	else
+		printf("Left output:  Gain: %3ddB\n",
 		       ((int)(data & 0x3f)) * (-3) / 2);
 	data = get_mixer_reg(7);
-	if (data & 0x80) 
+	if (data & 0x80)
 		printf("Right output: muted\n");
-	else 
-		printf("Right output: Gain: %3ddB\n", 
+	else
+		printf("Right output: Gain: %3ddB\n",
 		       ((int)(data & 0x3f)) * (-3) / 2);
 	data = get_mixer_reg(13);
 	if (data & 1)
@@ -154,24 +157,24 @@ static void display_mixer_cs423x(void)
 
 	display_mixer_ad1848();
 	data = get_mixer_reg(26);
-	printf("Mono: %s%s%s Gain: %3ddB\n", 
+	printf("Mono: %s%s%s Gain: %3ddB\n",
 	       (data & 0x80) ? "input muted, " : "",
 	       (data & 0x40) ? "output muted, " : "",
 	       (data & 0x20) ? "bypass, " : "",
 	       (int)(data & 0xf) * (-3));
-       	data = get_mixer_reg(27);
-	if (data & 0x80) 
+	data = get_mixer_reg(27);
+	if (data & 0x80)
 		printf("Left output:  muted\n");
-	else 
-		printf("Left output:  Gain: %3ddB\n", 
+	else
+		printf("Left output:  Gain: %3ddB\n",
 		       ((int)(data & 0xf)) * (-2));
 	data = get_mixer_reg(29);
-	if (data & 0x80) 
+	if (data & 0x80)
 		printf("Right output: muted\n");
-	else 
-		printf("Right output: Gain: %3ddB\n", 
+	else
+		printf("Right output: Gain: %3ddB\n",
 		       ((int)(data & 0xf)) * (-2));
-	
+
 }
 
 /* ---------------------------------------------------------------------- */
@@ -179,73 +182,73 @@ static void display_mixer_cs423x(void)
 static void display_mixer_ct1335(void)
 {
 	unsigned char data;
-	
+
 	data = get_mixer_reg(0x2);
-	printf("Master volume: %3ddB\n", 
+	printf("Master volume: %3ddB\n",
 	       (((int)((data >> 1) & 7)) - 7) * 46 / 7);
 	data = get_mixer_reg(0xa);
-	printf("Voice volume:  %3ddB\n", 
+	printf("Voice volume:  %3ddB\n",
 	       (((int)((data >> 1) & 3)) - 3) * 46 / 3);
 	data = get_mixer_reg(0x6);
-	printf("MIDI volume:   %3ddB\n", 
+	printf("MIDI volume:   %3ddB\n",
 	       (((int)((data >> 1) & 7)) - 7) * 46 / 7);
 	data = get_mixer_reg(0x8);
-	printf("CD volume:     %3ddB\n", 
+	printf("CD volume:     %3ddB\n",
 	       (((int)((data >> 1) & 7)) - 7) * 46 / 7);
 }
 
 /* ---------------------------------------------------------------------- */
 
 static void display_mixer_ct1345(void)
-{	
+{
 	static const char *src[4] = { "Mic", "CD", "Mic", "Line" };
 	unsigned char data, data2;
-	
+
 	data = get_mixer_reg(0xc);
 	data2 = get_mixer_reg(0xe);
 	printf("Input source: %s\n", src[(data >> 1) & 3]);
-	if (!(data & data2 & 0x20)) { 
-		printf("Filter: Low pass %s kHz: ", (data & 0x8) ? 
+	if (!(data & data2 & 0x20)) {
+		printf("Filter: Low pass %s kHz: ", (data & 0x8) ?
 		       "8.8" : "3.2");
 		if (data & 0x20)
 			printf("output\n");
-		else 
+		else
 			printf("input%s\n", (data2 & 0x20) ? "" : ", output");
 	}
 	if (data2 & 2)
 		printf("stereo\n");
-	
+
 	data = get_mixer_reg(0x22);
-	printf("Master volume: Left: %3ddB  Right: %3ddB\n", 
+	printf("Master volume: Left: %3ddB  Right: %3ddB\n",
 	       (((int)((data >> 5) & 7)) - 7) * 46 / 7,
 	       (((int)((data >> 1) & 7)) - 7) * 46 / 7);
 	data = get_mixer_reg(0x4);
-	printf("Voice volume:  Left: %3ddB  Right: %3ddB\n", 
+	printf("Voice volume:  Left: %3ddB  Right: %3ddB\n",
 	       (((int)((data >> 5) & 7)) - 7) * 46 / 7,
 	       (((int)((data >> 1) & 7)) - 7) * 46 / 7);
 	data = get_mixer_reg(0x26);
-	printf("MIDI volume:   Left: %3ddB  Right: %3ddB\n", 
+	printf("MIDI volume:   Left: %3ddB  Right: %3ddB\n",
 	       (((int)((data >> 5) & 7)) - 7) * 46 / 7,
 	       (((int)((data >> 1) & 7)) - 7) * 46 / 7);
 	data = get_mixer_reg(0x28);
-	printf("CD volume:     Left: %3ddB  Right: %3ddB\n", 
+	printf("CD volume:     Left: %3ddB  Right: %3ddB\n",
 	       (((int)((data >> 5) & 7)) - 7) * 46 / 7,
 	       (((int)((data >> 1) & 7)) - 7) * 46 / 7);
 	data = get_mixer_reg(0x2e);
-	printf("Line volume:   Left: %3ddB  Right: %3ddB\n", 
+	printf("Line volume:   Left: %3ddB  Right: %3ddB\n",
 	       (((int)((data >> 5) & 7)) - 7) * 46 / 7,
 	       (((int)((data >> 1) & 7)) - 7) * 46 / 7);
 	data = get_mixer_reg(0x0a);
-	printf("Mic mixing volume:   %3ddB\n", 
+	printf("Mic mixing volume:   %3ddB\n",
 	       (((int)((data >> 1) & 3)) - 3) * 46 / 3);
 }
 
 /* ---------------------------------------------------------------------- */
 
 static void display_mixer_ct1745(void)
-{	
+{
 	unsigned char data, data2;
-	
+
 	printf("Master volume: Left: %3ddB  Right: %3ddB\n",
 	       ((int)((get_mixer_reg(0x30) >> 3) & 0x1f) - 31) * 2,
 	       ((int)((get_mixer_reg(0x31) >> 3) & 0x1f) - 31) * 2);
@@ -265,7 +268,7 @@ static void display_mixer_ct1745(void)
 	       ((int)((get_mixer_reg(0x3a) >> 3) & 0x1f) - 31) * 2);
 	printf("PC speaker volume:   %3ddB\n",
 	       ((int)((get_mixer_reg(0x3b) >> 6) & 0x3) - 3) * 6);
-	printf("Mic gain:      %s\n", 
+	printf("Mic gain:      %s\n",
 	       (get_mixer_reg(0x43) & 1) ? "fixed 20dB" : "AGC");
 	printf("Output gain:   Left: %3ddB  Right: %3ddB\n",
 	       ((int)((get_mixer_reg(0x41) >> 6) & 3)) * 6,
@@ -298,14 +301,14 @@ static void display_mixer_ct1745(void)
 	       (data & 8) ? " Line.R" : "");
 	data = get_mixer_reg(0x3d);
 	printf("Input sources left:  %s%s%s%s%s%s%s\n",
-	       (data & 1) ? " Mic" : "", (data & 2) ? " CD.R" : "", 
-	       (data & 4) ? " CD.L" : "", (data & 8) ? " Line.R" : "", 
+	       (data & 1) ? " Mic" : "", (data & 2) ? " CD.R" : "",
+	       (data & 4) ? " CD.L" : "", (data & 8) ? " Line.R" : "",
 	       (data & 0x10) ? " Line.L" : "", (data & 0x20) ? " Midi.R" : "",
 	       (data & 0x40) ? " Midi.L" : "");
 	data = get_mixer_reg(0x3e);
 	printf("Input sources right: %s%s%s%s%s%s%s\n",
-	       (data & 1) ? " Mic" : "", (data & 2) ? " CD.R" : "", 
-	       (data & 4) ? " CD.L" : "", (data & 8) ? " Line.R" : "", 
+	       (data & 1) ? " Mic" : "", (data & 2) ? " CD.R" : "",
+	       (data & 4) ? " CD.L" : "", (data & 8) ? " Line.R" : "",
 	       (data & 0x10) ? " Line.L" : "", (data & 0x20) ? " Midi.R" : "",
 	       (data & 0x40) ? " Midi.L" : "");
 }
@@ -314,15 +317,15 @@ static void display_mixer_ct1745(void)
 
 static int parse_ad_src(const char *cp)
 {
-        if (!strcasecmp(cp, "line"))
-                return 0;
-        if (!strcasecmp(cp, "aux1"))
-                return 1;
-        if (!strcasecmp(cp, "mic"))
-                return 2;
-        if (!strcasecmp(cp, "dac"))
-                return 3;
-        return -1;
+	if (!strcasecmp(cp, "line"))
+		return 0;
+	if (!strcasecmp(cp, "aux1"))
+		return 1;
+	if (!strcasecmp(cp, "mic"))
+		return 2;
+	if (!strcasecmp(cp, "dac"))
+		return 3;
+	return -1;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -386,21 +389,24 @@ static int set_mixer_ad1848(int argc, char *argv[])
 			}
 		} else if (!strncasecmp(argv[0], "sl=", 3)) {
 			mask |= 16;
-			if ((isrcl = parse_ad_src(argv[0]+3)) < 0) {
+			isrcl = parse_ad_src(argv[0] + 3);
+			if (isrcl < 0) {
 				fprintf(stderr, "invalid input source, must "
 					"be either line, aux1, mic or dac\n");
 				return -1;
 			}
 		} else if (!strncasecmp(argv[0], "sr=", 3)) {
 			mask |= 32;
-			if ((isrcr = parse_ad_src(argv[0]+3)) < 0) {
+			isrcr = parse_ad_src(argv[0] + 3);
+			if (isrcr < 0) {
 				fprintf(stderr, "invalid input source, must "
 					"be either line, aux1, mic or dac\n");
 				return -1;
 			}
 		} else if (!strncasecmp(argv[0], "s=", 2)) {
 			mask |= 48;
-			if ((isrcl = isrcr = parse_ad_src(argv[0]+2)) < 0) {
+			isrcl = isrcr = parse_ad_src(argv[0] + 2);
+			if (isrcl < 0) {
 				fprintf(stderr, "invalid input source, must "
 					"be either line, aux1, mic or dac\n");
 				return -1;
@@ -445,13 +451,13 @@ static int set_mixer_ad1848(int argc, char *argv[])
 	if (mask & 1) {
 		if (olvll < -95)
 			set_mixer_reg(0x06, 0x80);
-		else 
+		else
 			set_mixer_reg(0x06, (olvll * (-2) / 3));
 	}
 	if (mask & 2) {
 		if (olvlr < -95)
 			set_mixer_reg(0x07, 0x80);
-		else 
+		else
 			set_mixer_reg(0x07, (olvlr * (-2) / 3));
 	}
 	set_mixer_reg(0x0d, 0x00);
@@ -620,25 +626,25 @@ static int set_mixer_ct1745(int argc, char *argv[])
 			}
 		} else if (!strncasecmp(argv[0], "s=", 2)) {
 			mask |= 16;
-			if (!strcasecmp(argv[0]+2, "mic")) 
+			if (!strcasecmp(argv[0]+2, "mic"))
 				insrc |= 1;
-			else if (!strcasecmp(argv[0]+2, "cd.r")) 
+			else if (!strcasecmp(argv[0]+2, "cd.r"))
 				insrc |= 2;
-			else if (!strcasecmp(argv[0]+2, "cd.l")) 
+			else if (!strcasecmp(argv[0]+2, "cd.l"))
 				insrc |= 4;
-			else if (!strcasecmp(argv[0]+2, "cd")) 
+			else if (!strcasecmp(argv[0]+2, "cd"))
 				insrc |= 6;
-			else if (!strcasecmp(argv[0]+2, "line.r")) 
+			else if (!strcasecmp(argv[0]+2, "line.r"))
 				insrc |= 0x08;
-			else if (!strcasecmp(argv[0]+2, "line.l")) 
+			else if (!strcasecmp(argv[0]+2, "line.l"))
 				insrc |= 0x10;
-			else if (!strcasecmp(argv[0]+2, "line")) 
+			else if (!strcasecmp(argv[0]+2, "line"))
 				insrc |= 0x18;
-			else if (!strcasecmp(argv[0]+2, "midi.r")) 
+			else if (!strcasecmp(argv[0]+2, "midi.r"))
 				insrc |= 0x20;
-			else if (!strcasecmp(argv[0]+2, "midi.l")) 
+			else if (!strcasecmp(argv[0]+2, "midi.l"))
 				insrc |= 0x40;
-			else if (!strcasecmp(argv[0]+2, "midi")) 
+			else if (!strcasecmp(argv[0]+2, "midi"))
 				insrc |= 0x60;
 			else {
 				fprintf(stderr, "invalid input source, must "
@@ -715,7 +721,7 @@ static int set_mixer_ct1745(int argc, char *argv[])
 
 /* ---------------------------------------------------------------------- */
 
-static const char *usage_str = 
+static const char *usage_str =
 "[-i smif]\n\n";
 
 int main(int argc, char *argv[])
@@ -724,7 +730,7 @@ int main(int argc, char *argv[])
 	struct sm_mixer_data mixdat;
 
 	progname = *argv;
-	printf("%s: Version 0.2; (C) 1996-1997 by Thomas Sailer HB9JNX/AE4WA\n", *argv);
+	printf("%s: Version " VERSION "; (C) 1996-1997 by Thomas Sailer HB9JNX/AE4WA\n", *argv);
 	hdrvc_args(&argc, argv, "sm0");
 	while ((c = getopt(argc, argv, "")) != -1) {
 		switch (c) {

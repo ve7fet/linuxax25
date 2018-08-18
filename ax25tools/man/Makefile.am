@@ -7,6 +7,7 @@ man_MANS = \
 	axparms.8 \
 	axports.5 \
 	axspawn.8 axspawn.conf.5 \
+	axwrapper.8 \
 	baycom.9 \
 	beacon.8 \
 	bpqparms.8 \

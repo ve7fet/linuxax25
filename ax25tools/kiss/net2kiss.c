@@ -31,7 +31,6 @@
 /*****************************************************************************/
 
 #include <stdio.h>
-#define __USE_XOPEN
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -39,13 +38,13 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
 #include <endian.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <grp.h>
+#include <pty.h>
 #include <string.h>
 #include <termios.h>
 #include <limits.h>
@@ -53,11 +52,7 @@
 #include <sys/socket.h>
 #include <net/if.h>
 
-#ifdef __GLIBC__
 #include <net/ethernet.h>
-#else
-#include <linux/if_ether.h>
-#endif
 
 
 /* --------------------------------------------------------------------- */
@@ -65,14 +60,14 @@
 static int fdif, fdpty;
 static struct ifreq ifr;
 static char *progname;
-static int verbose = 0;
-static int i_am_unix98_pty_master = 0; /* unix98 ptmx support */
-static char *namepts = NULL;  /* name of the unix98 pts slave, which
-	                       * the client has to use */
+static int verbose;
+static int i_am_unix98_pty_master;	/* unix98 ptmx support */
+static char *namepts;			/* name of the unix98 pts slave, which
+					 * the client has to use */
 
 /* --------------------------------------------------------------------- */
 
-static void die(char *func) 
+static void die(char *func)
 {
 	fprintf(stderr, "%s: %s (%i)%s%s\n", progname, strerror(errno),
 		errno, func ? " in " : "", func ? func : "");
@@ -88,7 +83,7 @@ static void display_packet(unsigned char *bp, unsigned int len)
 	unsigned char v1=1,cmd=0;
 	unsigned char i,j;
 
-	if (!bp || !len) 
+	if (!bp || !len)
 		return;
 	if (len < 8)
 		return;
@@ -100,24 +95,24 @@ static void display_packet(unsigned char *bp, unsigned int len)
 		cmd = (bp[1] & 2) != 0;
 		printf("fm ? to ");
 		i = (bp[2] >> 2) & 0x3f;
-		if (i) 
+		if (i)
 			printf("%c",i+0x20);
 		i = ((bp[2] << 4) | ((bp[3] >> 4) & 0xf)) & 0x3f;
-		if (i) 
+		if (i)
 			printf("%c",i+0x20);
 		i = ((bp[3] << 2) | ((bp[4] >> 6) & 3)) & 0x3f;
-		if (i) 
+		if (i)
 			printf("%c",i+0x20);
 		i = bp[4] & 0x3f;
-		if (i) 
+		if (i)
 			printf("%c",i+0x20);
 		i = (bp[5] >> 2) & 0x3f;
-		if (i) 
+		if (i)
 			printf("%c",i+0x20);
 		i = ((bp[5] << 4) | ((bp[6] >> 4) & 0xf)) & 0x3f;
-		if (i) 
+		if (i)
 			printf("%c",i+0x20);
-		printf("-%u QSO Nr %u", bp[6] & 0xf, (bp[0] << 6) | 
+		printf("-%u QSO Nr %u", bp[6] & 0xf, (bp[0] << 6) |
 		       (bp[1] >> 2));
 		bp += 7;
 		len -= 7;
@@ -132,33 +127,33 @@ static void display_packet(unsigned char *bp, unsigned int len)
 			cmd = (bp[6] & 0x80);
 		}
 		printf("fm ");
-		for(i = 7; i < 13; i++) 
-			if ((bp[i] &0xfe) != 0x40) 
+		for (i = 7; i < 13; i++)
+			if ((bp[i] &0xfe) != 0x40)
 				printf("%c",bp[i] >> 1);
 		printf("-%u to ",(bp[13] >> 1) & 0xf);
-		for(i = 0; i < 6; i++) 
-			if ((bp[i] &0xfe) != 0x40) 
+		for (i = 0; i < 6; i++)
+			if ((bp[i] &0xfe) != 0x40)
 				printf("%c",bp[i] >> 1);
 		printf("-%u",(bp[6] >> 1) & 0xf);
 		bp += 14;
 		len -= 14;
 		if ((!(bp[-1] & 1)) && (len >= 7)) printf(" via ");
 		while ((!(bp[-1] & 1)) && (len >= 7)) {
-			for(i = 0; i < 6; i++) 
-				if ((bp[i] &0xfe) != 0x40) 
+			for (i = 0; i < 6; i++)
+				if ((bp[i] &0xfe) != 0x40)
 					printf("%c",bp[i] >> 1);
 			printf("-%u",(bp[6] >> 1) & 0xf);
 			bp += 7;
 			len -= 7;
-			if ((!(bp[-1] & 1)) && (len >= 7)) 
+			if ((!(bp[-1] & 1)) && (len >= 7))
 				printf(",");
 		}
 	}
-	if(!len) 
+	if (!len)
 		return;
 	i = *bp++;
 	len--;
-	j = v1 ? ((i & 0x10) ? '!' : ' ') : 
+	j = v1 ? ((i & 0x10) ? '!' : ' ') :
 		((i & 0x10) ? (cmd ? '+' : '-') : (cmd ? '^' : 'v'));
 	if (!(i & 1)) {
 		/*
@@ -207,7 +202,7 @@ static void display_packet(unsigned char *bp, unsigned int len)
 			printf(" REJ%u%c",(i >> 5) & 7,j);
 			break;
 		default:
-			printf(" unknown S (0x%x)%u%c", i & 0xf, 
+			printf(" unknown S (0x%x)%u%c", i & 0xf,
 			       (i >> 5) & 7, j);
 			break;
 		}
@@ -221,70 +216,20 @@ static void display_packet(unsigned char *bp, unsigned int len)
 	j = 0;
 	while (len) {
 		i = *bp++;
-		if ((i >= 32) && (i < 128)) 
+		if ((i >= 32) && (i < 128))
 			printf("%c",i);
 		else if (i == 13) {
-			if (j) 
+			if (j)
 				printf("\n");
 			j = 0;
-		} else 
+		} else
 			printf(".");
-		if (i >= 32) 
+		if (i >= 32)
 			j = 1;
 		len--;
 	}
-	if (j) 
+	if (j)
 		printf("\n");
-}
-
-/* ---------------------------------------------------------------------- */
-
-static int openpty(int *amaster, int *aslave, char *name, 
-		   struct termios *termp, struct winsize *winp)
-{
-	char line[PATH_MAX];
-        const char *cp1, *cp2;
-	int master, slave;
-	struct group *gr = getgrnam("tty");
-
-	strcpy(line, "/dev/ptyXX");
-	for (cp1 = "pqrstuvwxyzPQRST"; *cp1; cp1++) {
-		line[8] = *cp1;
-		for (cp2 = "0123456789abcdef"; *cp2; cp2++) {
-			line[9] = *cp2;
-			if ((master = open(line, O_RDWR, 0)) == -1) {
-				if (errno == ENOENT)
-					return (-1);	/* out of ptys */
-			} else {
-				line[5] = 't';
-				(void) chown(line, getuid(), 
-					     gr ? gr->gr_gid : -1);
-				(void) chmod(line, S_IRUSR|S_IWUSR|S_IWGRP);
-#if 0
-				(void) revoke(line);
-#endif
-				if ((slave = open(line, O_RDWR, 0)) != -1) {
-					*amaster = master;
-					*aslave = slave;
-					if (name)
-						strcpy(name, line);
-					if (termp)
-						(void) tcsetattr(slave,
-								 TCSAFLUSH, 
-								 termp);
-					if (winp)
-						(void) ioctl(slave, 
-							     TIOCSWINSZ, 
-							     (char *)winp);
-					return 0;
-				}
-				(void) close(master);
-				line[5] = 'p';
-			}
-		}
-	}
-	errno = ENOENT;	/* out of ptys */
-	return (-1);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -318,22 +263,22 @@ static void restore_ifflags(int signum)
 
 /* --------------------------------------------------------------------- */
 
-static void kiss_overflow(void) 
+static void kiss_overflow(void)
 {
 	if (verbose)
 		printf("KISS: packet overflow\n");
 }
 
-static void kiss_bad_escape(void) 
+static void kiss_bad_escape(void)
 {
 	if (verbose)
 		printf("KISS: bad escape sequence\n");
 }
 
-static void display_kiss_packet(char *pfx, unsigned char *pkt, 
-				unsigned int pktlen) 
+static void display_kiss_packet(char *pfx, unsigned char *pkt,
+				unsigned int pktlen)
 {
-	if (!verbose) 
+	if (!verbose)
 		return;
 	switch (*pkt) {
 	case KISS_CMD_DATA:
@@ -344,7 +289,7 @@ static void display_kiss_packet(char *pfx, unsigned char *pkt,
 	case KISS_CMD_TXDELAY:
 		printf("%s: txdelay = %dms\n", pfx, (int)pkt[1] * 10);
 		break;
-     
+
 	case KISS_CMD_PPERSIST:
 		printf("%s: p persistence = %d\n", pfx, pkt[1]);
 		break;
@@ -367,8 +312,8 @@ static void display_kiss_packet(char *pfx, unsigned char *pkt,
 	}
 }
 
-static void kiss_packet(int fdif, char *addr, 
-			unsigned char *pkt, unsigned int pktlen) 
+static void kiss_packet(int fdif, char *addr,
+			unsigned char *pkt, unsigned int pktlen)
 {
 	struct sockaddr to;
 	int i;
@@ -392,7 +337,6 @@ static void kiss_packet(int fdif, char *addr,
 		return;
 	}
 	die("sendto");
-	return;
 }
 
 /* --------------------------------------------------------------------- */
@@ -404,25 +348,25 @@ static int doio(int fdif, int fdpty, char *ifaddr)
 	unsigned char pktbuf[2048];
 	unsigned char *pktptr = pktbuf;
 	unsigned char pktstate = KISS_HUNT;
-      	unsigned char obuf[16384];
+	unsigned char obuf[16384];
 	unsigned int ob_wp = 0, ob_rp = 0, ob_wpx;
 	int i;
 	fd_set rmask, wmask;
 	struct sockaddr from;
 	socklen_t from_len;
-	
+
 #define ADD_CHAR(c) \
 	obuf[ob_wpx] = c; \
 	ob_wpx = (ob_wpx + 1) % sizeof(obuf); \
 	if (ob_wpx == ob_rp) goto kissencerr;
- 
+
 #define ADD_KISSCHAR(c) \
 	if (((c) & 0xff) == KISS_FEND) \
-                { ADD_CHAR(KISS_FESC); ADD_CHAR(KISS_TFEND); } \
+		{ ADD_CHAR(KISS_FESC); ADD_CHAR(KISS_TFEND); } \
 	else if (((c) & 0xff) == KISS_FESC) \
-                { ADD_CHAR(KISS_FESC); ADD_CHAR(KISS_TFESC); } \
+		{ ADD_CHAR(KISS_FESC); ADD_CHAR(KISS_TFESC); } \
 	else { ADD_CHAR(c); }
-	 
+
 	for (;;) {
 		FD_ZERO(&rmask);
 		FD_ZERO(&wmask);
@@ -436,9 +380,9 @@ static int doio(int fdif, int fdpty, char *ifaddr)
 			die("select");
 		if (FD_ISSET(fdpty, &wmask)) {
 			if (ob_rp > ob_wp)
-				i = write(fdpty, obuf+ob_rp, 
+				i = write(fdpty, obuf+ob_rp,
 					  sizeof(obuf)-ob_rp);
-			else 
+			else
 				i = write(fdpty, obuf+ob_rp, ob_wp - ob_rp);
 			if (i < 0)
 				die("write");
@@ -468,7 +412,7 @@ static int doio(int fdif, int fdpty, char *ifaddr)
 					}
 					if (*bp == KISS_FEND) {
 						kiss_packet(fdif, ifaddr,
-							    pktbuf, 
+							    pktbuf,
 							    pktptr - pktbuf);
 						pktptr = pktbuf;
 						break;
@@ -499,7 +443,7 @@ static int doio(int fdif, int fdpty, char *ifaddr)
 					pktstate = KISS_RX;
 					break;
 				}
-			}				
+			}
 		}
 		if (FD_ISSET(fdif, &rmask)) {
 			from_len = sizeof(from);
@@ -602,8 +546,8 @@ int main(int argc, char *argv[])
 		slavename[5] = 'p';
 		master_name = slavename;
 	} else {
-		if ((fdpty = open(name_pname, 
-				  O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
+		fdpty = open(name_pname, O_RDWR | O_NOCTTY | O_NONBLOCK);
+		if (fdpty < 0) {
 			fprintf(stderr, "%s: cannot open \"%s\"\n", progname,
 				name_pname);
 			exit(1);
@@ -612,23 +556,25 @@ int main(int argc, char *argv[])
 			i_am_unix98_pty_master = 1;
 		master_name = name_pname;
 	}
-	if ((fdif = socket(PF_INET, SOCK_PACKET, proto)) < 0) 
+	fdif = socket(PF_INET, SOCK_PACKET, proto);
+	if (fdif < 0)
 		die("socket");
 	memset(&sa, 0, sizeof(struct sockaddr));
 	memcpy(sa.sa_data, name_iface, sizeof(sa.sa_data));
 	sa.sa_family = AF_INET;
 	if (bind(fdif, &sa, sizeof(struct sockaddr)) < 0)
-		die("bind"); 
+		die("bind");
 	memcpy(ifr.ifr_name, name_iface, IFNAMSIZ);
 	if (ioctl(fdif, SIOCGIFFLAGS, &ifr) < 0)
 		die("ioctl SIOCGIFFLAGS");
-       	ifr_new = ifr;	
+	ifr_new = ifr;
 	ifr_new.ifr_flags |= if_newflags;
 	if (ioctl(fdif, SIOCSIFFLAGS, &ifr_new) < 0)
 		die("ioctl SIOCSIFFLAGS");
 	if (i_am_unix98_pty_master) {
 		/* get name of pts-device */
-		if ((namepts = ptsname(fdpty)) == NULL) {
+		namepts = ptsname(fdpty);
+		if (namepts == NULL) {
 			fprintf(stderr, "%s: Cannot get name of pts-device.\n", progname);
 			exit (1);
 		}
@@ -639,7 +585,7 @@ int main(int argc, char *argv[])
 		}
 		/* Users await the slave pty to be referenced in the 2nd line */
 		printf("Awaiting client connects on\n%s\n", namepts);
-		if (!verbose){
+		if (!verbose) {
 			fflush(stdout);
 			fflush(stderr);
 			close(0);
@@ -674,12 +620,14 @@ int main(int argc, char *argv[])
 		} else {
 			/*
 			 * try to reopen master
-		 	 */
+			 */
 			if (verbose)
 				printf("reopening master tty: %s\n", master_name);
 			close(fdpty);
 
-			if ((fdpty = open(master_name, O_RDWR | O_NOCTTY | O_NONBLOCK)) < 0) {
+			fdpty = open(master_name,
+				     O_RDWR | O_NOCTTY | O_NONBLOCK);
+			if (fdpty < 0) {
 				fprintf(stderr, "%s: cannot reopen \"%s\"\n", progname,
 					master_name);
 				exit(1);

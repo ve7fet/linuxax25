@@ -19,17 +19,19 @@
 
 #include "../pathnames.h"
 
-char nodes_usage[]  = "usage: rsparms -nodes add|del nodeaddr[/mask] port neighbour [digis...]\n       rsparms -nodes list\n";
+static char nodes_usage[]  = "usage: rsparms -nodes add|del nodeaddr[/mask] "
+	"port neighbour [digis...]\n       rsparms -nodes list\n";
 
 /* print the Rose neighbour whose number is supplied */
-void printnb(char *neigh)
+static void printnb(char *neigh)
 {
 	FILE* fp;
 	char addr[10], callsign[10], port[10], digi[10];
 	char buff[80];
 	int args;
 
-	if ((fp=fopen(PROC_RS_NEIGH_FILE,"r"))==NULL) {
+	fp = fopen(PROC_RS_NEIGH_FILE, "r");
+	if (fp == NULL) {
 		fprintf(stderr,"rsparms: Couldn't open %s file\n",PROC_RS_NEIGH_FILE);
 		exit(1);
 	}
@@ -54,7 +56,7 @@ void printnb(char *neigh)
 	fclose(fp);
 }
 
-void nodes(int s, int argc, char *argv[])
+static void nodes(int s, int argc, char *argv[])
 {
 	struct rose_route_struct rs_node;
 	char *dev;
@@ -84,12 +86,13 @@ void nodes(int s, int argc, char *argv[])
 	}
 
 	if (argv[2][0] == 'l') {
-		if ((fn=fopen(PROC_RS_NODES_FILE,"r"))==NULL) {
+		fn = fopen(PROC_RS_NODES_FILE, "r");
+		if (fn == NULL) {
 			fprintf(stderr,"rsparms: Couldn't open %s file\n",PROC_RS_NODES_FILE);
 			exit(1);
 		}
 
-		while(fgets(buff,80,fn)) {
+		while (fgets(buff,80,fn)) {
 			args=sscanf(buff,"%10s %4s %*s %9s %9s %9s",address, rmask, neigh1, neigh2, neigh3);
 			if (strcmp(address,"address")==0)
 				continue;
@@ -122,7 +125,7 @@ void nodes(int s, int argc, char *argv[])
 		*mask = '\0';
 		mask++;
 
-		if (sscanf(mask, "%hd", &rs_node.mask) != 1) {
+		if (sscanf(mask, "%hu", &rs_node.mask) != 1) {
 			fprintf(stderr, "rsparms: nodes: no mask supplied!\n");
 			close(s);
 			exit(1);
@@ -151,7 +154,8 @@ void nodes(int s, int argc, char *argv[])
 		exit(1);
 	}
 
-	if ((dev = ax25_config_get_dev(argv[4])) == NULL) {
+	dev = ax25_config_get_dev(argv[4]);
+	if (dev == NULL) {
 		fprintf(stderr, "rsparms: nodes: invalid port name - %s\n", argv[4]);
 		close(s);
 		exit(1);
@@ -197,7 +201,7 @@ int main(int argc, char *argv[])
 {
 	ax25_address rose_call;
 	int s = 0;
-	
+
 	if (argc == 1) {
 		fprintf(stderr, "usage: rsparms -call|-nodes|-version ...\n");
 		return 1;
@@ -223,11 +227,12 @@ int main(int argc, char *argv[])
 			rose_call = null_ax25_address;
 		}
 
-		if ((s = socket(AF_ROSE, SOCK_SEQPACKET, 0)) < 0) {
+		s = socket(AF_ROSE, SOCK_SEQPACKET, 0);
+		if (s < 0) {
 			perror("rsparms: socket");
 			return 1;
 		}
-		
+
 		if (ioctl(s, SIOCRSL2CALL, &rose_call) == -1) {
 			perror("rsparms: ioctl");
 			close(s);
@@ -241,7 +246,8 @@ int main(int argc, char *argv[])
 
 	if (strncmp(argv[1], "-n", 2) == 0) {
 
-		if ((s = socket(AF_ROSE, SOCK_SEQPACKET, 0)) < 0) {
+		s = socket(AF_ROSE, SOCK_SEQPACKET, 0);
+		if (s < 0) {
 			perror("rsparms: socket");
 			return 1;
 		}
@@ -251,8 +257,8 @@ int main(int argc, char *argv[])
 	}
 
 	fprintf(stderr, "usage: rsparms -call|-nodes|-version ...\n");
-	
+
 	close(s);
-	
+
 	return 1;
 }

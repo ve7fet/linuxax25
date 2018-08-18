@@ -1,6 +1,7 @@
 sbin_PROGRAMS = kissattach kissnetd kissparms mkiss net2kiss
 
 LDADD= $(AX25_LIB)
+net2kiss_LDADD = $(UTIL_LIB)
 
 AM_CPPFLAGS = -DAX25_SYSCONFDIR=\""$(AX25_SYSCONFDIR)"\" \
 	      -DAX25_LOCALSTATEDIR=\""$(AX25_LOCALSTATEDIR)"\" 

@@ -1,4 +1,5 @@
 axspawn			Joerg Reuter DL1BKE <jreuter@poboxes.com>
+axwrapper		Tomi Manninen OH2BNS <oh2bns@sral.fi>
 ax25ipd			Rob Mayfield VK5XXX <mayfieldrob@mail.dec.com>
 ax25rtd			Klaus Kudielka <oe1kib@oe1xtu.ampr.org>
 bpqparms		Joerg Reuter DL1BKE <jreuter@poboxes.com>
@@ -18,12 +19,11 @@ sethdlc			Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
 smdiag			Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
 smmixer			Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
 ttylinkd		Craig Small VK2XLZ <csmall@small.dropbear.id.au>
-dmascc_cfg		Klaus Kudielka	
+dmascc_cfg		Klaus Kudielka
 xfhdlcchpar		Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
 xfhdlcst		Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
 xfsmdiag		Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
 xfsmmixer		Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
-yamcfg			Jean-Paul Roubelat F6FBB <jpr@f6fbb.org>	
+yamcfg			Jean-Paul Roubelat F6FBB <jpr@f6fbb.org>
 
 All others		Jonathon Naylor G4KLX <g4klx@g4klx.demon.co.uk>
-

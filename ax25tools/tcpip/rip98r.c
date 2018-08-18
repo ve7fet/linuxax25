@@ -23,11 +23,11 @@
 
 static int cmp_route(struct route_struct *route, struct in_addr addr, int bits, int metric)
 {
-	unsigned long int old_mask, new_mask;
-	unsigned long int old_addr, new_addr;
+	unsigned int old_mask, new_mask;
+	unsigned int old_addr, new_addr;
 
-	old_mask = ntohl(bits2mask(route->bits));
-	new_mask = ntohl(bits2mask(bits));
+	old_mask = bits2mask(route->bits);
+	new_mask = bits2mask(bits);
 
 	old_addr = route->addr.s_addr;
 	new_addr = addr.s_addr;
@@ -42,7 +42,7 @@ static int cmp_route(struct route_struct *route, struct in_addr addr, int bits, 
 
 	if (route->action == DEL_ROUTE || route->action == NEW_ROUTE)
 		return UNMATCH_ROUTE;
-		
+
 	if (old_addr != new_addr)
 		return UNMATCH_ROUTE;
 
@@ -116,9 +116,9 @@ void receive_routes(int s)
 		syslog(LOG_DEBUG, "RIP98 message received from %s\n", inet_ntoa(rem_addr.sin_addr));
 
 	for (p = message + RIP98_HEADER; p < message + mess_len; p += RIP98_ENTRY) {
-		memcpy((char *)&addr, (char *)p, sizeof(addr));
+		memcpy(&addr, p, sizeof(addr));
 		bits   = p[4];
-		metric = p[5];	
+		metric = p[5];
 
 		network = inet_netof(addr);
 
@@ -140,7 +140,7 @@ void receive_routes(int s)
 			syslog(LOG_DEBUG, "    route to %s/%d metric %d\n", inet_ntoa(addr), bits, metric);
 
 		metric++;
-		
+
 		if (metric > RIP98_INFINITY)
 			metric = RIP98_INFINITY;
 
@@ -151,42 +151,44 @@ void receive_routes(int s)
 
 			switch (cmp_route(route, addr, bits, metric)) {
 
-				case NO_ROUTE:
-					matched = TRUE;
-					break;
+			case NO_ROUTE:
+				matched = TRUE;
+				break;
 
-				case REPLACE_ROUTE:
-					route->action = DEL_ROUTE;
-				
-				case ADDITIONAL_ROUTE:
-					if (!found) {
-						if ((new = malloc(sizeof(struct route_struct))) == NULL) {
-							if (logging)
-								syslog(LOG_ERR, "out of memory\n");
-							return;
-						}
+			case REPLACE_ROUTE:
+				route->action = DEL_ROUTE;
 
-						new->addr   = addr;
-						new->bits   = bits;
-						new->metric = metric;
-						new->action = NEW_ROUTE;
-				
-						new->next   = first_route;
-						first_route = new;
-	
-						found = TRUE;
+			case ADDITIONAL_ROUTE:
+				if (!found) {
+					new = malloc(sizeof(struct route_struct));
+					if (new == NULL) {
+						if (logging)
+							syslog(LOG_ERR, "out of memory\n");
+						return;
 					}
 
-					matched = TRUE;
-					break;
+					new->addr   = addr;
+					new->bits   = bits;
+					new->metric = metric;
+					new->action = NEW_ROUTE;
 
-				default:
-					break;
+					new->next   = first_route;
+					first_route = new;
+
+					found = TRUE;
+				}
+
+				matched = TRUE;
+				break;
+
+			default:
+				break;
 			}
 		}
 
 		if (!matched) {
-			if ((new = malloc(sizeof(struct route_struct))) == NULL) {
+			new = malloc(sizeof(struct route_struct));
+			if (new == NULL) {
 				if (logging)
 					syslog(LOG_ERR, "out of memory\n");
 				return;
@@ -196,20 +198,20 @@ void receive_routes(int s)
 			new->bits   = bits;
 			new->metric = metric;
 			new->action = NEW_ROUTE;
-				
+
 			new->next   = first_route;
 			first_route = new;
 		}
 	}
-	
+
 	for (route = first_route; route != NULL; route = route->next) {
 		if (route->action == DEL_ROUTE) {
-			memset((char *)&rt, 0, sizeof(rt));
+			memset(&rt, 0, sizeof(rt));
 
 			trg.sin_family = AF_INET;
 			trg.sin_addr   = route->addr;
 			trg.sin_port   = 0;
-			memcpy((char *)&rt.rt_dst, (char *)&trg, sizeof(struct sockaddr));
+			memcpy(&rt.rt_dst, &trg, sizeof(struct sockaddr));
 
 			if (ioctl(s, SIOCDELRT, &rt) < 0) {
 				if (logging)
@@ -220,24 +222,26 @@ void receive_routes(int s)
 
 	for (route = first_route; route != NULL; route = route->next) {
 		if (route->action == NEW_ROUTE) {
-			memset((char *)&rt, 0, sizeof(rt));
+			memset(&rt, 0, sizeof(rt));
 
 			trg.sin_family = AF_INET;
 			trg.sin_addr   = route->addr;
 			trg.sin_port   = 0;
-			memcpy((char *)&rt.rt_dst, (char *)&trg, sizeof(struct sockaddr));
+			memcpy(&rt.rt_dst, &trg, sizeof(struct sockaddr));
 
 			rt.rt_flags = RTF_UP | RTF_GATEWAY | RTF_DYNAMIC;
 
 			if (route->bits == 32) {
 				rt.rt_flags |= RTF_HOST;
 			} else {
-				netmask = bits2mask(route->bits);
-			
+				netmask = htonl(bits2mask(route->bits));
+
 				trg.sin_family = AF_INET;
-				memcpy((char *)&trg.sin_addr, (char *)&netmask, sizeof(struct in_addr));
+				memcpy(&trg.sin_addr, &netmask,
+				       sizeof(struct in_addr));
 				trg.sin_port   = 0;
-				memcpy((char *)&rt.rt_genmask, (char *)&trg, sizeof(struct sockaddr));
+				memcpy(&rt.rt_genmask, &trg,
+				       sizeof(struct sockaddr));
 			}
 
 			rt.rt_metric = route->metric + 1;
@@ -245,7 +249,7 @@ void receive_routes(int s)
 			trg.sin_family = AF_INET;
 			trg.sin_addr   = rem_addr.sin_addr;
 			trg.sin_port   = 0;
-			memcpy((char *)&rt.rt_gateway, (char *)&trg, sizeof(struct sockaddr));
+			memcpy(&rt.rt_gateway, &trg, sizeof(struct sockaddr));
 
 			if (ioctl(s, SIOCADDRT, &rt) < 0) {
 				if (logging)

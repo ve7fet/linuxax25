@@ -41,6 +41,8 @@
 #include "hdrvcomm.h"
 #include "xfhdlcst.h"
 
+#include <config.h>
+
 /* ---------------------------------------------------------------------- */
 
 static char *progname;
@@ -62,7 +64,7 @@ void cb_timer(void *)
 
 /* ---------------------------------------------------------------------- */
 
-static const char *usage_str = 
+static const char *usage_str =
 "[-i smif]\n"
 "  -i: specify the name of the baycom kernel driver interface\n\n";
 
@@ -70,17 +72,15 @@ static const char *usage_str =
 
 int main(int argc, char *argv[])
 {
-        int c, i;
+	int c, i;
 	int ret;
 	struct hdrvc_channel_state cs;
-#ifdef HDRVC_KERNEL
 	struct sm_ioctl smi;
-#endif /* HDRVC_KERNEL */
 	char buf[32];
 	char name[64];
 
 	progname = *argv;
-	printf("%s: Version 0.3; (C) 1996,1997,2000 by Thomas Sailer HB9JNX/AE4WA\n", *argv);
+	printf("%s: Version " VERSION "; (C) 1996,1997,2000 by Thomas Sailer HB9JNX/AE4WA\n", *argv);
 	hdrvc_args(&argc, argv, "bc0");
 	for (i = 1; i < argc; ) {
 		c = i;
@@ -112,21 +112,19 @@ int main(int argc, char *argv[])
 	if (ret < 0) {
 		perror("hdrvc_get_mode_name");
 		modename->hide();
-	} else 
+	} else
 		modename->value(name);
 	ret = hdrvc_get_driver_name(name, sizeof(name));
 	if (ret < 0) {
 		perror("hdrvc_get_driver_name");
 		drivername->hide();
-	} else 
+	} else
 		drivername->value(name);
 	/*
 	 * check for soundmodem driver
 	 */
-#ifdef HDRVC_KERNEL
 	ret = hdrvc_sm_ioctl(SMCTL_GETDEBUG, &smi);
 	if (ret < 0) {
-#endif /* HDRVC_KERNEL */
 		tdemodcyc->hide();
 		tmodcyc->hide();
 		tintfreq->hide();
@@ -135,9 +133,7 @@ int main(int argc, char *argv[])
 		modcyc->hide();
 		intfreq->hide();
 		dmares->hide();
-#ifdef HDRVC_KERNEL
 	}
-#endif /* HDRVC_KERNEL */
 	hdlcst->show();
 	for (;;) {
 		Fl::wait();
@@ -171,7 +167,7 @@ int main(int argc, char *argv[])
 			demodcyc->value(buf);
 			sprintf(buf, "%d", smi.data.dbg.dma_residue);
 			dmares->value(buf);
-		} 
+		}
 	}
 	exit (0);
 }

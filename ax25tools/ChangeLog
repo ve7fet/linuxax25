@@ -1,14 +1,135 @@
 ax25tools (1.0.4) unstable; urgency=low
 
-  * Add files to build Debian packages
-  * Reformat ChangeLog for consisency
-  * Security fixes in axparms.c, mkiss.c, m6pack.c, nrparms.c, and 
-  rsparms.c (printf/fprintf formatting) found when compiling with -Werror=format-security
+  * Add files to build Debian packages.
+  * Reformat ChangeLog for consisency.
   * Change the way the default conf files are installed. They will now be
   put in somewhere like /usr/share/doc/ax25apps/conf with .dist extensions
-  to ensure that the default config files don't clobber working files
+  to ensure that the default config files don't clobber working files.
+  * This update includes nearly all patches in the official source between 
+  2015 and 2017, to make the two source trees consistent once again.
+  * The following changes are from the official source tree:
+  * Security fixes in axparms.c, mkiss.c, m6pack.c, nrparms.c, and 
+  rsparms.c (printf/fprintf formatting) found when compiling 
+  with -Werror=format-security.
+  * Tree-wide delete duplicate #includes.
+  * Tree-wide remove casrs of a type to the same type.
+  * Tree-wide remove useless casts of a function return value to void.
+  * Tree-wide remove useless casts from bind() pointer argument.
+  * Tree-wide remove useless casts from memset pointer argument.
+  * Tree-wide remove useless casts from memcpy pointer argument.
+  * Tree-wide kill assignments in if conditions.
+  * Tree-wide white space changes for consistency.
+  * Tree-wide fix signedness compiler warnings.
+  * Tree-wide make many functions and variables static.
+  * Various programs Remove support for !defined(__GLIBC__) and __GLIBC__ != 2.
+  * Various programs use the right way to get the required feature set from 
+  glibc. __USE_XOPEN doesn't work to get ptsname() etc. from libc. This is 
+  Linux-specific software so convert to _GNU_SOURCE.
+  * mheard: added "-d a" option to mheard. Display the data from c and s 
+  combined in one view. Requires wide screen.
+  * mheard: fix for segfault issue,port record data can be garbled. We cannot 
+  trust the data. i.e., ctime() returns NULL at time_t 2^33 (72057594037927936).
+  char lh[] was size 30. This is not enough for year > 999999999. Also assure 
+  that pr->entry.type is < sizeof(types), and in 'case 4:', only up to 8 
+  digipeaters are copied.
+  * mheard: changed printf to %u (because mheard's struct has unsigned int 
+  values) and enhanced formating (%8 instead of %5).
+  * mheard: got rid of ctime() and using localtime()/strftime(). Has nicer 
+  time representation, too.
+  * mheard: drop unsatisfiable conditions.
+  * beacon: new option -f, do not fork.
+  * beacon: new option -H, beacon intervals relative to the hour
+  * axspawn: found Debian Wheezy useradd bug, useradd terminates and 
+  eats 100% cpu power, if it was called from axspawn. This could be prevented 
+  if SIGCHLD is masked.
+  * axspawn: to increase security, no longer call useradd via system() but 
+  fork() and execve().
+  * axspawn: fixed a bug when useradd failed then the login process continued 
+  anyway.
+  * axspawn: empty lines in axspawn.conf are now valid.
+  * axspawn: the user_shell config variable is optional. If not specified, 
+  /bin/bash is used. Except, if create_with_useradd is configured and there's 
+  a config file /etc/default/useradd, then it's not passed to useradd in 
+  order to let him choose.
+  * axspawn: remove unused variable command.
+  * axspawn: sort out pointer signedness mess.
+  * axspawn: sort out homebrew declaration of forkpty(3).
+  * axspawn: remove unused function Xtoupper().
+  * ax25d: security patch submitted by Jaroslav Skarvada <jskarvad@redhat.com>
+  Netrom and ROSE Addresses are copied to Node. Room was enough for Netrom, 
+  but rose addresses returned by rose_ntoa() are one byte longer (a 10 bytes 
+  string plus null-termination) which leads to a buffer overflow.
+  * ax25d: fix warning about set but unused variable. This is from dead code 
+  setting the no-op socket option AX25_IAMDIGI.
+  * ax25d: reorder code to avoid the need for forward declarations. And then 
+  delete those now useless declarations.
+  * access: move calc_md5_pw to eleminate need for declaration and make static.
+  * axgetput: fixed regression in axgetput (bget/bput crc was calculated wrong)
+  * axgetput: provide calc_crc() function to iterate over memory area.
+  * axgetput: use shifts instead of a silly table to compute bitmask.
+  * axgetput: move definition of several array from a .h to a .c file. And 
+  add proper declarations to the header file.
+  * axgetput: don't check for negative return from strlen. For one, strlen 
+  does not return any errors. By its very nature, strlen does not return 
+  negative results and its return type is size_t which happens to be unsigned.
+  * hdlcutil: remove HDRVC_KERNEL ifdefery. HDRVC_KERNEL was always defined 
+  to on.
+  * hdlcutil: remove undocumented user mode.
+  * sethdlc: remove HDRVC_KERNEL ifdefery. HDRVC_KERNEL was always defined 
+  to on.
+  * xfhdlcst: remove HDRVC_KERNEL ifdefery. HDRVC_KERNEL was always defined 
+  to on.
+  * kissnetd: fix possible buffer overflow. When printing an error message for 
+  configurations using particularly long file names a buffer overflow may occur 
+  potencially resulting in malfunction or crash.
+  * kissnetd: fix swapped calloc arguments. Fortunately this is a harmless 
+  issue.
+  * mkiss: change type of buffer[] to fix warning.
+  * net2kiss: switch from private openpty() implementation to libutil. In 
+  particular the openpty() implementation was still using only the old BSD 
+  terminals so not working on modern distributions which ship their kernels 
+  with CONFIG_LEGACY_PTYS disabled.
+  * netromr: fix warning by moving declaration of variable `compliant'.
+  * netromt: fix warning about set but unused variable.
+  * netromt: use symbolic pathnames from pathnames.h.
+  * netromt: add cast to fix warning.
+  * rsattach: the current linux kernel has no limit anymore for the number 
+  of netrom and rose devices (previously 4 netrom, 6 rose).
+  * rsdwnlnk: make alarm_handler() static.
+  * rsdwnlnk: add cast to silence useless warning.
+  * rsmemsiz: move /proc filename defines to pathnames.h.
+  * rsmemsiz: use standard libc function to get load average.
+  * rsmemsiz: when parsing /proc/uptime, ignore idle time. We don't use this 
+  information anyway later on.
+  * rsmemsiz: use sysinfo to obtain uptime. Now that uptime() is only used to 
+  obtain the load average it's trivial to replace.
+  * rsmemsiz: delete now unused macro SET_IF_DESIRED.
+  * rsmemsiz: rewrite the last instance of FILE_TO_BUF(). Expand the one 
+  remaining invocation to FILE_TO_BUF(), then fix the return type and attempt 
+  to close fd -1 and format nicely.
+  * rsmemsiz: fix warning and add error check to getuptime call.
+  * rip98d: change mask2bits's argument from unsigned long to unsigned int. An 
+  IPv4 address or mask fits into an unsigned int.
+  * rip98d: change bits2mask's return value from unsigned long to unsigned int.
+  An IPv4 mask fit into an unsigned int.
+  * rip98d: replace naive mask2bits and bits2mask implementations.
+  * rip98d: perform a crapectomy on hex2intrev(). hex2intrev is a hilariously 
+  complicated function which combine parsing a hexadecimal integer in network 
+  byte order and swapping the result to host byte order.
+  * rip98d: move the endianness swapping to the caller which allows us to remove 
+  double endianness swapping. Now that hex2intrev no longer deals with byte
+  order rename it to hex2int and replace its implementation with a simple
+  invocation of strtoul.
+  * rip98r: replace naive mask2bits and bits2mask implementations.
+  * rip98r: use unsigned int to store IPv4 addresses and masks. Unsigned long 
+  is wasteful on 64 bit.
+  * user_io: fix warning about void pointer arithmetic.
+  * mcs2h: fix warning about set but unused variable.
+  * mcs2h: fix warning about format string.
+  * mcs2h: make functions static and delete unused function.
+  * yamcfg: fix warning about format string.
 
- -- Lee Woldanski <ve7fet@tparc.org>  Sat, Aug 11 2018 14:00:00 -0700
+ -- Lee Woldanski <ve7fet@tparc.org>  Sat, 18 Aug 2018 07:00:00 -0700
 
 ax25tools (1.0.3) unstable; urgency=low
 
@@ -79,7 +200,7 @@ ax25-tools (0.0.10) unstable; urgency=low
   * Support UNIX authentication for axspawn logins.
   * Axspawn now support Hufman compression.
   * An IP address is no longer mandatory for nrattach, kissattach.
-  * kissparms now allows to send a raw value to the driver and to set
+  * kissparms now allows one to send a raw value to the driver and to set
   the CRC mode by command line option.
   * axspawn now records the time at microsecond accuracy in utmp.
   * removed old kernel patches for yum support for kernels 2.0.36 and

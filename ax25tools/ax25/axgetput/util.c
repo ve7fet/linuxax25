@@ -7,6 +7,7 @@
 #include "includes.h"
 
 #include "axgetput.h"
+#include "util.h"
 
 /* Use private function because some platforms are broken, eg 386BSD */
 
@@ -52,17 +53,18 @@ int my_read(int fd, char *s, int len_max, int *eof, char *p_break)
     int len;
     char *s_curr = s + len_got;
 
-    if ((len = read(fd, s_curr, (p_break ? 1 : len_max))) < 1) {
+    len = read(fd, s_curr, (p_break ? 1 : len_max));
+    if (len < 1) {
       if (len == -1 && errno == EAGAIN) {
-        sleep(10);
-        continue;
+	sleep(10);
+	continue;
       }
       *eof = 1;
       /*
        * len = 0: normal eof. if we're looking for a string, return -1 since
        * we have'nt found
        */
-      return (len == 0 && p_break ? -1 : (len_got ? len_got : len));
+      return len == 0 && p_break ? -1 : (len_got ? len_got : len);
     }
     len_got += len;
 
@@ -74,12 +76,12 @@ int my_read(int fd, char *s, int len_max, int *eof, char *p_break)
   timeout.tv_usec = 0;
   FD_ZERO(&errfds);
   FD_SET(fdout, &errfds);
-  if (select(fd+1, 0, 0, &errfds, &timeout) && FD_ISSET(fd, &errfds))
+  if (select(fd+1, NULL, NULL, &errfds, &timeout) && FD_ISSET(fd, &errfds))
     *eof = 1;
 
   return len_got;
 }
-    
+
 /*---------------------------------------------------------------------------*/
 
 int secure_write(int fd, char *s, int len_write) {
@@ -87,10 +89,11 @@ int secure_write(int fd, char *s, int len_write) {
 
   while (len_write_left_curr) {
     int len;
-    if ((len = write(fd, s, len_write_left_curr)) < 0) {
+    len = write(fd, s, len_write_left_curr);
+    if (len < 0) {
       if (len == -1 && errno == EAGAIN) {
-        sleep(10);
-        continue;
+	sleep(10);
+	continue;
       }
       return -1;
     }
@@ -113,19 +116,23 @@ char *get_fixed_filename(char *line, long size, unsigned int msg_crc, int genera
 
   *filename = 0;
 
-  if ((p = strchr(line, '\"'))) {
+  p = strchr(line, '\"');
+  if (p) {
     p++;
   }
 
   /* security.. */
 
-  if ((q = strrchr((p ? p : line), '/'))) {
+  q = strrchr((p ? p : line), '/');
+  if (q) {
     p = ++q;
   }
-  if ((q = strrchr((p ? p : line), '\\'))) {
+  q = strrchr((p ? p : line), '\\');
+  if (q) {
     p = ++q;
   }
-  if ((q = strrchr((p ? p : line), ':'))) {
+  q = strrchr((p ? p : line), ':');
+  if (q) {
     p = ++q;
   }
   if (!p) {
@@ -141,7 +148,8 @@ char *get_fixed_filename(char *line, long size, unsigned int msg_crc, int genera
   }
   *r = 0;
   strtrim(filename);
-  if ((q = strrchr(filename, '.'))) {
+  q = strrchr(filename, '.');
+  if (q) {
     if (!*(q+1)) {
       /* remove trailing dots */
       *q = 0;
@@ -151,7 +159,7 @@ char *get_fixed_filename(char *line, long size, unsigned int msg_crc, int genera
     }
   }
   if (!*filename && generate_filename) {
-    sprintf(filename, "unknown-%ld%d%ld.bin", size, msg_crc, time(0));
+    sprintf(filename, "unknown-%ld%d%ld.bin", size, msg_crc, time(NULL));
   }
   return filename;
 }
@@ -162,22 +170,22 @@ char *get_fixed_filename(char *line, long size, unsigned int msg_crc, int genera
 
 /* Linear day numbers of the respective 1sts in non-leap years. */
 static int day_n[] = { 0,31,59,90,120,151,181,212,243,273,304,334,0,0,0,0 };
-                  /* JanFebMarApr May Jun Jul Aug Sep Oct Nov Dec */
+		  /* JanFebMarApr May Jun Jul Aug Sep Oct Nov Dec */
 
 /*---------------------------------------------------------------------------*/
 
 long date_dos2unix(unsigned short time,unsigned short date)
 {
-        int month,year;
-        long secs;
+	int month,year;
+	long secs;
 
-        month = ((date >> 5) & 15)-1;
-        year = date >> 9;
-        secs = (time & 31)*2+60*((time >> 5) & 63)+(time >> 11)*3600+86400*
-            ((date & 31)-1+day_n[month]+(year/4)+year*365-((year & 3) == 0 &&
-            month < 2 ? 1 : 0)+3653);
-                        /* days since 1.1.70 plus 80's leap day */
-        return secs;
+	month = ((date >> 5) & 15)-1;
+	year = date >> 9;
+	secs = (time & 31)*2+60*((time >> 5) & 63)+(time >> 11)*3600+86400*
+	    ((date & 31)-1+day_n[month]+(year/4)+year*365-((year & 3) == 0 &&
+	    month < 2 ? 1 : 0)+3653);
+			/* days since 1.1.70 plus 80's leap day */
+	return secs;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -186,23 +194,22 @@ long date_dos2unix(unsigned short time,unsigned short date)
 
 void date_unix2dos(int unix_date,unsigned short *time, unsigned short *date)
 {
-        int day,year,nl_day,month;
+	int day,year,nl_day,month;
 
-        *time = (unix_date % 60)/2+(((unix_date/60) % 60) << 5)+
-            (((unix_date/3600) % 24) << 11);
-        day = unix_date/86400-3652;
-        year = day/365;
-        if ((year+3)/4+365*year > day) year--;
-        day -= (year+3)/4+365*year;
-        if (day == 59 && !(year & 3)) {
-                nl_day = day;
-                month = 2;
-        }
-        else {
-                nl_day = (year & 3) || day <= 59 ? day : day-1;
-                for (month = 0; month < 12; month++)
-                        if (day_n[month] > nl_day) break;
-        }
-        *date = nl_day-day_n[month-1]+1+(month << 5)+(year << 9);
+	*time = (unix_date % 60)/2+(((unix_date/60) % 60) << 5)+
+	    (((unix_date/3600) % 24) << 11);
+	day = unix_date/86400-3652;
+	year = day/365;
+	if ((year+3)/4+365*year > day) year--;
+	day -= (year+3)/4+365*year;
+	if (day == 59 && !(year & 3)) {
+		nl_day = day;
+		month = 2;
+	}
+	else {
+		nl_day = (year & 3) || day <= 59 ? day : day-1;
+		for (month = 0; month < 12; month++)
+			if (day_n[month] > nl_day) break;
+	}
+	*date = nl_day-day_n[month-1]+1+(month << 5)+(year << 9);
 }
-

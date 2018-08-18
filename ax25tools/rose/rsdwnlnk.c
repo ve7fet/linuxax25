@@ -19,13 +19,13 @@
 
 #define	AX25_HBIT	0x80
 
-void alarm_handler(int sig)
+static void alarm_handler(int sig)
 {
 }
 
 int main(int argc, char **argv)
 {
-	unsigned char buffer[512], *addr;
+	char buffer[512], *addr;
 	fd_set read_fd;
 	int n = 0, s, yes = 1;
 	struct full_sockaddr_ax25 axbind, axconnect;
@@ -78,7 +78,8 @@ int main(int argc, char **argv)
 	axbind.fsa_ax25.sax25_ndigis = 1;
 	axbind.fsa_ax25.sax25_call   = rosepeer.srose_call;
 
-	if ((addr = ax25_config_get_addr(argv[1])) == NULL) {
+	addr = ax25_config_get_addr(argv[1]);
+	if (addr == NULL) {
 		syslog(LOG_ERR, "invalid AX.25 port name - %s\n", argv[1]);
 		closelog();
 		return 1;
@@ -114,7 +115,7 @@ int main(int argc, char **argv)
 			return 1;
 		}
 		axconnect.fsa_digipeater[n].ax25_call[6] |= AX25_HBIT;
-		n++;		
+		n++;
 	}
 
 	/*
@@ -127,7 +128,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	axconnect.fsa_digipeater[n].ax25_call[6] |= AX25_HBIT;
-	n++;		
+	n++;
 
 	/*
 	 *	And my local ROSE callsign.
@@ -155,7 +156,8 @@ int main(int argc, char **argv)
 	/*
 	 * Open the socket into the kernel.
 	 */
-	if ((s = socket(AF_AX25, SOCK_SEQPACKET, 0)) < 0) {
+	s = socket(AF_AX25, SOCK_SEQPACKET, 0);
+	if (s < 0) {
 		syslog(LOG_ERR, "cannot open AX.25 socket, %s\n", strerror(errno));
 		closelog();
 		return 1;
@@ -198,26 +200,26 @@ int main(int argc, char **argv)
 	 */
 	if (connect(s, (struct sockaddr *)&axconnect, addrlen) != 0) {
 		switch (errno) {
-			case ECONNREFUSED:
-				strcpy(buffer, "*** Connection refused\r");
-				break;
-			case ENETUNREACH:
-				strcpy(buffer, "*** No known route\r");
-				break;
-			case EINTR:
-				strcpy(buffer, "*** Connection timed out\r");
-				break;
-			default:
-				sprintf(buffer, "ERROR: cannot connect to AX.25 callsign, %s\r", strerror(errno));
-				break;
+		case ECONNREFUSED:
+			strcpy(buffer, "*** Connection refused\r");
+			break;
+		case ENETUNREACH:
+			strcpy(buffer, "*** No known route\r");
+			break;
+		case EINTR:
+			strcpy(buffer, "*** Connection timed out\r");
+			break;
+		default:
+			sprintf(buffer, "ERROR: cannot connect to AX.25 callsign, %s\r", strerror(errno));
+			break;
 		}
 
 		close(s);
 
 		write(STDOUT_FILENO, buffer, strlen(buffer));
-		
+
 		sleep(20);
-		
+
 		return 0;
 	}
 
@@ -236,11 +238,12 @@ int main(int argc, char **argv)
 		FD_ZERO(&read_fd);
 		FD_SET(STDIN_FILENO, &read_fd);
 		FD_SET(s, &read_fd);
-		
+
 		select(s + 1, &read_fd, NULL, NULL, NULL);
 
 		if (FD_ISSET(s, &read_fd)) {
-			if ((n = read(s, buffer + 2, sizeof(buffer)-2)) == -1)
+			n = read(s, buffer + 2, sizeof(buffer) - 2);
+			if (n == -1)
 				break;
 			if (buffer[2] == 0xF0) {
 				buffer[2] = 0;
@@ -253,12 +256,13 @@ int main(int argc, char **argv)
 		}
 
 		if (FD_ISSET(STDIN_FILENO, &read_fd)) {
-			if ((n = read(STDIN_FILENO, buffer, 512)) == -1) {
+			n = read(STDIN_FILENO, buffer, 512);
+			if (n == -1) {
 				close(s);
 				break;
 			}
 			if (buffer[0] == 0) {		/* Q Bit not set */
-				buffer[0] = 0xF0;
+				buffer[0] = (char) 0xF0;
 				write(s, buffer, n);
 			} else {
 				/* Lose the leading 0x7F */

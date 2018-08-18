@@ -33,8 +33,8 @@ hdlcdrv \- HDLC amateur (AX.25) packet radio network driver
 .SH DESCRIPTION
 This driver should ease the implementation of simple AX.25 packet radio
 modems where the software is responsible for the HDLC encoding and decoding.
-Examples of such modems include the \fIbaycom\fP family and the 
-\fIsoundcard\fP modems. 
+Examples of such modems include the \fIbaycom\fP family and the
+\fIsoundcard\fP modems.
 
 This driver provides a standard Linux network driver interface.
 It can even be compiled if Kernel AX.25 is not enabled in the Linux
@@ -118,11 +118,11 @@ the HDLC driver:
 
 .nf
 struct hdlcdrv_ops {
-        const char *\fIdrvname\fP;
-        const char *\fIdrvinfo\fP;
-        int (*\fIopen\fP)(struct device *);
-        int (*\fIclose\fP)(struct device *);
-        int (*\fIioctl\fP)(struct device *, struct ifreq *, int);
+	const char *\fIdrvname\fP;
+	const char *\fIdrvinfo\fP;
+	int (*\fIopen\fP)(struct device *);
+	int (*\fIclose\fP)(struct device *);
+	int (*\fIioctl\fP)(struct device *, struct ifreq *, int);
 };
 .fi
 
@@ -140,7 +140,7 @@ which then gets invoked by the hardware.
 \fBifconfig\ \fP\fIifname\fP\fB\ down\fP and should undo all actions done
 by \fBopen\fP, i.e. release io regions and irqs.
 
-\fBioctl\fP may be provided to implement device specific ioctl's. 
+\fBioctl\fP may be provided to implement device specific ioctl's.
 
 .SH "IOCTL CALLS"
 
@@ -149,14 +149,14 @@ from and to the driver using the following struct:
 
 .nf
 struct hdlcdrv_ioctl {
-        int cmd;
-        union {
-                struct hdlcdrv_params mp;
-                struct hdlcdrv_channel_params cp;
-                struct hdlcdrv_channel_state cs;
-                unsigned int calibrate;
-                unsigned char bits;
-        } data;
+	int cmd;
+	union {
+		struct hdlcdrv_params mp;
+		struct hdlcdrv_channel_params cp;
+		struct hdlcdrv_channel_state cs;
+		unsigned int calibrate;
+		unsigned char bits;
+	} data;
 };
 .fi
 
@@ -214,7 +214,3 @@ linux/drivers/net/hdlcdrv.c,
 
 .SH AUTHOR
 hdlcdrv was written by Thomas Sailer, HB9JNX/AE4WA, (t.sailer@alumni.ethz.ch).
-
-
-
-

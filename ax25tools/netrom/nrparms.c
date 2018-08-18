@@ -18,10 +18,13 @@
 #include <netax25/axconfig.h>
 #include <netax25/nrconfig.h>
 
-char nodes_usage[]  = "usage: nrparms -nodes nodecall +|- ident quality count port neighbour [digicall...]\n";
-char routes_usage[] = "usage: nrparms -routes port nodecall [digicall...] +|- pathquality\n";
+static char nodes_usage[]  = "usage: nrparms -nodes nodecall +|- "
+	"ident quality count port neighbour [digicall...]\n";
+static char routes_usage[] = "usage: nrparms -routes port nodecall "
+	"[digicall...] +|- pathquality\n";
 
-void nodes(int s, char *nodecall, char *op, char *ident, int quality, int count, char *port, char *neighbour, char *digis[])
+static void nodes(int s, char *nodecall, char *op, char *ident, int quality,
+	int count, char *port, char *neighbour, char *digis[])
 {
 	struct nr_route_struct nr_node;
 	char *p, *q, *dev;
@@ -64,12 +67,12 @@ void nodes(int s, char *nodecall, char *op, char *ident, int quality, int count,
 		close(s);
 		exit(1);
 	}
-		
+
 	if (strcmp(ident, "*") != 0) {
 		for (p = ident, q = nr_node.mnemonic; *p != '\0'; p++, q++)
 			*q = toupper(*p);
 		*q = '\0';
-		
+
 		if (strspn(nr_node.mnemonic, "&#-_/ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") != strlen(nr_node.mnemonic)) {
 			fprintf(stderr, "nrparms: nodes: invalid ident %s\n", ident);
 			close(s);
@@ -94,14 +97,15 @@ void nodes(int s, char *nodecall, char *op, char *ident, int quality, int count,
 		nr_node.ndigis++;
 	}
 
-	if ((dev = ax25_config_get_dev(port)) == NULL) {
+	dev = ax25_config_get_dev(port);
+	if (dev == NULL) {
 		fprintf(stderr, "nrparms: nodes: invalid port name - %s\n", port);
 		close(s);
 		exit(1);
 	}
 
 	strcpy(nr_node.device, dev);
-	
+
 	nr_node.quality   = quality;
 	nr_node.obs_count = count;
 
@@ -120,7 +124,7 @@ void nodes(int s, char *nodecall, char *op, char *ident, int quality, int count,
 	}
 }
 
-void routes(int s, char *port, char *nodecall, char *rest[])
+static void routes(int s, char *port, char *nodecall, char *rest[])
 {
 	struct nr_route_struct nr_neigh;
 	char *dev, *op;
@@ -158,7 +162,8 @@ void routes(int s, char *port, char *nodecall, char *rest[])
 		exit(1);
 	}
 
-	if ((dev = ax25_config_get_dev(port)) == NULL) {
+	dev = ax25_config_get_dev(port);
+	if (dev == NULL) {
 		fprintf(stderr, "nrparms: routes: invalid port name - %s\n", port);
 		close(s);
 		exit(1);
@@ -192,7 +197,7 @@ void routes(int s, char *port, char *nodecall, char *rest[])
 int main(int argc, char *argv[])
 {
 	int s;
-	
+
 	if (argc == 1) {
 		fprintf(stderr, "usage: nrparms -nodes|-routes|-version ...\n");
 		return 1;
@@ -202,12 +207,13 @@ int main(int argc, char *argv[])
 		printf("nrparms: %s\n", VERSION);
 		return 0;
 	}
-	
-	if ((s = socket(AF_NETROM, SOCK_SEQPACKET, 0)) < 0) {
+
+	s = socket(AF_NETROM, SOCK_SEQPACKET, 0);
+	if (s < 0) {
 		perror("nrparms: socket");
 		return 1;
 	}
-	
+
 	if (strncmp(argv[1], "-n", 2) == 0) {
 		if (argc < 9) {
 			fprintf(stderr, "%s", nodes_usage);
@@ -231,8 +237,8 @@ int main(int argc, char *argv[])
 	}
 
 	fprintf(stderr, "usage: nrparms -nodes|-routes|-version ...\n");
-	
+
 	close(s);
-	
+
 	return 1;
 }

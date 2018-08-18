@@ -1,6 +1,6 @@
 SUBDIRS = axgetput 
 
-sbin_PROGRAMS = ax25d axctl axparms axspawn beacon bpqparms mheardd rxecho
+sbin_PROGRAMS = ax25d axctl axparms axspawn axwrapper beacon bpqparms mheardd rxecho
 
 bin_PROGRAMS = mheard
 
@@ -17,6 +17,7 @@ ax25d_SOURCES = ax25d.c
 axctl_SOURCES = axctl.c
 axparms_SOURCES = axparms.c
 axspawn_SOURCES = axspawn.c axspawn.h access.c access.h md5.c md5.h
+axwrapper_SOURCES = axwrapper.c
 beacon_SOURCES = beacon.c
 bpqparms_SOURCES = bpqparms.c
 mheard_SOURCES = mheard.c

@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -15,7 +14,7 @@
 
 #include "user_io.h"
 
-void alarm_handler(int sig)
+static void alarm_handler(int sig)
 {
 }
 
@@ -69,7 +68,8 @@ int main(int argc, char **argv)
 	/*
 	 * Open the socket into the kernel.
 	 */
-	if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	s = socket(AF_INET, SOCK_STREAM, 0);
+	if (s < 0) {
 		sprintf(buffer, "ERROR: can't open socket: %s\n", strerror(errno));
 		err(buffer);
 	}

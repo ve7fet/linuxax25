@@ -10,11 +10,7 @@
 #include <netinet/in.h>
 #include <net/if.h>
 
-#ifdef __GLIBC__ 
 #include <net/ethernet.h>
-#else
-#include <linux/if_ether.h>
-#endif
 
 #include <netax25/ax25.h>
 #include <netrose/rose.h>
@@ -58,96 +54,96 @@ int main(int argc, char *argv[])
 
 	while ((s = getopt(argc, argv, "c:e:f:h:l:p:r:s:t:X:vx")) != -1) {
 		switch (s) {
-			case 'c':
-				crcmode  = atoi(optarg);
-				break;
-			case 'e':
-				feclevel = atoi(optarg);
-				if (feclevel < 0 || feclevel > 3) {
-					fprintf(stderr, "kissparms: invalid FEC level value\n");
-					return 1;
-				}
-				break;
-
-			case 'f':
-				if (*optarg != 'y' && *optarg != 'n') {
-					fprintf(stderr, "kissparms: invalid full duplex setting\n");
-					return 1;
-				}
-				fulldup = *optarg == 'y';
-				break;
-
-			case 'l':
-				txtail = atoi(optarg) / 10;
-				if (txtail < 0 || txtail > 255) {
-					fprintf(stderr, "kissparms: invalid txtail value\n");
-					return 1;
-				}
-				break;
-
-
-			case 'h':
-				hardware = atoi(optarg);
-				if (hardware < 0 || hardware > 255) {
-					fprintf(stderr, "kissparms: invalid hardware value\n");
-					return 1;
-				}
-				break;
-
-			case 'p':
-				port = optarg;
-				if (ax25_config_get_addr(port) == NULL) {
-					fprintf(stderr, "kissparms: invalid port name - %s\n", port);
-					return 1;
-				}
-				break;
-
-			case 'r':
-				persist = atoi(optarg);
-				if (persist < 0 || persist > 255) {
-					fprintf(stderr, "kissparms: invalid persist value\n");
-					return 1;
-				}
-				break;
-
-			case 's':
-				slottime = atoi(optarg) / 10;
-				if (slottime < 0 || slottime > 255) {
-					fprintf(stderr, "kissparms: invalid slottime value\n");
-					return 1;
-				}
-				break;
-
-			case 't':
-				txdelay = atoi(optarg) / 10;
-				if (txdelay < 0 || txdelay > 255) {
-					fprintf(stderr, "kissparms: invalid txdelay value\n");
-					return 1;
-				}
-				break;
-
-			case 'v':
-				printf("kissparms: %s\n", VERSION);
-				return 0;
-
-			case 'x':
-				kissoff = 1;
-				break;
-
-			case 'X':
-				do {
-					buffer[buflen++] = atoi(optarg);
-					while (*optarg && isalnum(*optarg & 0xff))
-						optarg++;
-					while (*optarg && isspace(*optarg & 0xff))
-						optarg++;
-				} while (*optarg);
-				X = 1;
-				break;
-			case ':':
-			case '?':
-				fprintf(stderr, USAGE);
+		case 'c':
+			crcmode  = atoi(optarg);
+			break;
+		case 'e':
+			feclevel = atoi(optarg);
+			if (feclevel < 0 || feclevel > 3) {
+				fprintf(stderr, "kissparms: invalid FEC level value\n");
 				return 1;
+			}
+			break;
+
+		case 'f':
+			if (*optarg != 'y' && *optarg != 'n') {
+				fprintf(stderr, "kissparms: invalid full duplex setting\n");
+				return 1;
+			}
+			fulldup = *optarg == 'y';
+			break;
+
+		case 'l':
+			txtail = atoi(optarg) / 10;
+			if (txtail < 0 || txtail > 255) {
+				fprintf(stderr, "kissparms: invalid txtail value\n");
+				return 1;
+			}
+			break;
+
+
+		case 'h':
+			hardware = atoi(optarg);
+			if (hardware < 0 || hardware > 255) {
+				fprintf(stderr, "kissparms: invalid hardware value\n");
+				return 1;
+			}
+			break;
+
+		case 'p':
+			port = optarg;
+			if (ax25_config_get_addr(port) == NULL) {
+				fprintf(stderr, "kissparms: invalid port name - %s\n", port);
+				return 1;
+			}
+			break;
+
+		case 'r':
+			persist = atoi(optarg);
+			if (persist < 0 || persist > 255) {
+				fprintf(stderr, "kissparms: invalid persist value\n");
+				return 1;
+			}
+			break;
+
+		case 's':
+			slottime = atoi(optarg) / 10;
+			if (slottime < 0 || slottime > 255) {
+				fprintf(stderr, "kissparms: invalid slottime value\n");
+				return 1;
+			}
+			break;
+
+		case 't':
+			txdelay = atoi(optarg) / 10;
+			if (txdelay < 0 || txdelay > 255) {
+				fprintf(stderr, "kissparms: invalid txdelay value\n");
+				return 1;
+			}
+			break;
+
+		case 'v':
+			printf("kissparms: %s\n", VERSION);
+			return 0;
+
+		case 'x':
+			kissoff = 1;
+			break;
+
+		case 'X':
+			do {
+				buffer[buflen++] = atoi(optarg);
+				while (*optarg && isalnum(*optarg & 0xff))
+					optarg++;
+				while (*optarg && isspace(*optarg & 0xff))
+					optarg++;
+			} while (*optarg);
+			X = 1;
+			break;
+		case ':':
+		case '?':
+			fprintf(stderr, USAGE);
+			return 1;
 		}
 	}
 
@@ -156,7 +152,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if ((s = socket(PF_PACKET, SOCK_PACKET, htons(proto))) < 0) {
+	s = socket(PF_PACKET, SOCK_PACKET, htons(proto));
+	if (s < 0) {
 		perror("kissparms: socket");
 		return 1;
 	}
@@ -250,8 +247,8 @@ rawsend:
 			}
 		}
 	}
-	
+
 	close(s);
-	
+
 	return 0;
 }

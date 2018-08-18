@@ -1,0 +1,24 @@
+.TH AXWRAPPER 8 "25 May 2015" Linux "Linux System Managers Manual"
+.SH NAME
+axwrapper \- Run non-ax.25-aware programs from ax25d
+.SH SYNOPSIS
+.B axwrapper [ -p paclen ] server-program argv[0] ...
+.SH DESCRIPTION
+.LP
+.B  Axwrapper
+first creates a pipe and then forks and execs the program <server-program> with
+arguments given at the axwrapper command line.  The argv[0] argument is
+mandatory; further arguments are optional.  The parent process then sits
+and waits for any I/O to and from the user and converts any carriage return
+characters from the user to line feeds and any line feeds from the program to
+carriage returns. This is useful when starting non-AX.25-aware programs from
+ax25d.
+.SH OPTIONS
+.BI "\-c paclen"
+.IP
+Specify a the size of the output buffer.  The default length is 256 bytes.
+.SH "SEE ALSO"
+.BR ax25 (8)
+.BR ax25.conf (5)
+.SH AUTHOR
+Tomi Manninen OH2BNS <oh2bns@sral.fi>

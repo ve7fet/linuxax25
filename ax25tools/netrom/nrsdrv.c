@@ -39,10 +39,10 @@ static char *kissdev, *nrsdev;
 #define	NRS_CKSUM	3
 static int nrs_state = NRS_WAIT;
 
-static unsigned char nrs_cksum = 0;
+static unsigned char nrs_cksum;
 
 static unsigned char nrs_rxbuffer[512];
-static int nrs_rxcount = 0;
+static int nrs_rxcount;
 
 #define	FEND		0300
 #define	FESC		0333
@@ -56,7 +56,7 @@ static int nrs_rxcount = 0;
 static int kiss_state = KISS_WAIT;
 
 static unsigned char kiss_rxbuffer[512];
-static int kiss_rxcount = 0;
+static int kiss_rxcount;
 
 static void terminate(int sig)
 {
@@ -81,16 +81,16 @@ static void key_rts(int fd)
 	/* Wait for CTS to be low */
 	while (1) {
 		/* Get CTS status */
-                if (ioctl(fd, TIOCMGET, &status) < 0) {
+		if (ioctl(fd, TIOCMGET, &status) < 0) {
 			syslog(LOG_INFO|LOG_ERR, "TIOCMGET failed: flowcontrol disabled (%m)\n");
 			flowcontrol = 0;
-                        return;
-                }
+			return;
+		}
 		if (status & TIOCM_CTS) {
 			if (debugging) {
 				fprintf(stderr,"CTS high: waiting\n");
 			}
-                	ioctl(fd, TIOCMIWAIT, &status);
+			ioctl(fd, TIOCMIWAIT, &status);
 		} else {
 			break;
 		}
@@ -100,10 +100,10 @@ static void key_rts(int fd)
 		fprintf(stderr,"CTS low: keying RTS\n");
 	}
 	status |= TIOCM_RTS | TIOCM_DTR;
-        if (ioctl(fd, TIOCMSET, &status) < 0) {
+	if (ioctl(fd, TIOCMSET, &status) < 0) {
 		syslog(LOG_INFO|LOG_ERR, "TIOCMGET failed: flowcontrol disabled (%m)\n");
 		flowcontrol = 0;
-        }
+	}
 }
 
 static void unkey_rts(int fd)
@@ -116,13 +116,13 @@ static void unkey_rts(int fd)
 	if (debugging) {
 		fprintf(stderr,"Transmission finished: unkeying RTS\n");
 	}
-        ioctl(fd, TIOCMGET, &status);
+	ioctl(fd, TIOCMGET, &status);
 	status &= ~TIOCM_RTS;
-        status |= TIOCM_DTR;
-        if (ioctl(fd, TIOCMSET, &status) < 0) {
+	status |= TIOCM_DTR;
+	if (ioctl(fd, TIOCMSET, &status) < 0) {
 		syslog(LOG_INFO|LOG_ERR, "TIOCMGET failed: flowcontrol disabled (%m)\n");
 		flowcontrol = 0;
-        }
+	}
 }
 
 static void nrs_esc(unsigned char *s, int len)
@@ -136,16 +136,16 @@ static void nrs_esc(unsigned char *s, int len)
 
 	while (len-- > 0) {
 		switch (c = *s++) {
-			case STX:
-			case ETX:
-			case DLE:
-				*ptr++ = DLE;
-				/* Fall through */
-			default:
-				*ptr++ = c;
-				break;
+		case STX:
+		case ETX:
+		case DLE:
+			*ptr++ = DLE;
+			/* Fall through */
+		default:
+			*ptr++ = c;
+			break;
 		}
-		
+
 		csum += c;
 	}
 
@@ -170,17 +170,17 @@ static void kiss_esc(unsigned char *s, int len)
 
 	while (len-- > 0) {
 		switch (c = *s++) {
-			case FESC:
-				*ptr++ = FESC;
-				*ptr++ = FESCESC;
-				break;
-			case FEND:
-				*ptr++ = FESC;
-				*ptr++ = FESCEND;
-				break;
-			default:
-				*ptr++ = c;
-				break;
+		case FESC:
+			*ptr++ = FESC;
+			*ptr++ = FESCESC;
+			break;
+		case FEND:
+			*ptr++ = FESC;
+			*ptr++ = FESCEND;
+			break;
+		default:
+			*ptr++ = c;
+			break;
 		}
 	}
 
@@ -192,53 +192,53 @@ static void kiss_esc(unsigned char *s, int len)
 static void nrs_unesc(unsigned char *buffer, int len)
 {
 	int i;
-	
+
 	for (i = 0; i < len; i++) {
 		switch (nrs_state) {
-			case NRS_WAIT:
-				if (buffer[i] == STX) {
-					nrs_state   = NRS_DATA;
-					nrs_rxcount = 0;
-					nrs_cksum   = 0;
-				}
-				break;
+		case NRS_WAIT:
+			if (buffer[i] == STX) {
+				nrs_state   = NRS_DATA;
+				nrs_rxcount = 0;
+				nrs_cksum   = 0;
+			}
+			break;
 
-			case NRS_DATA:
-				switch (buffer[i]) {	
-					case STX:	/* !! */
-						nrs_rxcount = 0;
-						nrs_cksum   = 0;
-						break;
-					case DLE:
-						nrs_state = NRS_ESCAPE;
-						break;
-					case ETX:
-						nrs_state = NRS_CKSUM;
-						break;
-					default:
-						if (nrs_rxcount < 512) {
-							nrs_cksum += buffer[i];
-							nrs_rxbuffer[nrs_rxcount++] = buffer[i];
-						}
-						break;
-				}
+		case NRS_DATA:
+			switch (buffer[i]) {
+			case STX:	/* !! */
+				nrs_rxcount = 0;
+				nrs_cksum   = 0;
 				break;
-
-			case NRS_ESCAPE:
-				nrs_state = NRS_DATA; 
+			case DLE:
+				nrs_state = NRS_ESCAPE;
+				break;
+			case ETX:
+				nrs_state = NRS_CKSUM;
+				break;
+			default:
 				if (nrs_rxcount < 512) {
 					nrs_cksum += buffer[i];
 					nrs_rxbuffer[nrs_rxcount++] = buffer[i];
 				}
 				break;
+			}
+			break;
 
-			case NRS_CKSUM:
-				if (buffer[i] == nrs_cksum)
-					kiss_esc(nrs_rxbuffer, nrs_rxcount);
-				nrs_state   = NRS_WAIT;
-				nrs_cksum   = 0;
-				nrs_rxcount = 0;
-				break;
+		case NRS_ESCAPE:
+			nrs_state = NRS_DATA;
+			if (nrs_rxcount < 512) {
+				nrs_cksum += buffer[i];
+				nrs_rxbuffer[nrs_rxcount++] = buffer[i];
+			}
+			break;
+
+		case NRS_CKSUM:
+			if (buffer[i] == nrs_cksum)
+				kiss_esc(nrs_rxbuffer, nrs_rxcount);
+			nrs_state   = NRS_WAIT;
+			nrs_cksum   = 0;
+			nrs_rxcount = 0;
+			break;
 		}
 	}
 }
@@ -246,97 +246,98 @@ static void nrs_unesc(unsigned char *buffer, int len)
 static void kiss_unesc(unsigned char *buffer, int len)
 {
 	int i;
-	
+
 	for (i = 0; i < len; i++) {
 		switch (kiss_state) {
-			case KISS_WAIT:
-				if (buffer[i] == FEND) {
-					kiss_state   = KISS_CTRL;
-					kiss_rxcount = 0;
-				}
-				break;
+		case KISS_WAIT:
+			if (buffer[i] == FEND) {
+				kiss_state   = KISS_CTRL;
+				kiss_rxcount = 0;
+			}
+			break;
 
-			case KISS_CTRL:
-				if ((buffer[i] & 0x0F) == 0x00) {
-					kiss_state   = KISS_DATA;
-					kiss_rxcount = 0;
-				} else {
-					kiss_state   = KISS_WAIT;
-					kiss_rxcount = 0;
-				}
-				break;
+		case KISS_CTRL:
+			if ((buffer[i] & 0x0F) == 0x00) {
+				kiss_state   = KISS_DATA;
+				kiss_rxcount = 0;
+			} else {
+				kiss_state   = KISS_WAIT;
+				kiss_rxcount = 0;
+			}
+			break;
 
-			case KISS_DATA:
-				switch (buffer[i]) {	
-					case FEND:
-						if (kiss_rxcount > 2)
-							nrs_esc(kiss_rxbuffer, kiss_rxcount);
-						kiss_state   = KISS_WAIT;
-						kiss_rxcount = 0;
-						break;
-					case FESC:
-						kiss_state = KISS_ESCAPE;
-						break;
-					default:
-						if (kiss_rxcount < 512)
-							kiss_rxbuffer[kiss_rxcount++] = buffer[i];
-						break;
-				}
+		case KISS_DATA:
+			switch (buffer[i]) {
+			case FEND:
+				if (kiss_rxcount > 2)
+					nrs_esc(kiss_rxbuffer, kiss_rxcount);
+				kiss_state   = KISS_WAIT;
+				kiss_rxcount = 0;
 				break;
+			case FESC:
+				kiss_state = KISS_ESCAPE;
+				break;
+			default:
+				if (kiss_rxcount < 512)
+					kiss_rxbuffer[kiss_rxcount++] = buffer[i];
+				break;
+			}
+			break;
 
-			case KISS_ESCAPE:
-				kiss_state = KISS_DATA;
-				switch (buffer[i]) {
-					case FESCESC:
-						if (kiss_rxcount < 512)
-							kiss_rxbuffer[kiss_rxcount++] = FESC;
-						break;
-					case FESCEND:
-						if (kiss_rxcount < 512)
-							kiss_rxbuffer[kiss_rxcount++] = FEND;
-						break;
-				}
+		case KISS_ESCAPE:
+			kiss_state = KISS_DATA;
+			switch (buffer[i]) {
+			case FESCESC:
+				if (kiss_rxcount < 512)
+					kiss_rxbuffer[kiss_rxcount++] = FESC;
 				break;
+			case FESCEND:
+				if (kiss_rxcount < 512)
+					kiss_rxbuffer[kiss_rxcount++] = FEND;
+				break;
+			}
+			break;
 		}
 	}
 }
 
 int main(int argc, char *argv[])
 {
-	static char buffer[512];
+	static unsigned char buffer[512];
 	unsigned int speed = 0;
 	fd_set read_fd;
 	int c, n;
 
 	while ((c = getopt(argc, argv, "dfls:v")) != -1) {
 		switch (c) {
-			case 'd':
-				debugging = TRUE;
-				break;
-			case 'f':
-				flowcontrol = TRUE;
-				break;
-			case 'l':
-				logging = TRUE;
-				break;
-			case 's':
-				if ((speed = atoi(optarg)) <= 0) {
-					fprintf(stderr, "nrsdrv: invalid speed %s\n", optarg);
-					return 1;
-				}
-				break;
-			case 'v':
-				printf("kissattach: %s\n", VERSION);
-				return 0;
-			case ':':
-			case '?':
-				fprintf(stderr, "usage: nrsdrv [-f] [-l] [-s speed] [-v] kisstty nrstty\n");
+		case 'd':
+			debugging = TRUE;
+			break;
+		case 'f':
+			flowcontrol = TRUE;
+			break;
+		case 'l':
+			logging = TRUE;
+			break;
+		case 's':
+			speed = atoi(optarg);
+			if (speed <= 0) {
+				fprintf(stderr, "nrsdrv: invalid speed %s\n", optarg);
 				return 1;
+			}
+			break;
+		case 'v':
+			printf("kissattach: %s\n", VERSION);
+			return 0;
+		case ':':
+		case '?':
+			fprintf(stderr, "usage: nrsdrv [-f] [-l] [-s speed] [-v] kisstty nrstty\n");
+			return 1;
 		}
 	}
 
 	if (debugging) {
-		fprintf(stderr,"Flow control %s\n", 
+		fprintf(stderr,"Flow control %s\n",
 			flowcontrol ? "enabled" : "disabled");
 	}
 
@@ -358,12 +359,14 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if ((kissfd = open(kissdev, O_RDWR)) == -1) {
+	kissfd = open(kissdev, O_RDWR);
+	if (kissfd == -1) {
 		perror("nrsdrv: open kiss device");
 		return 1;
 	}
 
-	if ((nrsfd = open(nrsdev, O_RDWR)) == -1) {
+	nrsfd = open(nrsdev, O_RDWR);
+	if (nrsfd == -1) {
 		perror("nrsdrv: open nrs device");
 		return 1;
 	}
@@ -399,7 +402,7 @@ int main(int argc, char *argv[])
 		openlog("nrsdrv", LOG_PID, LOG_DAEMON);
 		syslog(LOG_INFO, "KISS device %s connected to NRS device %s\n", argv[optind + 0], argv[optind + 1]);
 	}
-		
+
 	signal(SIGHUP, SIG_IGN);
 	signal(SIGTERM, terminate);
 
@@ -421,14 +424,15 @@ int main(int argc, char *argv[])
 
 	for (;;) {
 		FD_ZERO(&read_fd);
-		
+
 		FD_SET(kissfd, &read_fd);
 		FD_SET(nrsfd, &read_fd);
 
 		n = select(c, &read_fd, NULL, NULL, NULL);
 
 		if (FD_ISSET(kissfd, &read_fd)) {
-			if ((n = read(kissfd, buffer, 512)) <= 0) {
+			n = read(kissfd, buffer, 512);
+			if (n <= 0) {
 				if (logging) {
 					syslog(LOG_INFO, "terminating on KISS device closure\n");
 					closelog();
@@ -437,9 +441,10 @@ int main(int argc, char *argv[])
 			}
 			kiss_unesc(buffer, n);
 		}
-		
+
 		if (FD_ISSET(nrsfd, &read_fd)) {
-			if ((n = read(nrsfd, buffer, 512)) <= 0) {
+			n = read(nrsfd, buffer, 512);
+			if (n <= 0) {
 				if (logging) {
 					syslog(LOG_INFO, "terminating on NRS device closure\n");
 					closelog();

@@ -25,7 +25,7 @@
  */
 
 /*****************************************************************************/
-      
+
 #ifndef _USERSMDIAG_H
 #define _USERSMDIAG_H
 
@@ -85,7 +85,7 @@ struct usersmmsg {
 			int fulldup;   /* some driver do not support full duplex, setting */
 			/* this just makes them send even if DCD is on */
 		} cp;
-		
+
 		int calib;
 
 		struct usersm_channel_state {
@@ -97,7 +97,7 @@ struct usersmmsg {
 			unsigned long rx_packets;
 			unsigned long rx_errors;
 		} cs;
-		
+
 		struct usersm_diag {
 			unsigned int mode;
 			unsigned int flags;
@@ -110,7 +110,7 @@ struct usersmmsg {
 			short samples[DIAGDATALEN];
 		} diag_out;
 
-		unsigned char by[0];
+		char by[0];
 	} data;
 };
 

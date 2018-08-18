@@ -36,35 +36,29 @@ extern "C" {
 
 /* ---------------------------------------------------------------------- */
 
-#define HDRVC_KERNEL 1
-
-/* ---------------------------------------------------------------------- */
-
-#ifdef HDRVC_KERNEL
 #include <linux/hdlcdrv.h>
 #include "soundmodem.h"
 #include <linux/baycom.h>
-#endif /* HDRVC_KERNEL */
 
 /* ---------------------------------------------------------------------- */
 
 struct hdrvc_channel_params {
-        int tx_delay;  /* the transmitter keyup delay in 10ms units */
-        int tx_tail;   /* the transmitter keyoff delay in 10ms units */
-        int slottime;  /* the slottime in 10ms; usually 10 = 100ms */
-        int ppersist;  /* the p-persistence 0..255 */
-        int fulldup;   /* some driver do not support full duplex, setting */
-                       /* this just makes them send even if DCD is on */
+	int tx_delay;  /* the transmitter keyup delay in 10ms units */
+	int tx_tail;   /* the transmitter keyoff delay in 10ms units */
+	int slottime;  /* the slottime in 10ms; usually 10 = 100ms */
+	int ppersist;  /* the p-persistence 0..255 */
+	int fulldup;   /* some driver do not support full duplex, setting */
+		       /* this just makes them send even if DCD is on */
 };
 
 struct hdrvc_channel_state {
-        int ptt;
-        int dcd;
-        int ptt_keyed;
-        unsigned long tx_packets;
-        unsigned long tx_errors;
-        unsigned long rx_packets;
-        unsigned long rx_errors;
+	int ptt;
+	int dcd;
+	int ptt_keyed;
+	unsigned long tx_packets;
+	unsigned long tx_errors;
+	unsigned long rx_packets;
+	unsigned long rx_errors;
 };
 
 /* ---------------------------------------------------------------------- */
@@ -102,12 +96,10 @@ extern int hdrvc_diag2(unsigned int mode, unsigned int flags, short *data, unsig
 extern int hdrvc_get_driver_name(char *buf, int bufsz);
 extern int hdrvc_get_mode_name(char *buf, int bufsz);
 
-#ifdef HDRVC_KERNEL
 extern int hdrvc_hdlcdrv_ioctl(int cmd, struct hdlcdrv_ioctl *par);
 extern int hdrvc_sm_ioctl(int cmd, struct sm_ioctl *par);
 extern int hdrvc_baycom_ioctl(int cmd, struct baycom_ioctl *par);
 extern int hdrvc_diag(struct sm_diag_data *diag);
-#endif /* HDRVC_KERNEL */
 
 /* ---------------------------------------------------------------------- */
 #ifdef __cplusplus

@@ -48,10 +48,12 @@
 #include <X11/Xutil.h>
 #include "hdrvcomm.h"
 
+#include <config.h>
+
 /* ---------------------------------------------------------------------- */
 
 static char *progname;
-static Display *display = NULL;
+static Display *display;
 static Window window;
 static Pixmap pixmap;
 static unsigned long col_zeroline;
@@ -69,11 +71,11 @@ static int x_error_handler(Display *disp, XErrorEvent *evt)
 
     XGetErrorText(disp, evt->error_code, err_buf, sizeof(err_buf));
     fprintf(stderr, "X Error: %s\n", err_buf);
-    XGetErrorDatabaseText(disp, mtype, "MajorCode", "Request Major code %d", 
+    XGetErrorDatabaseText(disp, mtype, "MajorCode", "Request Major code %d",
 			  mesg, sizeof(mesg));
     fprintf(stderr, mesg, evt->request_code);
     sprintf(number, "%d", evt->request_code);
-    XGetErrorDatabaseText(disp, "XRequest", number, "", err_buf, 
+    XGetErrorDatabaseText(disp, "XRequest", number, "", err_buf,
 			  sizeof(err_buf));
     fprintf(stderr, " (%s)\n", err_buf);
     abort();
@@ -86,55 +88,57 @@ static int x_error_handler(Display *disp, XErrorEvent *evt)
 
 static int openwindow(char *disp, int constell, int samplesperbit)
 {
-        XSetWindowAttributes attr;
-        XGCValues gr_values;
-        XColor color, dummy;
-        XSizeHints sizehints;
+	XSetWindowAttributes attr;
+	XGCValues gr_values;
+	XColor color, dummy;
+	XSizeHints sizehints;
 
-        if (!(display = XOpenDisplay(NULL)))
-                return -1;
-        XSetErrorHandler(x_error_handler);
-        XAllocNamedColor(display, DefaultColormap(display, 0), "red",
-                         &color, &dummy);
+	display = XOpenDisplay(NULL);
+	if (!display)
+		return -1;
+	XSetErrorHandler(x_error_handler);
+	XAllocNamedColor(display, DefaultColormap(display, 0), "red",
+			 &color, &dummy);
 	col_zeroline = color.pixel;
 	col_background = WhitePixel(display, 0);
 	col_trace = BlackPixel(display, 0);
-        attr.background_pixel = col_background;
-        if (!(window = XCreateWindow(display, XRootWindow(display, 0), 
-				     200, 200, WIDTH, HEIGHT, 5, 
-				     DefaultDepth(display, 0), 
-				     InputOutput, DefaultVisual(display, 0),
-				     CWBackPixel, &attr))) {
+	attr.background_pixel = col_background;
+	window = XCreateWindow(display, XRootWindow(display, 0), 200, 200,
+			       WIDTH, HEIGHT, 5, DefaultDepth(display, 0),
+			       InputOutput, DefaultVisual(display, 0),
+			       CWBackPixel, &attr);
+	if (!window) {
 		fprintf(stderr, "smdiag: unable to open X window\n");
 		exit(1);
 	}
-	if (!(pixmap = XCreatePixmap(display, window, WIDTH, HEIGHT,
-				     DefaultDepth(display, 0)))) {
+	pixmap = XCreatePixmap(display, window, WIDTH, HEIGHT,
+			       DefaultDepth(display, 0));
+	if (!pixmap) {
 		fprintf(stderr, "smdiag: unable to open offscreen pixmap\n");
 		exit(1);
 	}
-        xmul = WIDTH / (2*(samplesperbit > 0 ? samplesperbit : 1));
-        XSelectInput(display, window, KeyPressMask | StructureNotifyMask
+	xmul = WIDTH / (2*(samplesperbit > 0 ? samplesperbit : 1));
+	XSelectInput(display, window, KeyPressMask | StructureNotifyMask
 		     | ExposureMask) ;
-        XAllocNamedColor(display, DefaultColormap(display, 0), "red",
-                         &color, &dummy);
-        gr_values.foreground = col_trace;
-        gr_values.line_width = 1;
-        gr_values.line_style = LineSolid;
-        gr_context = XCreateGC(display, window, GCForeground | GCLineWidth |
-                               GCLineStyle, &gr_values);
-        XStoreName(display, window, "diagnostics");
-        /*
-         * Do not allow the window to be resized
-         */
-        memset(&sizehints, 0, sizeof(sizehints));
-        sizehints.min_width = sizehints.max_width = WIDTH;
-        sizehints.min_height = sizehints.max_height = HEIGHT;
-        sizehints.flags = PMinSize | PMaxSize;
-        XSetWMNormalHints(display, window, &sizehints);
-        XMapWindow(display, window);
-        XSynchronize(display, 1);
-        return 0;
+	XAllocNamedColor(display, DefaultColormap(display, 0), "red",
+			 &color, &dummy);
+	gr_values.foreground = col_trace;
+	gr_values.line_width = 1;
+	gr_values.line_style = LineSolid;
+	gr_context = XCreateGC(display, window, GCForeground | GCLineWidth |
+			       GCLineStyle, &gr_values);
+	XStoreName(display, window, "diagnostics");
+	/*
+	 * Do not allow the window to be resized
+	 */
+	memset(&sizehints, 0, sizeof(sizehints));
+	sizehints.min_width = sizehints.max_width = WIDTH;
+	sizehints.min_height = sizehints.max_height = HEIGHT;
+	sizehints.flags = PMinSize | PMaxSize;
+	XSetWMNormalHints(display, window, &sizehints);
+	XMapWindow(display, window);
+	XSynchronize(display, 1);
+	return 0;
 }
 
 #undef WIDTH
@@ -144,11 +148,11 @@ static int openwindow(char *disp, int constell, int samplesperbit)
 
 static void closewindow(void)
 {
-        if (!display)
-                return;
-        XDestroyWindow(display, window);
-        XCloseDisplay(display);
-        display = NULL;
+	if (!display)
+		return;
+	XDestroyWindow(display, window);
+	XCloseDisplay(display);
+	display = NULL;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -159,34 +163,34 @@ static void closewindow(void)
 static void drawdata(short *data, int len, int replace, int xm)
 {
 	int cnt;
-        GC gc;
-        XGCValues gcv;
-        XWindowAttributes winattrs;	
+	GC gc;
+	XGCValues gcv;
+	XWindowAttributes winattrs;
 
-        if (!display || !pixmap)
-                return;
-        XGetWindowAttributes(display, window, &winattrs);
+	if (!display || !pixmap)
+		return;
+	XGetWindowAttributes(display, window, &winattrs);
 	gcv.line_width = 1;
-        gcv.line_style = LineSolid;
-        gc = XCreateGC(display, pixmap, GCLineWidth | GCLineStyle, &gcv);
-        XSetState(display, gc, col_background, col_background, GXcopy, 
+	gcv.line_style = LineSolid;
+	gc = XCreateGC(display, pixmap, GCLineWidth | GCLineStyle, &gcv);
+	XSetState(display, gc, col_background, col_background, GXcopy,
 		  AllPlanes);
 	if (replace)
-		XFillRectangle(display, pixmap, gc, 0, 0, 
+		XFillRectangle(display, pixmap, gc, 0, 0,
 			       winattrs.width, winattrs.height);
 	else
-		XCopyArea(display, window, pixmap, gr_context, 0, 0, 
+		XCopyArea(display, window, pixmap, gr_context, 0, 0,
 			  winattrs.width, winattrs.height, 0, 0);
-        XSetForeground(display, gc, col_trace);
+	XSetForeground(display, gc, col_trace);
 	for (cnt = 0; cnt < len-1; cnt++)
 		XDrawLine(display, pixmap, gc, XCOORD(cnt), YCOORD(data[cnt]),
 			  XCOORD(cnt+1), YCOORD(data[cnt+1]));
-        XSetForeground(display, gc, col_zeroline);
+	XSetForeground(display, gc, col_zeroline);
 	XDrawLine(display, pixmap, gc, 0, YCOORD(0), winattrs.width,
 		  YCOORD(0));
 	XCopyArea(display, pixmap, window, gr_context, 0, 0, winattrs.width,
-                  winattrs.height, 0, 0);
-        XFreeGC(display, gc);
+		  winattrs.height, 0, 0);
+	XFreeGC(display, gc);
 	XSync(display, 0);
 }
 
@@ -201,30 +205,30 @@ static void drawdata(short *data, int len, int replace, int xm)
 static void drawconstell(short *data, int len)
 {
 	int cnt;
-        GC gc;
-        XGCValues gcv;
-        XWindowAttributes winattrs;	
+	GC gc;
+	XGCValues gcv;
+	XWindowAttributes winattrs;
 
-        if (!display || !pixmap)
-                return;
-        XGetWindowAttributes(display, window, &winattrs);
+	if (!display || !pixmap)
+		return;
+	XGetWindowAttributes(display, window, &winattrs);
 	gcv.line_width = 1;
-        gcv.line_style = LineSolid;
-        gc = XCreateGC(display, pixmap, GCLineWidth | GCLineStyle, &gcv);
-        XSetState(display, gc, col_background, col_background, GXcopy, 
+	gcv.line_style = LineSolid;
+	gc = XCreateGC(display, pixmap, GCLineWidth | GCLineStyle, &gcv);
+	XSetState(display, gc, col_background, col_background, GXcopy,
 		  AllPlanes);
-	XCopyArea(display, window, pixmap, gr_context, 0, 0, 
+	XCopyArea(display, window, pixmap, gr_context, 0, 0,
 		  winattrs.width, winattrs.height, 0, 0);
-        XSetForeground(display, gc, col_trace);
+	XSetForeground(display, gc, col_trace);
 	for (cnt = 0; cnt < len-1; cnt += 2)
-		XDrawPoint(display, pixmap, gc, 
+		XDrawPoint(display, pixmap, gc,
 			   XCOORD(data[cnt]), YCOORD(data[cnt+1]));
-        XSetForeground(display, gc, col_zeroline);
+	XSetForeground(display, gc, col_zeroline);
 	XDrawLine(display, pixmap, gc, 0, YCOORD(0), winattrs.width, YCOORD(0));
 	XDrawLine(display, pixmap, gc, XCOORD(0), 0, XCOORD(0), winattrs.height);
 	XCopyArea(display, pixmap, window, gr_context, 0, 0, winattrs.width,
-                  winattrs.height, 0, 0);
-        XFreeGC(display, gc);
+		  winattrs.height, 0, 0);
+	XFreeGC(display, gc);
 	XSync(display, 0);
 }
 
@@ -235,50 +239,50 @@ static void drawconstell(short *data, int len)
 
 static void clearwindow(void)
 {
-        XWindowAttributes winattrs;	
+	XWindowAttributes winattrs;
 	GC gc;
-        XGCValues gcv;
+	XGCValues gcv;
 
-        if (!display || !pixmap)
-                return;
-        XGetWindowAttributes(display, window, &winattrs);
+	if (!display || !pixmap)
+		return;
+	XGetWindowAttributes(display, window, &winattrs);
 	gcv.line_width = 1;
-        gcv.line_style = LineSolid;
-        gc = XCreateGC(display, pixmap, GCLineWidth | GCLineStyle, &gcv);
-        XSetState(display, gc, col_background, col_background, GXcopy, 
+	gcv.line_style = LineSolid;
+	gc = XCreateGC(display, pixmap, GCLineWidth | GCLineStyle, &gcv);
+	XSetState(display, gc, col_background, col_background, GXcopy,
 		  AllPlanes);
-	XFillRectangle(display, pixmap, gc, 0, 0, 
+	XFillRectangle(display, pixmap, gc, 0, 0,
 		       winattrs.width, winattrs.height);
-        XSetForeground(display, gc, col_zeroline);
-        XClearArea(display, window, 0, 0, 0, 0, False);
+	XSetForeground(display, gc, col_zeroline);
+	XClearArea(display, window, 0, 0, 0, 0, False);
 	XCopyArea(display, pixmap, window, gr_context, 0, 0, winattrs.width,
-                  winattrs.height, 0, 0);
-        XFreeGC(display, gc);	
+		  winattrs.height, 0, 0);
+	XFreeGC(display, gc);
 }
 
 /* ---------------------------------------------------------------------- */
 
 static Bool predicate(Display *display, XEvent *event, char *arg)
 {
-        return True;
+	return True;
 }
 
 /* ---------------------------------------------------------------------- */
 
 static char *getkey(void)
 {
-        XWindowAttributes winattrs;	
-        XEvent evt;
-        static char kbuf[32];
-        int i;
+	XWindowAttributes winattrs;
+	XEvent evt;
+	static char kbuf[32];
+	int i;
 
-        if (!display)
-                return NULL;
+	if (!display)
+		return NULL;
 	XSync(display, 0);
-        while (XCheckIfEvent(display, &evt, predicate, NULL)) {
+	while (XCheckIfEvent(display, &evt, predicate, NULL)) {
 		switch (evt.type) {
 		case KeyPress:
-			i = XLookupString((XKeyEvent *)&evt, kbuf, sizeof(kbuf)-1, 
+			i = XLookupString((XKeyEvent *)&evt, kbuf, sizeof(kbuf)-1,
 					  NULL, NULL);
 			if (!i)
 				return NULL;
@@ -290,14 +294,14 @@ static char *getkey(void)
 			return NULL;
 		case Expose:
 			XGetWindowAttributes(display, window, &winattrs);
-			XCopyArea(display, pixmap, window, gr_context, 0, 0, 
+			XCopyArea(display, pixmap, window, gr_context, 0, 0,
 				  winattrs.width, winattrs.height, 0, 0);
 			break;
 		default:
 			break;
 		}
-        }
-        return NULL;
+	}
+	return NULL;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -311,7 +315,7 @@ static void printmode(unsigned int mode, unsigned int trigger)
 
 /* ---------------------------------------------------------------------- */
 
-static const char *usage_str = 
+static const char *usage_str =
 "[-d display] [-i smif] [-c] [-e]\n"
 "  -d: display host\n"
 "  -i: specify the name of the baycom kernel driver interface\n"
@@ -331,7 +335,7 @@ int main(int argc, char *argv[])
 	unsigned int samplesperbit;
 
 	progname = *argv;
-	printf("%s: Version 0.2; (C) 1996-1997 by Thomas Sailer HB9JNX/AE4WA\n", *argv);
+	printf("%s: Version " VERSION "; (C) 1996-1997 by Thomas Sailer HB9JNX/AE4WA\n", *argv);
 	hdrvc_args(&argc, argv, "sm0");
 	while ((ret = getopt(argc, argv, "d:ecp")) != -1) {
 		switch (ret) {
@@ -365,8 +369,10 @@ int main(int argc, char *argv[])
 	}
 	printmode(mode, trigger);
 	for (;;) {
-		if ((ret = hdrvc_diag2(mode, trigger, data, sizeof(data) / sizeof(short),
-				       &samplesperbit)) < 0) {
+		ret = hdrvc_diag2(mode, trigger, data,
+				  sizeof(data) / sizeof(short),
+				  &samplesperbit);
+		if (ret < 0) {
 			perror("hdrvc_diag2");
 			exit(1);
 		}
@@ -384,7 +390,8 @@ int main(int argc, char *argv[])
 		} else
 			usleep(100000L);
 		if (display) {
-			if ((cp = getkey())) {
+			cp = getkey();
+			if (cp) {
 				for (; *cp; cp++) {
 					printf("char pressed: '%c'\n", *cp);
 					switch (*cp) {

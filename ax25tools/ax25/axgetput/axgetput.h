@@ -14,9 +14,9 @@ extern int fderr;
 extern int fdin_is_pipe;
 extern int fdout_is_pipe;
 
-char myname[PATH_MAX+1];
-char filename[PATH_MAX+1];
-char err_msg[2048];
+extern char myname[PATH_MAX+1];
+extern char filename[PATH_MAX+1];
+extern char err_msg[2048];
 
 extern int is_stream;
 extern int mode;

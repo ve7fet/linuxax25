@@ -20,7 +20,7 @@
 
 #include "user_io.h"
 
-void alarm_handler(int sig)
+static void alarm_handler(int sig)
 {
 }
 
@@ -73,7 +73,8 @@ int main(int argc, char **argv)
 	roseconnect.srose_family = rosebind.srose_family = AF_ROSE;
 	roseconnect.srose_ndigis = rosebind.srose_ndigis = 0;
 
-	if ((addr = rs_config_get_addr(argv[optind])) == NULL) {
+	addr = rs_config_get_addr(argv[optind]);
+	if (addr == NULL) {
 		sprintf(buffer, "ERROR: invalid Rose port name - %s\r", argv[optind]);
 		err(buffer);
 	}
@@ -101,7 +102,8 @@ int main(int argc, char **argv)
 	/*
 	 * Open the socket into the kernel.
 	 */
-	if ((s = socket(AF_ROSE, SOCK_SEQPACKET, 0)) < 0) {
+	s = socket(AF_ROSE, SOCK_SEQPACKET, 0);
+	if (s < 0) {
 		sprintf(buffer, "ERROR: cannot open Rose socket, %s\r", strerror(errno));
 		err(buffer);
 	}
@@ -129,18 +131,18 @@ int main(int argc, char **argv)
 	 */
 	if (connect(s, (struct sockaddr *)&roseconnect, addrlen) != 0) {
 		switch (errno) {
-			case ECONNREFUSED:
-				strcpy(buffer, "*** Connection refused - aborting\r");
-				break;
-			case ENETUNREACH:
-				strcpy(buffer, "*** No known route - aborting\r");
-				break;
-			case EINTR:
-				strcpy(buffer, "*** Connection timed out - aborting\r");
-				break;
-			default:
-				sprintf(buffer, "ERROR: cannot connect to Rose address, %s\r", strerror(errno));
-				break;
+		case ECONNREFUSED:
+			strcpy(buffer, "*** Connection refused - aborting\r");
+			break;
+		case ENETUNREACH:
+			strcpy(buffer, "*** No known route - aborting\r");
+			break;
+		case EINTR:
+			strcpy(buffer, "*** Connection timed out - aborting\r");
+			break;
+		default:
+			sprintf(buffer, "ERROR: cannot connect to Rose address, %s\r", strerror(errno));
+			break;
 		}
 
 		err(buffer);

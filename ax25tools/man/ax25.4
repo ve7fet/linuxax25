@@ -1,4 +1,4 @@
-.TH AX25 4 "15 October 1996" Linux "Linux Programmer's Manual"
+.TH AX25 4 "1 August 2017" Linux "Linux Programmer's Manual"
 .SH NAME
 AF_AX25 \- AX.25 amateur packet radio protocol family
 .SH DESCRIPTION
@@ -38,7 +38,7 @@ association. a set of ioctl calls are provided to manage an association
 table, and in addition the superuser may use an arbitary callsign by binding
 to the callsign desired and specifying the port to use as a first digipeated
 hop.
-.LP 
+.LP
 AX.25 supports the following socket options for SOL_AX25. AX25_T1 is the T1
 timer in 1/10ths of a second, AX25_T2 is the T2 timer in 1/10ths of a
 second, AX25_T3 is the T3 timer. The window is settable with AX25_WINDOW.
@@ -58,8 +58,7 @@ first frame is returned along with the defragmented data.
 .BR setsockopt (2),
 .BR getsockopt (2),
 .BR axctl (8),
-.BR axparms (5),
-.BR axassociate (8),
+.BR axports (5),
 .BR axparms (8),
 .BR kissattach (8).
 .LP

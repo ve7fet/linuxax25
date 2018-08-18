@@ -41,6 +41,8 @@
 #include "hdrvcomm.h"
 #include "xfsmmixer.h"
 
+#include <config.h>
+
 /* ---------------------------------------------------------------------- */
 
 static char *progname;
@@ -50,9 +52,9 @@ static unsigned int mixdevice;
 
 static int do_mix_ioctl(int cmd, struct sm_mixer_data *mixdat)
 {
-        struct sm_ioctl par;
+	struct sm_ioctl par;
 	int i;
-	
+
 	par.cmd = cmd;
 	par.data.mix = *mixdat;
 	i = hdrvc_sm_ioctl(cmd, &par);
@@ -120,7 +122,7 @@ void update_ad1848(Fl_Widget *widget, void *udata)
 		mdata |= 0x20;
 	}
 	mval *= 0.666666;
-	if (mval > 15) 
+	if (mval > 15)
 		mval = 15;
 	mdata |= (int)mval;
 	set_mixer_reg(0x00, mdata);
@@ -139,7 +141,7 @@ void update_ad1848(Fl_Widget *widget, void *udata)
 		mdata |= 0x20;
 	}
 	mval *= 0.666666;
-	if (mval > 15) 
+	if (mval > 15)
 		mval = 15;
 	mdata |= (int)mval;
 	set_mixer_reg(0x01, mdata);
@@ -150,12 +152,12 @@ void update_ad1848(Fl_Widget *widget, void *udata)
 	mval = ad1848_outl->value();
 	if (mval < -95)
 		set_mixer_reg(0x06, 0x80);
-	else 
+	else
 		set_mixer_reg(0x06, (unsigned char)(mval * (-0.66666666)));
 	mval = ad1848_outr->value();
 	if (mval < -95)
 		set_mixer_reg(0x07, 0x80);
-	else 
+	else
 		set_mixer_reg(0x07, (unsigned char)(mval * (-0.66666666)));
 	set_mixer_reg(0x0d, 0x00);
 }
@@ -272,7 +274,7 @@ void update_ct1745(Fl_Widget *widget, void *udata)
 	if (ct1745_srcl_midil->value())
 		mdata |= 0x40;
 	if (ct1745_srcl_midir->value())
-		mdata |= 0x20;				
+		mdata |= 0x20;
 	set_mixer_reg(0x3d, mdata); /* input sources left */
 	mdata = 0;
 	if (ct1745_srcr_mic->value())
@@ -288,7 +290,7 @@ void update_ct1745(Fl_Widget *widget, void *udata)
 	if (ct1745_srcr_midil->value())
 		mdata |= 0x40;
 	if (ct1745_srcr_midir->value())
-		mdata |= 0x20;				
+		mdata |= 0x20;
 	set_mixer_reg(0x3e, mdata); /* input sources right*/
 }
 
@@ -301,7 +303,7 @@ void cb_quit(Fl_Button *, long)
 
 /* ---------------------------------------------------------------------- */
 
-static const char *usage_str = 
+static const char *usage_str =
 "[-i smif]\n"
 "  -i: specify the name of the soundmodem kernel driver interface\n\n";
 
@@ -309,12 +311,12 @@ static const char *usage_str =
 
 int main(int argc, char *argv[])
 {
-        int c, i;
+	int c, i;
 	struct sm_mixer_data mixdat;
 	unsigned char mdata;
-	
+
 	progname = *argv;
-	printf("%s: Version 0.3; (C) 1996,1997,2000 by Thomas Sailer HB9JNX/AE4WA\n", progname);
+	printf("%s: Version " VERSION "; (C) 1996,1997,2000 by Thomas Sailer HB9JNX/AE4WA\n", progname);
 	hdrvc_args(&argc, argv, "sm0");
 	for (i = 1; i < argc; ) {
 		c = i;
@@ -352,7 +354,7 @@ int main(int argc, char *argv[])
 
 	case SM_MIXER_AD1848:
 	case SM_MIXER_CRYSTAL:
-		printf("Mixer device: %s\n", mixdevice == SM_MIXER_CRYSTAL ? 
+		printf("Mixer device: %s\n", mixdevice == SM_MIXER_CRYSTAL ?
 		       "CS423x" : "AD1848");
 		create_form_ad1848();
 		mdata = get_mixer_reg(0);
