@@ -123,14 +123,13 @@ int update_ip_route(config * config, unsigned long ip, int ipmode,
 	return action;
 }
 
-
 ax25_rt_entry *update_ax25_route(config * config, ax25_address * call,
 				 int ndigi, ax25_address * digi,
 				 time_t timestamp)
 {
 	ax25_rt_entry *bp = ax25_routes;
 	ax25_rt_entry *bp_prev = ax25_routes;
-	unsigned char *iface = config->dev;
+	char *iface = config->dev;
 	int action = 0;
 
 	while (bp) {
@@ -216,7 +215,7 @@ ax25_rt_entry *update_ax25_route(config * config, ax25_address * call,
 	return bp;
 }
 
-ip_rt_entry *remove_ip_route(ip_rt_entry * bp)
+static ip_rt_entry *remove_ip_route(ip_rt_entry * bp)
 {
 	ip_rt_entry *bp2;
 
@@ -235,7 +234,7 @@ ip_rt_entry *remove_ip_route(ip_rt_entry * bp)
 	return bp2;
 }
 
-ax25_rt_entry *remove_ax25_route(ax25_rt_entry * bp)
+static ax25_rt_entry *remove_ax25_route(ax25_rt_entry * bp)
 {
 	ax25_rt_entry *bp2;
 	ip_rt_entry *iprt;
@@ -301,7 +300,6 @@ int del_ax25_route(config * config, ax25_address * call)
 
 	return 1;
 }
-
 
 void expire_ax25_route(time_t when)
 {

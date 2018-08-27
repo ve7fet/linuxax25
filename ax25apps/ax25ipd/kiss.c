@@ -21,23 +21,23 @@
 #define TFEND 0xdc
 #define TFESC 0xdd
 
-unsigned char iframe[MAX_FRAME];
-unsigned char *ifptr;
-int ifcount;
-int iescaped;
+static unsigned char iframe[MAX_FRAME];
+static unsigned char *ifptr;
+static int ifcount;
+static int iescaped;
 
-unsigned char oframe[MAX_FRAME];
-unsigned char *ofptr;
-int ofcount;
+static unsigned char oframe[MAX_FRAME];
+static unsigned char *ofptr;
+static int ofcount;
 
 #define PTABLE_SIZE 10
 
-struct param_table_entry {
+static struct param_table_entry {
 	unsigned char parameter;
 	unsigned char value;
 } param_tbl[PTABLE_SIZE];
 
-int param_tbl_top;
+static int param_tbl_top;
 
 
 /*
@@ -70,7 +70,7 @@ void assemble_kiss(unsigned char *buf, int l)
 		if (c == FEND) {
 			if (ifcount > 0) {
 				/* Make sure that the control byte is zero */
-				if ((*iframe & 0xf) == '\0') {
+				if ((*iframe & 0xf) == '\0') {	/* See Debian bug #606338 */
 					/* Room for CRC in buffer? */
 					if (ifcount < (MAX_FRAME - 2)) {
 						stats.kiss_in++;
@@ -114,7 +114,7 @@ void assemble_kiss(unsigned char *buf, int l)
 /* convert a standard AX25 frame into a kiss frame */
 void send_kiss(unsigned char type, unsigned char *buf, int l)
 {
-#define KISSEMIT(x) if(ofcount<MAX_FRAME){*ofptr=(x);ofptr++;ofcount++;}
+#define KISSEMIT(x) if (ofcount<MAX_FRAME) {*ofptr=(x);ofptr++;ofcount++;}
 
 	int i;
 
@@ -162,7 +162,6 @@ void param_add(int p, int v)
 	      param_tbl[param_tbl_top].parameter,
 	      param_tbl[param_tbl_top].value);
 	param_tbl_top++;
-	return;
 }
 
 /* dump the contents of the parameter table */

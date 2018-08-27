@@ -45,7 +45,7 @@
 #include "../pathnames.h"
 #include "ax25rtd.h"
 
-ax25_address *asc2ax(char *call)
+static ax25_address *asc2ax(char *call)
 {
 	static ax25_address callsign;
 
@@ -64,8 +64,7 @@ static long asc2ip(char *s)
 	return addr.s_addr;
 }
 
-
-char *prepare_cmdline(char *buf)
+static char *prepare_cmdline(char *buf)
 {
 	char *p;
 	for (p = buf; *p; p++) {
@@ -87,7 +86,7 @@ char *prepare_cmdline(char *buf)
 	return buf;
 }
 
-char *get_next_arg(char **p)
+static char *get_next_arg(char **p)
 {
 	char *p2;
 
@@ -133,14 +132,14 @@ static ax25_address *get_mycall(char *port)
 {
 	char *addr;
 
-	if ((addr = ax25_config_get_addr(port)) == NULL)
+	addr = ax25_config_get_addr(port);
+	if (addr == NULL)
 		return NULL;
 
 	return asc2ax(addr);
 }
 
-
-void load_ports(void)
+static void load_ports(void)
 {
 	config *config, *cfg, *ncfg;
 	char buf[1024];
@@ -148,7 +147,8 @@ void load_ports(void)
 	struct ifreq ifr, *ifrp;
 	int k, fd;
 
-	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+	fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (fd < 0) {
 		fprintf(stderr, "Unable to open socket\n");
 		exit(1);
 	}
@@ -218,7 +218,7 @@ void load_ports(void)
 	}
 }
 
-void load_listeners(void)
+static void load_listeners(void)
 {
 	config *config;
 	char buf[1024], device[14], call[10], dcall[10];
@@ -226,7 +226,6 @@ void load_listeners(void)
 	int k;
 	FILE *fp;
 	ax25_address *axcall;
-
 
 	fp = fopen(PROC_AX25_FILE, "r");
 
@@ -509,10 +508,9 @@ void reload_config(void)
 	load_config();
 }
 
-
 /* commands:
    ---------
-   
+
    add ax25 <callsign> <dev> <time> [<digipeater>]	# Add an AX.25 route
    add ip   <ip> <dev> <time> <call> <mode>		# Add an IP route & mode
    del ax25 <callsign> <dev>				# Remove an AX.25 route (from cache)
@@ -522,26 +520,25 @@ void reload_config(void)
    save							# Save cache
    expire <minutes>					# Expire cache entries
    shutdown						# Save cache and exit
-   
+
    There's a difference between 'list heard' and 'heard':
-   
-   The 'list' commands will output the symbolic port names as defined in 
-   /usr/local/etc/axports (i.e. 9k6 for scc3), while 'heard' shows the 
+
+   The 'list' commands will output the symbolic port names as defined in
+   /usr/local/etc/axports (i.e. 9k6 for scc3), while 'heard' shows the
    'real' network device name (i.e. scc3). All commands accept either the
    port or the network device name. The expample
-   
+
    add ax25 dl0tha scc3 0 db0pra
-   
+
    is equivalent to
-   
+
    add ax25 dl0tha 9k6 0 dbpra
-   
+
    Note that in conflicting cases the network device name has precedence
    over the port name.
 */
 
-
-void interpret_command(int fd, unsigned char *buf)
+void interpret_command(int fd, char *buf)
 {
 	char *p, *cmd, *arg, *arg2, *dev, *time;
 	ax25_address digipeater[AX25_MAX_DIGIS];
@@ -562,13 +559,17 @@ void interpret_command(int fd, unsigned char *buf)
 	if (!strcmp(cmd, "add")) {
 		if (arg == NULL)
 			return;
-		if ((arg2 = get_next_arg(&p)) == NULL)
+		arg2 = get_next_arg(&p);
+		if (arg2 == NULL)
 			return;
-		if ((dev = get_next_arg(&p)) == NULL)
+		dev = get_next_arg(&p);
+		if (dev == NULL)
 			return;
-		if ((time = get_next_arg(&p)) == NULL)
+		time = get_next_arg(&p);
+		if (time == NULL)
 			return;
-		if ((config = dev_get_config(dev)) == NULL)
+		config = dev_get_config(dev);
+		if (config == NULL)
 			return;
 
 		sscanf(time, "%lx", &stamp);
@@ -593,10 +594,12 @@ void interpret_command(int fd, unsigned char *buf)
 		} else if (!strcmp(arg, "ip")) {
 			ip = asc2ip(arg2);
 
-			if ((arg2 = get_next_arg(&p)) == NULL)
+			arg2 = get_next_arg(&p);
+			if (arg2 == NULL)
 				return;
 
-			if ((arg = get_next_arg(&p)) == NULL)
+			arg = get_next_arg(&p);
+			if (arg == NULL)
 				return;
 
 			if (*arg == 'x')

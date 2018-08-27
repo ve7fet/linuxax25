@@ -12,9 +12,12 @@
  * Dual port additions by M.Durrant VE3PNX and D.J.Dionne Feb 4, 1995
  */
 
-#include "ax25ipd.h"
 #include <stdio.h>
+#include <string.h>
 #include <syslog.h>
+
+#include "ax25ipd.h"
+
 /* if dual port the upper nibble will have a value of 1 (not 0) */
 #define FROM_PORT2(p)   (((*(p+1))&0x10)!=0)
 #define FOR_PORT2(p)    (addrmatch(p,mycallsign2) || addrmatch(p,myalias2))
@@ -30,8 +33,8 @@
 #define SETREPEATED(p)  (*(p+6))|=0x80
 #define SETLAST(p)      (*(p+6))|=0x01
 
-unsigned char bcbuf[256];	/* Must be larger than bc_text!!! */
-int bclen;			/* The size of bcbuf */
+static unsigned char bcbuf[256];	/* Must be larger than bc_text!!! */
+static int bclen;			/* The size of bcbuf */
 
 /*
  * Initialize the process variables
@@ -238,7 +241,7 @@ void do_beacon(void)
 
 		*p++ = 0xf0;	/* Protocol ID -- 0xf0 is no protocol */
 
-		strcpy(p, bc_text);	/* add the text field */
+		strcpy((char *)p, bc_text);	/* add the text field */
 
 		bclen = 16 + strlen(bc_text);	/* adjust the length nicely */
 	}
@@ -278,7 +281,7 @@ int addrmatch(unsigned char *a, unsigned char *b)
 		return 1;	/* ssid 0 matches all ssid's */
 	if ((*a++ ^ *b) & 0x1e)
 		return 0;	/* ssid */
-/*	if((*a++^*b++)&0x1e)return 0;      ssid (how it was ...) */
+/*	if ((*a++^*b++)&0x1e)return 0;      ssid (how it was ...) */
 	return 1;
 }
 

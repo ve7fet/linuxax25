@@ -62,7 +62,6 @@ static char *decode_type(int);
 #define NDAMA_STRING ""
 #define DAMA_STRING " [DAMA]"
 
-
 /* FlexNet header compression display by Thomas Sailer t.sailer@alumni.ethz.ch */
 
 /* Dump an AX.25 packet header */
@@ -225,8 +224,7 @@ void ax25_dump(unsigned char *data, int length, int hexdump)
 			}
 			lprintf(T_AXHDR, "%s len %d ", dama, length);
 
-			if (timestamp)
-				display_timestamp();
+			display_timestamp();
 
 			if (pid == PID_SEGMENT) {
 				seg = *data++;
@@ -243,36 +241,36 @@ void ax25_dump(unsigned char *data, int length, int hexdump)
 			lprintf(T_AXHDR, "\n");
 
 			switch (pid) {
-				case PID_SEGMENT:
-					data_dump(data, length, hexdump);
-					break;
-				case PID_ARP:
-					arp_dump(data, length);
-					break;
-				case PID_NETROM:
-					netrom_dump(data, length, hexdump, type);
-					break;
-				case PID_IP:
-					ip_dump(data, length, hexdump);
-					break;
-				case PID_X25:
-					rose_dump(data, length, hexdump);
-					break;
-				case PID_TEXNET:
-					data_dump(data, length, hexdump);
-					break;
-				case PID_FLEXNET:
-					flexnet_dump(data, length, hexdump);
-					break;
-				case PID_OPENTRAC:
-					opentrac_dump(data, length, hexdump);
-					break;
-				case PID_NO_L3:
-					data_dump(data, length, hexdump);
-					break;
-				default:
-					data_dump(data, length, hexdump);
-					break;
+			case PID_SEGMENT:
+				data_dump(data, length, hexdump);
+				break;
+			case PID_ARP:
+				arp_dump(data, length);
+				break;
+			case PID_NETROM:
+				netrom_dump(data, length, hexdump, type);
+				break;
+			case PID_IP:
+				ip_dump(data, length, hexdump);
+				break;
+			case PID_X25:
+				rose_dump(data, length, hexdump);
+				break;
+			case PID_TEXNET:
+				data_dump(data, length, hexdump);
+				break;
+			case PID_FLEXNET:
+				flexnet_dump(data, length, hexdump);
+				break;
+			case PID_OPENTRAC:
+				opentrac_dump(data, length, hexdump);
+				break;
+			case PID_NO_L3:
+				data_dump(data, length, hexdump);
+				break;
+			default:
+				data_dump(data, length, hexdump);
+				break;
 			}
 		}
 	} else if (type == FRMR && length >= 3) {
@@ -292,22 +290,19 @@ void ax25_dump(unsigned char *data, int length, int hexdump)
 			lprintf(T_ERROR, " Invalid seq number");
 		lprintf(T_AXHDR, "%s ", dama);
 
-		if (timestamp)
-			display_timestamp();
+		display_timestamp();
 		lprintf(T_AXHDR, "\n");
 	} else if ((type == SABM || type == UA) && length >= 2) {
 		/* FlexNet transmits the QSO "handle" for header
-		 * compression in SABM and UA frame data fields 
+		 * compression in SABM and UA frame data fields
 		 */
 		lprintf(T_AXHDR, " [%d]%s ", (data[0] << 8) | data[1],
 			dama);
-		if (timestamp)
-			display_timestamp();
+		display_timestamp();
 		lprintf(T_AXHDR, "\n");
 	} else {
 		lprintf(T_AXHDR, "%s ", dama);
-		if (timestamp)
-			display_timestamp();
+		display_timestamp();
 		lprintf(T_AXHDR, "\n");
 	}
 }
@@ -367,7 +362,7 @@ char *pax25(char *buf, unsigned char *data)
 	else
 		*s = '\0';
 
-	return (buf);
+	return buf;
 }
 
 static int ftype(unsigned char *data, int *type, int *ns, int *nr, int *pf,

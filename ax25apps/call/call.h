@@ -2,10 +2,10 @@
 #define	FALSE	0
 #endif
 #ifndef TRUE
-#define	TRUE	1 
+#define	TRUE	1
 #endif
 extern int fd;
-extern int interrupted;
+extern volatile int interrupted;
 extern int paclen;
 
 /* In call.c */
@@ -18,4 +18,4 @@ extern void cmd_yapp(char *, int);
 /* In dostime.c */
 extern void date_unix2dos(time_t, unsigned short*, unsigned short*);
 extern int yapp2unix(char *);
-extern void unix2yapp( int, char *);
+extern void unix2yapp(time_t unix_date, char *buffer);

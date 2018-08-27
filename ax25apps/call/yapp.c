@@ -5,12 +5,15 @@
  * This module implements the YAPP file transfer protocol as defined by Jeff
  * Jacobsen WA7MBL in the files yappxfer.doc and yappxfer.pas.
  *
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version
  * 2 of the license, or (at your option) any later version.
  */
+#define _DEFAULT_SOURCE
+#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE_EXTENDED
 
 /*
  * Yapp C and Resume support added by S N Henson.
@@ -37,7 +40,6 @@
 #include <termios.h>
 #include <unistd.h>
 #include <linux/ax25.h>
-#include <sys/stat.h>
 
 #include "call.h"
 
@@ -133,7 +135,8 @@ static void Send_NR(char *reason)
 	char buffer[257];
 	int length;
 
-	if ((length = strlen(reason)) > 255)
+	length = strlen(reason);
+	if (length > 255)
 		length = 255;
 
 	buffer[0] = NAK;
@@ -178,7 +181,8 @@ static void Send_CN(char *reason)
 	char buffer[257];
 	int length;
 
-	if ((length = strlen(reason)) > 255)
+	length = strlen(reason);
+	if (length > 255)
 		length = 255;
 
 	buffer[0] = CAN;
@@ -191,7 +195,7 @@ static void Send_CN(char *reason)
 static void Send_HD(char *filename, long length)
 {
 	char buffer[257];
-	char size_buffer[10];
+	char size_buffer[12];
 	int len_filename;
 	int len_size;
 	int len;
@@ -269,7 +273,7 @@ static int yapp_download_data(int *filefd, unsigned char *buffer)
 
 	if (buffer[0] == CAN || buffer[0] == NAK) {
 		Write_Status("RcdABORT");
-		return (FALSE);
+		return FALSE;
 	}
 
 	switch (state) {
@@ -283,18 +287,19 @@ static int yapp_download_data(int *filefd, unsigned char *buffer)
 
 		Send_CN("Unknown code");
 		Write_Status("SndABORT");
-		return (FALSE);
+		return FALSE;
 
 	case STATE_RH:
 		if (buffer[0] == SOH) {
 			/* Parse header: 3 fields == YAPP C */
-			char *hptr, *hfield[3];
-			if ((length = buffer[1]) == 0)
+			unsigned char *hptr, *hfield[3];
+			length = buffer[1];
+			if (length == 0)
 				length = 256;
 			hptr = buffer + 2;
 			while (length > 0) {
 				int hlen;
-				hlen = strlen(hptr) + 1;
+				hlen = strlen((char *)hptr) + 1;
 				hfield[(int) yappc++] = hptr;
 				hptr += hlen;
 				length -= hlen;
@@ -303,19 +308,19 @@ static int yapp_download_data(int *filefd, unsigned char *buffer)
 			if (yappc < 3) {
 				yappc = 0;
 			} else {
-				file_time = yapp2unix(hfield[2]);
+				file_time = yapp2unix((char *)hfield[2]);
 				yappc = 1;
 			}
 
 			if (*filefd == -1) {
-				if ((*filefd =
-				     open(hfield[0],
-					  O_RDWR | O_APPEND | O_CREAT,
-					  0666)) == -1) {
+				*filefd = open((char *)hfield[0],
+					       O_RDWR | O_APPEND | O_CREAT,
+					       0666);
+				if (*filefd == -1) {
 					printf("\n[Unable to open %s]\n",
 					       hfield[0]);
 					Send_NR("Invalid filename");
-					return (FALSE);
+					return FALSE;
 				}
 			}
 
@@ -345,16 +350,17 @@ static int yapp_download_data(int *filefd, unsigned char *buffer)
 		if (buffer[0] == EOT && buffer[1] == 0x01) {
 			Send_AT();
 			Write_Status("RcvEOT");
-			return (FALSE);
+			return FALSE;
 		}
 
 		Send_CN("Unknown code");
 		Write_Status("SndABORT");
-		return (FALSE);
+		return FALSE;
 
 	case STATE_RD:
 		if (buffer[0] == STX) {
-			if ((length = buffer[1]) == 0)
+			length = buffer[1];
+			if (length == 0)
 				length = 256;
 			total += length;
 			sprintf(Message, "RcvData  %5d bytes received",
@@ -372,7 +378,7 @@ static int yapp_download_data(int *filefd, unsigned char *buffer)
 					Send_CN("Bad Checksum");
 					Write_Status
 					    ("SndABORT: Bad Checksum");
-					return (FALSE);
+					return FALSE;
 				}
 			}
 
@@ -391,10 +397,10 @@ static int yapp_download_data(int *filefd, unsigned char *buffer)
 
 		Send_CN("Unknown code");
 		Write_Status("SndABORT");
-		return (FALSE);
+		return FALSE;
 	}
 
-	return (TRUE);
+	return TRUE;
 }
 
 static void yapp_download(int filefd)
@@ -446,7 +452,8 @@ static void yapp_download(int filefd)
 		}
 
 		if (FD_ISSET(fd, &sock_read)) {
-			if ((length = read(fd, buffer + buflen, 511)) > 0) {
+			length = read(fd, buffer + buflen, 511);
+			if (length > 0) {
 				buflen += length;
 
 				do {
@@ -468,8 +475,8 @@ static void yapp_download(int filefd)
 						}
 						break;
 					default:
-						if ((length =
-						     buffer[1]) == 0)
+						length = buffer[1];
+						if (length == 0)
 							length = 256;
 						if (buffer[0] == STX)
 							length += yappc;
@@ -500,7 +507,7 @@ static int yapp_upload_data(int filefd, char *filename, int filelength,
 
 	if (buffer[0] == CAN || buffer[0] == NAK) {
 		Write_Status("RcvABORT");
-		return (FALSE);
+		return FALSE;
 	}
 
 	switch (state) {
@@ -534,7 +541,7 @@ static int yapp_upload_data(int filefd, char *filename, int filelength,
 
 		Send_CN("Unknown code");
 		Write_Status("SndABORT");
-		return (FALSE);
+		return FALSE;
 
 	case STATE_SH:
 		/* Could get three replies here:
@@ -549,7 +556,7 @@ static int yapp_upload_data(int filefd, char *filename, int filelength,
 			len = buffer[1];
 			if (buffer[len] == 'C')
 				yappc = 1;
-			rpos = atol(buffer + 4);
+			rpos = atol((char *)buffer + 4);
 			lseek(filefd, rpos, SEEK_SET);
 			buffer[0] = ACK;
 			buffer[1] = yappc ? ACK : 0x02;
@@ -579,12 +586,12 @@ static int yapp_upload_data(int filefd, char *filename, int filelength,
 
 		Send_CN("Unknown code");
 		Write_Status("SndABORT");
-		return (FALSE);
+		return FALSE;
 
 	case STATE_SD:
 		Send_CN("Unknown code");
 		Write_Status("SndABORT");
-		return (FALSE);
+		return FALSE;
 
 	case STATE_SE:
 		if (buffer[0] == ACK && buffer[1] == 0x03) {
@@ -596,19 +603,19 @@ static int yapp_upload_data(int filefd, char *filename, int filelength,
 
 		Send_CN("Unknown code");
 		Write_Status("SndABORT");
-		return (FALSE);
+		return FALSE;
 
 	case STATE_ST:
 		if (buffer[0] == ACK && buffer[1] == 0x04) {
-			return (FALSE);
+			return FALSE;
 		}
 
 		Send_CN("Unknown code");
 		Write_Status("SndABORT");
-		return (FALSE);
+		return FALSE;
 	}
 
-	return (TRUE);
+	return TRUE;
 }
 
 static void yapp_upload(int filefd, char *filename, long filelength)
@@ -675,9 +682,8 @@ static void yapp_upload(int filefd, char *filename, long filelength)
 
 		if (FD_ISSET(fd, &sock_write)) {	/* Writable, only STATE_SD */
 			if (outlen > 0) {
-				if ((n =
-				     write(fd, outbuffer + outbufptr,
-					   outlen)) > 0) {
+				n = write(fd, outbuffer + outbufptr, outlen);
+				if (n > 0) {
 					outbufptr += n;
 					outlen -= n;
 					total += n;
@@ -712,7 +718,8 @@ static void yapp_upload(int filefd, char *filename, long filelength)
 		}
 
 		if (FD_ISSET(fd, &sock_read)) {
-			if ((length = read(fd, buffer + buflen, 511)) > 0) {
+			length = read(fd, buffer + buflen, 511);
+			if (length > 0) {
 				buflen += length;
 
 				do {
@@ -734,8 +741,8 @@ static void yapp_upload(int filefd, char *filename, long filelength)
 						}
 						break;
 					default:
-						if ((length =
-						     buffer[1]) == 0)
+						length = buffer[1];
+						if (length == 0)
 							length = 256;
 						if (buflen >= (length + 2)) {
 							if (!yapp_upload_data(filefd, filename, filelength, buffer))
@@ -769,7 +776,8 @@ void cmd_yapp(char *buf, int bytes)
 	switch (buf[0]) {
 	case 'U':
 	case 'u':
-		if ((t = strchr(buf, '\n')) != NULL)
+		t = strchr(buf, '\n');
+		if (t != NULL)
 			*t = '\0';
 		t = buf + 2;
 		while (*t != '\0' && isspace(*t))
@@ -780,7 +788,8 @@ void cmd_yapp(char *buf, int bytes)
 			Send_NR("No filename");
 			return;
 		}
-		if ((filefd = open(t, O_RDONLY)) == -1) {
+		filefd = open(t, O_RDONLY);
+		if (filefd == -1) {
 			printf("\n[Unable to open upload file]\n");
 			Send_NR("Invalid filename");
 			return;
@@ -802,19 +811,20 @@ void cmd_yapp(char *buf, int bytes)
 
 	case 'D':
 	case 'd':
-		if ((t = strchr(buf, '\n')) != NULL)
+		t = strchr(buf, '\n');
+		if (t != NULL)
 			*t = '\0';
 		t = buf + 2;
 		while (*t != '\0' && isspace(*t))
 			t++;
 		if (*t == '\0')
 			filefd = -1;
-		else if ((filefd =
-			  open(t, O_RDWR | O_APPEND | O_CREAT,
-			       0666)) == -1) {
-			printf("\n[Unable to open %s]\n", buf + 2);
-			Send_NR("Invalid filename");
-			return;
+		else {filefd = open(t, O_RDWR | O_APPEND | O_CREAT, 0666);
+			if (filefd == -1) {
+				printf("\n[Unable to open %s]\n", buf + 2);
+				Send_NR("Invalid filename");
+				return;
+			}
 		}
 		printf("\n[Downloading using YAPP]\n");
 		yapp_download(filefd);

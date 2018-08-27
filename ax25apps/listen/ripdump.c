@@ -38,18 +38,18 @@
 
 #include "listen.h"
 
-#define  RIP_VERSION_2           2
-#define  RIP_VERSION_98		 98
+#define  RIP_VERSION_2		 2
+#define  RIP_VERSION_98		98
 
-#define  RIP_HEADER              4
-#define  RIP_ENTRY               20
+#define  RIP_HEADER		 4
+#define  RIP_ENTRY		20
 
-#define  RIP_AF_INET             2	/* IP Family */
+#define  RIP_AF_INET		 2	/* IP Family */
 
-#define  RIPCMD_REQUEST          1	/* want info */
-#define  RIPCMD_RESPONSE         2	/* responding to request */
+#define  RIPCMD_REQUEST		 1	/* want info */
+#define  RIPCMD_RESPONSE	 2	/* responding to request */
 
-#define  RIP98_ENTRY             6
+#define  RIP98_ENTRY		 6
 
 static struct mask_struct {
 	unsigned int mask;
@@ -88,7 +88,7 @@ static struct mask_struct {
 	0xE0000000, 3}, {
 	0xC0000000, 2}, {
 	0x80000000, 1}, {
-0x00000000, 0},};
+	0x00000000, 0},};
 
 static unsigned int mask2width(unsigned int mask)
 {

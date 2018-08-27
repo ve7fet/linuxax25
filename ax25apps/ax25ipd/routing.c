@@ -6,14 +6,25 @@
  *
  */
 
-#include <stdio.h>
-#include "ax25ipd.h"
-#include <sys/types.h>
-#include <netinet/in.h>
 #include <memory.h>
+#include <stdio.h>
 #include <syslog.h>
 #include <string.h>
 #include <pthread.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <netdb.h>
+#include <sys/socket.h>
+
+#include "ax25ipd.h"
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
 
 /* The routing table structure is not visible outside this module. */
 
@@ -32,8 +43,8 @@ struct route_table_entry {
 	struct route_table_entry *next;
 };
 
-struct route_table_entry *route_tbl;
-struct route_table_entry *default_route;
+static struct route_table_entry *route_tbl;
+static struct route_table_entry *default_route;
 
 /* The Broadcast address structure is not visible outside this module either */
 
@@ -42,7 +53,7 @@ struct bcast_table_entry {
 	struct bcast_table_entry *next;
 };
 
-struct bcast_table_entry *bcast_tbl;
+static struct bcast_table_entry *bcast_tbl;
 
 struct callsign_lookup_entry {
 	unsigned char callsign[7];
@@ -379,7 +390,7 @@ int is_call_bcast(unsigned char *call)
 	int i;
 
 	if (call == NULL)
-		return (FALSE);
+		return FALSE;
 
 	for (i = 0; i < 6; i++)
 		bccall[i] = call[i] & 0xfe;
@@ -393,11 +404,11 @@ int is_call_bcast(unsigned char *call)
 		if (addrmatch(bccall, bp->callsign)) {
 			LOGL4("found broadcast %s\n",
 			      call_to_a(bp->callsign));
-			return (TRUE);
+			return TRUE;
 		}
 		bp = bp->next;
 	}
-	return (FALSE);
+	return FALSE;
 }
 
 /* Traverse the routing table, transmitting the packet to each bcast route */
@@ -409,7 +420,6 @@ void send_broadcast(unsigned char *buf, int l)
 	while (rp) {
 		if (rp->flags & AXRT_BCAST) {
 			unsigned char ipstorage[IPSTORAGESIZE];
-
 			send_ip(buf, l, retrieveip(rp->ip_addr, ipstorage));
 		}
 		rp = rp->next;

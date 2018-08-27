@@ -7,18 +7,23 @@
 /* 25.07.1995 some bug-fixes Alexander Tietzel (DG6XA) */
 /* 14.08.1995 merged with mainstream call.c code Jonathan Naylor (G4KLX) */
 /* 01.03.1996 support for different screen sizes, fixed 7plus download (DL1BKE)
-              */
+	      */
 /* 19.08.1996 fixed enter key handling (G4KLX) */
 /* 27.08.1996 added Rose support (G4KLX) */
 /* 30.11.1996 added the called user in the call windows and set talk mode as
-              default (IW0FBB) */
+	      default (IW0FBB) */
 /* 07.12.1996 updated status line to cope with callsign, bits and status
-              message (VK2KTJ) */
+	      message (VK2KTJ) */
 /* 02.02.1997 removed NETROM_PACLEN setting to match Jonathon removing it
-              from kernel (VK2KTJ) */
+	      from kernel (VK2KTJ) */
+
+#define _DEFAULT_SOURCE
+#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE_EXTENDED
 
 #include <sys/types.h>
 #include <utime.h>
+#include <limits.h>
 #include <time.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -35,7 +40,12 @@
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
-#include <curses.h>
+#include <wchar.h>
+#include <wctype.h>
+#include <ncursesw/ncurses.h>
+#include <locale.h>
+#include <iconv.h>
+#include <sys/ioctl.h>
 
 #include <netax25/ax25.h>
 #include <netrom/netrom.h>
@@ -72,21 +82,24 @@ static int ax25mode = -1;
 
 static int debug = FALSE;
 static int af_mode = AF_AX25;
-static int window = 0;
-static int be_silent = 0;
-static char *port = NULL;
-static char *mycall = NULL;
+static int window;
+static int be_silent;
+static char *port;
+static char *mycall;
 
 static int stdin_is_tty = 1;
+static iconv_t ibm850toutf8, wcharttoibm850, wcharttoutf8, utf8towchart;
 
-int interrupted = FALSE;
-int paclen = 0;
+volatile int interrupted = FALSE;
+static int sigwinchsignal;
+int paclen;
 int fd;
+static int curson = 1;
 
-int wait_for_remote_disconnect = FALSE;
-static struct timeval inactivity_timeout;
-int inactivity_timeout_is_set = FALSE;
-int remote_commands_enabled = TRUE;
+static int wait_for_remote_disconnect = FALSE;
+static struct timespec inactivity_timeout;
+static int inactivity_timeout_is_set = FALSE;
+static int remote_commands_enabled = TRUE;
 
 #define GP_FILENAME_SIZE	255
 typedef struct {
@@ -103,37 +116,342 @@ typedef struct {
 	WINDOW *ptr;
 	int max_y;
 	int max_x;
-	char string[MAX_BUFLEN];
+	wchar_t string[MAX_BUFLEN];
 	unsigned long bytes;
 	int curs_pos;
 } t_win;
 
 #define TALKMODE	001	/* two windows (outgoing and incoming) with menu */
 #define SLAVEMODE	002	/* Menu mode */
-#define RAWMODE         004	/* mode used by earlier versions */
+#define RAWMODE		004	/* mode used by earlier versions */
 
-void usage(void)
+#define ORIGINALENCODING	0
+#define UTF8ENCODING		1
+
+#define SCROLLBACKSIZE 5000
+
+typedef struct {
+	char *str;
+	int len;
+}scrollbackstruct;
+
+static scrollbackstruct scrollback[SCROLLBACKSIZE];
+static int topscroll, lastscroll, scrolledup, eatchar;
+static char inbuf[MAX_BUFLEN];
+static int inbuflen, inbufwid;
+static char incharbuf[6];
+static int incharbuflen;
+
+static void addscrollline(char *s, int len)
 {
-	fprintf(stderr, "usage: call [-b l|e] [-d] [-h] [-m s|e] [-p paclen] [-r] [-R]\n");
-	fprintf(stderr, "            [-s mycall] [-t] [-T timeout] [-v] [-w window] [-W]\n");
+	scrollback[lastscroll].str = malloc(len);
+	memcpy(scrollback[lastscroll].str, s, len);
+	scrollback[lastscroll].len = len;
+	if (++lastscroll >= SCROLLBACKSIZE)
+		lastscroll = 0;
+	if (lastscroll == topscroll) {
+		free(scrollback[topscroll].str);
+		if (++topscroll >= SCROLLBACKSIZE)
+			topscroll = 0;
+	}
+}
+
+/*
+ * Notes: Japanese, Chinese and Korean characters mostly take up two  characters
+ * in width.  These characters return 2 via wcwidth to let the code know that
+ * they require two spaces.  Mono-space fonts/ncurses seems to work correctly
+ * with East Asian characters.
+ *
+ * There are also some characters that return a wcwidth of 0. I'm not sure
+ * about all of them, but some of the 0 width characters add a mark above or
+ * below a character.  In order for these marks to appear correctly, the
+ * previous character and the overstrike must be drawn together.  using wmove
+ * and drawing the accent doesn't work.
+ *
+ * There are some other characters that have functions, and these are not
+ * supported using a print to the screen. South Asian fonts are complicated.  I
+ * don't believe south asian fonts work correctly from the Linux command line
+ * (as of late 2009). They print but don't combine.  The result is distorted.
+ *
+ * Many characters, as of 12/09, are too wide for a single space in the font,
+ * although they return a wcwidth of 1.  I suspect this is due to these
+ * characters not being part of the mono-spaced font and are instead pulled
+ * from an alternate font.  These characters also glitch in xterm, vim and
+ * other ncurses software. I suspect this is actually a font bug, and any
+ * character that returns wcwidth=1 in a monospaced font should be monospaced.
+ */
+
+static int widthchar(char *s, size_t bytes, int xpos)
+{
+	wchar_t c;
+	int width;
+	char *outbuf=(char *) &c;
+	size_t outsize = sizeof(wchar_t);
+
+	/*
+	 * Note:  Actually need to check if bad UTF8 characters show as ?
+	 */
+	if (iconv(utf8towchart, &s, &bytes, &outbuf, &outsize) == (size_t) -1)
+		return 0;
+	if (c == 9) {
+		return 8 - (xpos & 7);
+	}
+	width = wcwidth(c);
+	if (width < 0)
+		return 0;
+	return width;
+}
+
+static int completecharlen(char *s)
+{
+	unsigned ut = (unsigned char)s[0];
+	int clen;
+	if (ut <= 0x80)
+		clen = 1;
+	else if ((ut >= 192) && (ut < 192+32))
+		clen = 2;
+	else if ((ut >= 224) && (ut < 224+16))
+		clen = 3;
+	else if ((ut >= 240) && (ut < 240+8))
+		clen = 4;
+	else if ((ut >= 248) && (ut < 248+4))
+		clen = 5;
+	else if ((ut >= 252) && (ut < 252+2))
+		clen = 6;
+	else
+		clen = 1;		/* bad  */
+	return clen;
+}
+
+/*
+ * Must check for COLS while redrawing from history.  Or otherwise the text
+ * wraps around and does strange things.
+ */
+static int waddnstrcolcheck(WINDOW *win, char *s, int len, int twidth)
+{
+	int n;
+	for (twidth = 0,n=0;n<len;) {
+		int cwidth = completecharlen(&s[n]), width;
+		if (n + cwidth > len)	/* Error condition  */
+			return twidth;
+		width = widthchar(&s[n], cwidth, twidth);
+		if (twidth+width > COLS)
+			return twidth;
+		waddnstr(win, &s[n], cwidth);
+		n += cwidth;
+		twidth += width;
+	}
+	return twidth;
+}
+
+/*
+ * Update a line on the screen from the backscroll buffer.
+ */
+static void updateline(int screeny, int yfrom, t_win *win_in, int mode, t_win *win_out)
+{
+	wmove(win_in->ptr, screeny, 0);
+	if (yfrom == lastscroll) {
+		int twidth = 0;
+		if (inbuflen > 0)
+			twidth = waddnstrcolcheck(win_in->ptr, inbuf, inbuflen, 0);
+		if (mode == SLAVEMODE) {
+			char obuf[MAX_BUFLEN];
+			char *inbuf = (char *)win_out->string, *outbuf = obuf;
+			size_t insize = win_out->bytes * sizeof(wchar_t), outsize = MAX_BUFLEN;
+			iconv(wcharttoutf8, &inbuf, &insize, &outbuf, &outsize);
+			waddnstrcolcheck(win_in->ptr, obuf, MAX_BUFLEN - outsize, twidth);
+			win_out->curs_pos = win_out->bytes;
+		}
+	}
+	else {
+		waddnstrcolcheck(win_in->ptr, scrollback[yfrom].str, scrollback[yfrom].len, 0);
+	}
+}
+
+/*
+ * Cursor in SLAVE mode while scrolling looks broken.
+ * Cursor in TALK mode is always good, because it's on the bottom window
+ */
+static void checkcursor(int mode)
+{
+	int newcursor;
+	if ((mode == SLAVEMODE) && scrolledup)
+		newcursor = 0;
+	else newcursor = 1;
+	if (curson != newcursor) {
+		curs_set(newcursor);
+		curson = newcursor;
+	}
+}
+
+/* For CJK, it's important to keep the cursor always on the input
+ * window.  Otherwise the display is confused */
+static void restorecursor(int mode, t_win *win_out)
+{
+	checkcursor(mode);
+	if (mode != RAWMODE) {
+		int x,y;
+		getyx(win_out->ptr, y, x);	/* Must restore input cursor */
+		wmove(win_out->ptr,y, x);	/* location.		     */
+		wrefresh(win_out->ptr);
+	}
+}
+
+static void redrawscreen(t_win *win_in, int mode, t_win *win_out)
+{
+	int y, storedlines;
+	if (lastscroll >= topscroll)
+		storedlines = lastscroll - topscroll;
+	else storedlines = lastscroll + SCROLLBACKSIZE - topscroll;
+	/*
+	 * Note it's stored lines + 1 extra line for text input.
+	 */
+	for (y=0;(y<=win_in->max_y) && (y <= storedlines);y++) {
+		int linefrom;
+		if (storedlines <= win_in->max_y) {
+			/*
+			 * This is a little confusing.
+			 * The screen scrolls top down at start
+			 */
+			linefrom = topscroll + y;
+		}
+		else linefrom = lastscroll -scrolledup - (win_in->max_y) + y;
+		while (linefrom < 0)
+			linefrom += SCROLLBACKSIZE;
+		while (linefrom >= SCROLLBACKSIZE)
+			linefrom -= SCROLLBACKSIZE;
+		updateline(y,linefrom , win_in, mode, win_out);
+	}
+	checkcursor(mode);
+}
+
+static void statline(int mode, char *s)
+{
+	static int oldlen = 0;
+	int l, cnt;
+
+	if (*s == '\0') {
+		if (mode == RAWMODE)
+			return;
+		if (oldlen > 0) {
+			move(0, STATW_STAT);
+			attron(A_REVERSE);
+			for (cnt = STATW_STAT; cnt < COLS; cnt++)
+				addch(' ');
+			oldlen = 0;
+			attroff(A_REVERSE);
+			refresh();
+		}
+		return;
+	}
+	if (mode == RAWMODE) {
+		printf(">>%s\n", s);
+		fflush(stdout);
+		return;
+	}
+	if (COLS <= STATW_STAT)
+		return;
+	l = strlen(s);
+	if (l > COLS - STATW_STAT)
+		l = COLS-STATW_STAT;
+
+	move(0, STATW_STAT);
+
+	attron(A_REVERSE);
+	addnstr(s, l);
+	for (cnt = STATW_STAT+l;cnt < COLS;cnt++)
+		addch(' ');
+	attroff(A_REVERSE);
+	oldlen = l;
+	refresh();
+}
+
+static void scrolltext(t_win *win_in, int lines, int mode, t_win *win_out)
+{
+	int topline, storedlines;
+	int y;
+	int wasscrolledup;
+	if (scrolledup + lines < 0) {
+		lines = -scrolledup;
+	}
+	/*
+	 * storedlines = Lines stored in buffer.
+	 */
+	if (lastscroll >= topscroll)
+		storedlines = lastscroll - topscroll;
+	else storedlines = lastscroll + SCROLLBACKSIZE - topscroll;
+	/*
+	 * The max scrolling  we can do is the # of lines stored - the
+	 * screen size.
+	 */
+	topline = storedlines - win_in->max_y;
+	if (topline < 0)
+		topline = 0;
+	if (scrolledup + lines > topline) {
+		lines = topline - scrolledup;
+	}
+	if (!lines)
+		return;
+	wasscrolledup = scrolledup;
+	scrolledup += lines;
+	wscrl(win_in->ptr, -lines);
+	scrollok(win_in->ptr, FALSE);
+	if (lines > 0) {
+		for (y=0;y<lines;y++) {
+			int linefrom = lastscroll -scrolledup - (win_in->max_y) + y;
+			while (linefrom < 0)
+				linefrom += SCROLLBACKSIZE;
+			while (linefrom >= SCROLLBACKSIZE)
+				linefrom -= SCROLLBACKSIZE;
+			updateline(y,linefrom , win_in, mode, win_out);
+		}
+	}
+	else  {
+		for (y=-lines-1;y>=0;y--) {
+			int linefrom = lastscroll -scrolledup -  y;
+			while (linefrom < 0)
+				linefrom += SCROLLBACKSIZE;
+			while (linefrom >= SCROLLBACKSIZE)
+				linefrom -= SCROLLBACKSIZE;
+			updateline(win_in->max_y  - y,linefrom , win_in, mode, win_out);
+		}
+
+	}
+	scrollok(win_in->ptr, TRUE);
+	checkcursor(mode);
+	wrefresh(win_in->ptr);
+	if (wasscrolledup && !scrolledup) {
+		statline(mode, "");
+	}
+	else if (!wasscrolledup && scrolledup) {
+		statline(mode, "Viewing Scrollback");
+	}
+}
+
+static void usage(void)
+{
+	fprintf(stderr, "usage: call [-8] [-b l|e] [-d] [-h] [-i] [-m s|e] [-p paclen] [-r] [-R]\n");
+	fprintf(stderr, "            [-s mycall] [-S] [-t] [-T timeout] [-v] [-w window] [-W]\n");
 	fprintf(stderr, "            port callsign [[via] digipeaters...]\n");
 	exit(1);
 }
 
-WINDOW *win;
-const char *key_words[] = { "//",
+static WINDOW *win;
+static const char *key_words[] = { "//",
 	"#BIN#",
 	" go_7+. ",
 	" stop_7+. ",
 	"\0"
 };
-const char *rkey_words[] = {
-	// actually restricted keywords are very restrictive
+
+static const char *rkey_words[] = {
+	/*
+	 * actually restricted keywords are very restrictive
+	 */
 	"\0"
 };
-#define MAXCMDLEN 10
 
-void convert_cr_lf(char *buf, int len)
+static void convert_cr_lf(char *buf, int len)
 {
 	while (len--) {
 		if (*buf == '\r')
@@ -142,7 +460,7 @@ void convert_cr_lf(char *buf, int len)
 	}
 }
 
-void convert_lf_cr(char *buf, int len)
+static void convert_lf_cr(char *buf, int len)
 {
 	while (len--) {
 		if (*buf == '\n')
@@ -151,7 +469,7 @@ void convert_lf_cr(char *buf, int len)
 	}
 }
 
-void convert_upper_lower(char *buf, int len)
+static void convert_upper_lower(char *buf, int len)
 {
 	while (len--) {
 		*buf = tolower(*buf);
@@ -159,6 +477,85 @@ void convert_upper_lower(char *buf, int len)
 	}
 }
 
+/* Return the with of this character in character blocks.  (Normal = 1, CJK=2)
+ * Also for control chracters, return the width of the replacement string.
+ * */
+static int wcwidthcontrol(wchar_t c)
+{
+	int width;
+	cchar_t cc = {0};
+	wchar_t *str;
+	cc.chars[0] = c;
+	str = wunctrl(&cc);
+	if (!str)
+		return 0;
+	width = wcswidth(str, wcslen(str));
+	return width;
+}
+
+/* Return a string to print for a wchar_t.  Expand control characters.
+ * Strings returned by wunctrl don't like to be freed.  It seems. */
+static wchar_t *wunctrlwchar(wchar_t c)
+{
+	cchar_t cc = {0};
+	wchar_t *str;
+	cc.chars[0] = c;
+	str = wunctrl(&cc);
+	return str;
+}
+
+/*
+ * For some reason wins_nwstr fails on fedora 12 on some characters but
+ * waddnstr works.  Draw the entire input buffer when adding text.
+ * The fonts that do overstrike fail when written one char at a time.
+ */
+static void drawinbuf(WINDOW *w, wchar_t *string, int bytes, int cur_pos)
+{
+	int n, x, cursorx, xpos, ypos, width;
+
+	/*
+	 * Assume cursor to be at position of current char to draw.
+	 */
+	getyx(w, ypos, xpos);
+	x = xpos;
+
+	cursorx = xpos;
+	// cur_pos-1 = the chracter that was just added.
+	for (n=cur_pos-2;n>=0;n--) {
+		/*
+		 * Move x position to start of string or 0
+		 */
+		width = wcwidthcontrol(string[n]);
+		if (x >= width)
+			x -= width;
+		else x = 0;
+	}
+	wmove(w, ypos, x);
+	for (n=0;n<bytes;n++) {
+		char obuf[MAX_BUFLEN];
+		char *inbuf, *outbuf = obuf;
+		size_t insize, outsize = MAX_BUFLEN;
+		int len, width;
+		wchar_t *str;
+
+		if (n == cur_pos) {
+			cursorx = x;
+		}
+		str = wunctrlwchar(string[n]);
+		if (!str)
+			continue;
+		inbuf = (char *) str;
+		len = wcslen(str);
+		insize = len * sizeof(wchar_t);
+		width = wcswidth(str, len);
+		iconv(wcharttoutf8, &inbuf, &insize, &outbuf, &outsize);
+		waddnstr(w, obuf, MAX_BUFLEN-outsize);
+		x += width;
+	}
+	if (cur_pos < bytes) {
+		wmove(w,ypos, cursorx);
+	}
+}
 
 /* Convert linear UNIX date to a MS-DOS time/date pair. */
 
@@ -168,7 +565,7 @@ static char * unix_to_sfbin_date_string(time_t gmt)
   static char buf[9];
   unsigned short s_time, s_date;
 
-  date_unix2dos(((gmt == -1) ? time(0) : gmt), &s_time, &s_date);
+  date_unix2dos(((gmt == -1) ? time(NULL) : gmt), &s_time, &s_date);
   sprintf(buf, "%X", ((s_date << 16) + s_time));
   return buf;
 }
@@ -182,7 +579,8 @@ static int nr_convert_call(char *address, struct full_sockaddr_ax25 *addr)
 	for (call = address; *call != '\0'; call++)
 		*call = toupper(*call);
 
-	if ((fp = fopen(PROC_NR_NODES_FILE, "r")) == NULL) {
+	fp = fopen(PROC_NR_NODES_FILE, "r");
+	if (fp == NULL) {
 		fprintf(stderr,
 			"call: NET/ROM not included in the kernel\n");
 		return -1;
@@ -225,11 +623,12 @@ static int connect_to(char *address[])
 		if (address[0] == NULL || address[1] == NULL) {
 			fprintf(stderr,
 				"call: too few arguments for Rose\n");
-			return (-1);
+			return -1;
 		}
-		if ((fd = socket(AF_ROSE, SOCK_SEQPACKET, 0)) < 0) {
+		fd = socket(AF_ROSE, SOCK_SEQPACKET, 0);
+		if (fd < 0) {
 			perror("socket");
-			return (-1);
+			return -1;
 		}
 		break;
 
@@ -237,11 +636,12 @@ static int connect_to(char *address[])
 		if (address[0] == NULL) {
 			fprintf(stderr,
 				"call: too few arguments for NET/ROM\n");
-			return (-1);
+			return -1;
 		}
-		if ((fd = socket(AF_NETROM, SOCK_SEQPACKET, 0)) < 0) {
+		fd = socket(AF_NETROM, SOCK_SEQPACKET, 0);
+		if (fd < 0) {
 			perror("socket");
-			return (-1);
+			return -1;
 		}
 		ax25_aton(nr_config_get_addr(port), &sockaddr.ax25);
 		sockaddr.ax25.fsa_ax25.sax25_family = AF_NETROM;
@@ -252,11 +652,12 @@ static int connect_to(char *address[])
 		if (address[0] == NULL) {
 			fprintf(stderr,
 				"call: too few arguments for AX.25\n");
-			return (-1);
+			return -1;
 		}
-		if ((fd = socket(AF_AX25, SOCK_SEQPACKET, 0)) < 0) {
+		fd = socket(AF_AX25, SOCK_SEQPACKET, 0);
+		if (fd < 0) {
 			perror("socket");
-			return (-1);
+			return -1;
 		}
 		ax25_aton(ax25_config_get_addr(port), &sockaddr.ax25);
 		if (sockaddr.ax25.fsa_ax25.sax25_ndigis == 0) {
@@ -276,7 +677,7 @@ static int connect_to(char *address[])
 			perror("AX25_WINDOW");
 			close(fd);
 			fd = -1;
-			return (-1);
+			return -1;
 		}
 		if (setsockopt
 		    (fd, SOL_AX25, AX25_PACLEN, &paclen,
@@ -284,7 +685,7 @@ static int connect_to(char *address[])
 			perror("AX25_PACLEN");
 			close(fd);
 			fd = -1;
-			return (-1);
+			return -1;
 		}
 		if (backoff != -1) {
 			if (setsockopt
@@ -293,7 +694,7 @@ static int connect_to(char *address[])
 				perror("AX25_BACKOFF");
 				close(fd);
 				fd = -1;
-				return (-1);
+				return -1;
 			}
 		}
 		if (ax25mode != -1) {
@@ -303,7 +704,7 @@ static int connect_to(char *address[])
 				perror("AX25_EXTSEQ");
 				close(fd);
 				fd = -1;
-				return (-1);
+				return -1;
 			}
 		}
 		break;
@@ -315,14 +716,14 @@ static int connect_to(char *address[])
 		perror("SO_DEBUG");
 		close(fd);
 		fd = -1;
-		return (-1);
+		return -1;
 	}
 	if (af_mode != AF_ROSE) {	/* Let Rose autobind */
 		if (bind(fd, (struct sockaddr *) &sockaddr, addrlen) == -1) {
 			perror("bind");
 			close(fd);
 			fd = -1;
-			return (-1);
+			return -1;
 		}
 	}
 	switch (af_mode) {
@@ -334,14 +735,14 @@ static int connect_to(char *address[])
 		     sockaddr.rose.srose_call.ax25_call) == -1) {
 			close(fd);
 			fd = -1;
-			return (-1);
+			return -1;
 		}
 		if (rose_aton
 		    (address[1],
 		     sockaddr.rose.srose_addr.rose_addr) == -1) {
 			close(fd);
 			fd = -1;
-			return (-1);
+			return -1;
 		}
 		if (address[2] != NULL) {
 			digi = address[2];
@@ -351,7 +752,7 @@ static int connect_to(char *address[])
 						"call: callsign must follow 'via'\n");
 					close(fd);
 					fd = -1;
-					return (-1);
+					return -1;
 				}
 				digi = address[3];
 			}
@@ -360,7 +761,7 @@ static int connect_to(char *address[])
 			     sockaddr.rose.srose_digi.ax25_call) == -1) {
 				close(fd);
 				fd = -1;
-				return (-1);
+				return -1;
 			}
 			sockaddr.rose.srose_ndigis = 1;
 		}
@@ -372,7 +773,7 @@ static int connect_to(char *address[])
 		if (nr_convert_call(address[0], &sockaddr.ax25) == -1) {
 			close(fd);
 			fd = -1;
-			return (-1);
+			return -1;
 		}
 		sockaddr.rose.srose_family = AF_NETROM;
 		addrlen = sizeof(struct sockaddr_ax25);
@@ -383,7 +784,7 @@ static int connect_to(char *address[])
 		    ((const char **) address, &sockaddr.ax25) == -1) {
 			close(fd);
 			fd = -1;
-			return (-1);
+			return -1;
 		}
 		sockaddr.rose.srose_family = AF_AX25;
 		addrlen = sizeof(struct full_sockaddr_ax25);
@@ -401,65 +802,28 @@ static int connect_to(char *address[])
 		perror("connect");
 		close(fd);
 		fd = -1;
-		return (-1);
+		return -1;
 	}
 	if (!be_silent) {
 		printf("*** Connected to %s\n", address[0]);
 		fflush(stdout);
 	}
 
-	return (fd);
+	return fd;
 }
 
-void cmd_intr(int sig)
+static void cmd_sigwinch(int sig)
 {
-	signal(SIGQUIT, cmd_intr);
+	signal(SIGWINCH, cmd_sigwinch);
+	sigwinchsignal = TRUE;
+}
+
+static void cmd_intr(int sig)
+{
 	interrupted = TRUE;
 }
 
-void statline(int mode, char *s)
-{
-	static int oldlen = 0;
-	int l, cnt;
-
-	if (*s == '\0') {
-		if (mode == RAWMODE)
-			return;
-		if (oldlen > 0) {
-			move(0, STATW_STAT);
-			attron(A_REVERSE);
-			for (cnt = 0; cnt < oldlen; cnt++)
-				addch(' ');
-			oldlen = 0;
-			attroff(A_REVERSE);
-			refresh();
-		}
-		return;
-	}
-	if (mode == RAWMODE) {
-		printf(">>%s\n", s);
-		fflush(stdout);
-		return;
-	}
-	if (strlen(s) > 80 - STATW_STAT)
-		s[80 - STATW_STAT] = '\0';
-
-	move(0, STATW_STAT);
-
-	attron(A_REVERSE);
-	addstr(s);
-
-	if (oldlen > strlen(s)) {
-		l = oldlen - strlen(s);
-		for (cnt = 0; cnt < l; cnt++)
-			addch(' ');
-	}
-	attroff(A_REVERSE);
-	oldlen = strlen(s);
-	refresh();
-}
-
-WINDOW *opnstatw(int mode, wint * wintab, char *s, int lines, int cols)
+static WINDOW *opnstatw(int mode, wint * wintab, char *s, int lines, int cols)
 {
 	WINDOW *win;
 
@@ -477,7 +841,7 @@ WINDOW *opnstatw(int mode, wint * wintab, char *s, int lines, int cols)
 	return win;
 }
 
-void wrdstatw(WINDOW * win, char s[])
+static void wrdstatw(WINDOW * win, char s[])
 {
 	int y;
 
@@ -492,7 +856,7 @@ void wrdstatw(WINDOW * win, char s[])
 	wrefresh(win);
 }
 
-void dupdstatw(WINDOW * win, char *s, int add)
+static void dupdstatw(WINDOW * win, char *s, int add)
 {
 	static char infostr[80];
 	static int y, x;
@@ -540,7 +904,7 @@ void dupdstatw(WINDOW * win, char *s, int add)
 	oldlen = strlen(s);
 }
 
-int start_ab_download(int mode, WINDOW ** swin, wint * wintab,
+static int start_ab_download(int mode, WINDOW ** swin, wint * wintab,
 		      char parms[], int parmsbytes, char buf[], int bytes,
 		      t_gp * gp, char *address[])
 {
@@ -550,7 +914,7 @@ int start_ab_download(int mode, WINDOW ** swin, wint * wintab,
 	int cnt;
 	int date = 0;
 	struct tm ft;
-	char s[80];
+	char s[GP_FILENAME_SIZE + 18];
 	int time_set = 0;
 
 	for (crcst = 2; crcst < parmsbytes - 1 &&
@@ -589,9 +953,9 @@ int start_ab_download(int mode, WINDOW ** swin, wint * wintab,
 		for (namest = datest; namest < parmsbytes - 1 &&
 			(parms[namest - 1] != '#'); namest++);
 	}
-	
+
 	if (!time_set) {
-		time_t t = time(0);
+		time_t t = time(NULL);
 		memcpy(&ft, localtime(&t), sizeof(struct tm));
 		gp->ut.actime = mktime(localtime(&t));
 		gp->ut.modtime = gp->ut.actime;
@@ -600,7 +964,6 @@ int start_ab_download(int mode, WINDOW ** swin, wint * wintab,
 	gp->dwn_cnt = (unsigned long ) atol(parms);
 	strncpy(gp->file_name, STD_DWN_DIR, GP_FILENAME_SIZE-1);
 	gp->file_name[GP_FILENAME_SIZE-1] = 0;
-
 
 	if (crcst == parmsbytes - 1 || datest - crcst > 7
 	    || namest - datest > 10) {
@@ -646,7 +1009,7 @@ int start_ab_download(int mode, WINDOW ** swin, wint * wintab,
 		sprintf(s, "size of file    : %lu",
 			(unsigned long) gp->dwn_cnt);
 		wrdstatw(*swin, s);
-		sprintf(s, "filename        : %s", gp->file_name);
+		snprintf(s, sizeof(s), "filename        : %s", gp->file_name);
 		wrdstatw(*swin, s);
 		sprintf(s, "last mod. date  : %02i.%02i.%04i", ft.tm_mday,
 			ft.tm_mon+1 , ft.tm_year + 1900);
@@ -658,9 +1021,9 @@ int start_ab_download(int mode, WINDOW ** swin, wint * wintab,
 
 	dupdstatw(*swin, "Bytes to receive: ", TRUE);
 
-	if ((gp->dwn_file =
-	     open(gp->file_name, O_RDWR | O_CREAT, 0666)) == -1) {
-		sprintf(s, "Unable to open %s", gp->file_name);
+	gp->dwn_file = open(gp->file_name, O_RDWR | O_CREAT, 0666);
+	if (gp->dwn_file == -1) {
+		snprintf(s, sizeof(s), "Unable to open %s", gp->file_name);
 		statline(mode, s);
 		if (write(fd, "#ABORT#\r", 8) == -1) {
 			perror("write");
@@ -685,8 +1048,8 @@ int start_ab_download(int mode, WINDOW ** swin, wint * wintab,
 			int ret = write(gp->dwn_file, buf+offset, bytes-offset);
 			if (ret == -1) {
 				perror("write");
-			    	if (errno == EWOULDBLOCK || errno == EAGAIN) {
-		 			usleep(100000);
+				if (errno == EWOULDBLOCK || errno == EAGAIN) {
+					usleep(100000);
 					continue;
 				}
 				close(gp->dwn_file);
@@ -703,17 +1066,17 @@ int start_ab_download(int mode, WINDOW ** swin, wint * wintab,
 				return -1;
 				break;
 			}
-		  	gp->calc_crc = calc_crc((unsigned char *) buf, ret, 0);
-		  	gp->dwn_cnt -= ret;
-		  	offset += ret;
+			gp->calc_crc = calc_crc((unsigned char *) buf, ret, 0);
+			gp->dwn_cnt -= ret;
+			offset += ret;
 		}
 	}
 
 	return 0;
 }
 
-int ab_down(int mode, WINDOW * swin, wint * wintab, char buf[], int *bytes,
-	    t_gp * gp)
+static int ab_down(int mode, WINDOW * swin, wint * wintab, char buf[],
+	int *bytes, t_gp * gp)
 {
 	unsigned long extrach = 0;
 	char s[80];
@@ -781,7 +1144,7 @@ int ab_down(int mode, WINDOW * swin, wint * wintab, char buf[], int *bytes,
 			close(gp->dwn_file);
 			gp->dwn_file = -1;
 			utime(gp->file_name, &gp->ut);
-		        gp->file_name[0] = '\0';
+			gp->file_name[0] = '\0';
 			if (extrach != 0) {
 				memmove(buf, buf + *bytes, extrach);
 				*bytes = extrach;
@@ -796,13 +1159,21 @@ int ab_down(int mode, WINDOW * swin, wint * wintab, char buf[], int *bytes,
 	return 0;
 }
 
-int start_screen(char *call[])
+static int start_screen(char *call[])
 {
 	int cnt;
 	char idString[12];
-	sprintf(idString, " %9.9s ", call[0]);
+	char *p;
+	struct winsize winsz = {0};
 
-	if ((win = initscr()) == NULL)
+	if ((ioctl(0, TIOCGWINSZ, &winsz) >= 0) && winsz.ws_row && winsz.ws_col)
+		resizeterm(winsz.ws_row, winsz.ws_col);
+	sprintf(idString, " %9.9s ", call[0]);
+	for (p = idString; *p; p++)
+		if (islower(*p)) *p = toupper(*p);
+
+	win = initscr();
+	if (win == NULL)
 		return -1;
 
 	attron(A_REVERSE);
@@ -811,7 +1182,8 @@ int start_screen(char *call[])
 	addch(ACS_VLINE);
 	addstr("--------");
 	addch(ACS_VLINE);
-	for (cnt = STATW_STAT; cnt <= 80; cnt++)
+	move(0, STATW_STAT);
+	for (cnt = STATW_STAT; cnt < COLS; cnt++)
 		addch(' ');
 	attroff(A_REVERSE);
 
@@ -819,12 +1191,12 @@ int start_screen(char *call[])
 	raw();
 	nodelay(win, TRUE);
 	keypad(win, TRUE);
+	curson = 1;
 	refresh();
-
 	return 0;
 }
 
-int start_slave_mode(wint * wintab, t_win * win_in, t_win * win_out)
+static int start_slave_mode(wint * wintab, t_win * win_in, t_win * win_out)
 {
 	win_in->max_y = LINES - 2;
 	win_in->max_x = COLS;
@@ -841,11 +1213,12 @@ int start_slave_mode(wint * wintab, t_win * win_in, t_win * win_out)
 	win_out->curs_pos = 0;
 	win_in->bytes = 0;
 	win_in->curs_pos = 0;
-
+	redrawscreen(win_in, SLAVEMODE, win_out);
+	wrefresh(win_in->ptr);
 	return 0;
 }
 
-int start_talk_mode(wint * wintab, t_win * win_in, t_win * win_out)
+static int start_talk_mode(wint * wintab, t_win * win_in, t_win * win_out)
 {
 	int cnt;
 	WINDOW *win;
@@ -872,20 +1245,21 @@ int start_talk_mode(wint * wintab, t_win * win_in, t_win * win_out)
 	scrollok(win_out->ptr, TRUE);
 
 	wclear(win_out->ptr);
-	wrefresh(win_out->ptr);
 	wclear(win_in->ptr);
-	wrefresh(win_in->ptr);
 
 	win_out->bytes = 0;
 	win_out->curs_pos = 0;
 	win_in->bytes = 0;
 	win_out->curs_pos = 0;
-
+	redrawscreen(win_in, TALKMODE, win_out);
+	restorecursor(TALKMODE, win_out);
+	wrefresh(win_in->ptr);
+	wrefresh(win_out->ptr);
 	return 0;
 }
 
-int change_mode(int oldmode, int newmode, wint * wintab, t_win * win_in,
-		t_win * win_out, char *call[])
+static int change_mode(int oldmode, int newmode, wint * wintab,
+	t_win * win_in, t_win * win_out, char *call[])
 {
 	switch (oldmode) {
 	case RAWMODE:
@@ -905,13 +1279,13 @@ int change_mode(int oldmode, int newmode, wint * wintab, t_win * win_in,
 			wrefresh(win_out->ptr);
 			wclear(win_in->ptr);
 			wrefresh(win_in->ptr);
-			wintab->next = 0;
+			wintab->next = NULL;
 			endwin();
 		}
 		if (newmode == SLAVEMODE) {
 			delwin(win_out->ptr);
 			delwin(win_in->ptr);
-			wintab->next = 0;
+			wintab->next = NULL;
 			start_slave_mode(wintab, win_in, win_out);
 		}
 		break;
@@ -920,24 +1294,107 @@ int change_mode(int oldmode, int newmode, wint * wintab, t_win * win_in,
 		if (newmode == RAWMODE) {
 			wclear(win_out->ptr);
 			wrefresh(win_out->ptr);
-			wintab->next = 0;
+			wintab->next = NULL;
 			endwin();
 		}
 		if (newmode == TALKMODE) {
 			delwin(win_out->ptr);
-			wintab->next = 0;
+			wintab->next = NULL;
 			start_talk_mode(wintab, win_in, win_out);
 		}
 		break;
 	}
 
+	scrolledup = 0;
 	return newmode;
 }
 
-void writeincom(int mode, t_win * win_in, unsigned char buf[], int bytes)
+static void reinit_mode(int mode, wint * wintab, t_win * win_in, t_win * win_out, char *call[])
 {
-	int cnt;
+	switch (mode) {
+	case RAWMODE:
+		break;
+	case TALKMODE:	/* Clear the screen and re-init. Which looks awful.  */
+		wclear(win_out->ptr);
+		wrefresh(win_out->ptr);
+		wclear(win_in->ptr);
+		/* wrefresh(win_in->ptr);  */
+		wintab->next = NULL;
+		endwin();
+		start_screen(call);
+		start_talk_mode(wintab, win_in, win_out);
+		restorecursor(mode, win_out);
+		break;
+		case SLAVEMODE:	/* Also fix me.  */
+		wclear(win_out->ptr);
+		/* wrefresh(win_out->ptr);  */
+		wintab->next = NULL;
+		endwin();
+		start_screen(call);
+		start_slave_mode(wintab, win_in, win_out);
+		restorecursor(mode, win_out);
+		break;
+	}
+}
 
+static void waddnstrcrcheck(t_win *win_in, char *buf, int bytes, int draw, int mode, t_win *win_out)
+{
+	int n;
+	for (n=0;n<bytes;n++) {
+		int width;
+		incharbuf[incharbuflen++] = buf[n];
+		if (completecharlen(incharbuf) > incharbuflen)
+			continue;
+		if (eatchar && (incharbuf[0] == '\n')) {
+			eatchar = 0;
+			incharbuflen = 0;
+			continue;
+			}
+		width = widthchar(incharbuf, incharbuflen, inbufwid);
+		eatchar = 0;
+		if (draw) {
+			if (win_in)
+				waddnstr(win_in->ptr, incharbuf, incharbuflen);
+			else write(STDOUT_FILENO, incharbuf, incharbuflen);
+		}
+		if (incharbuf[0] == '\n')
+			incharbuflen = 0;
+		else if (width + inbufwid <= COLS) {
+			if (inbuflen + incharbuflen <= MAX_BUFLEN) {
+				memcpy(&inbuf[inbuflen], incharbuf, incharbuflen);
+				inbuflen += incharbuflen;
+			}
+			incharbuflen = 0;
+			inbufwid += width;
+			if (inbufwid >= COLS)
+				eatchar = 1;
+			continue; /* Skip to next line when width goes over. */
+		}
+		addscrollline(inbuf, inbuflen);
+		if (incharbuflen) {
+			memcpy(&inbuf[0], incharbuf, incharbuflen);
+			inbuflen = incharbuflen;
+			incharbuflen = 0;
+			inbufwid = width;
+		}
+		else {
+			inbuflen = 0;
+			inbufwid = 0;
+		}
+		if (scrolledup && win_in && win_out) {
+			/*
+			 * scrolledup is relative to bottom line
+			 */
+			scrolledup++;
+			scrolltext(win_in, 0, mode, win_out);
+		}
+	}
+	if (draw && win_in)
+		wrefresh(win_in->ptr);
+}
+
+static void writeincom(int mode, int encoding, t_win * win_in, unsigned char buf[], int bytes, t_win *win_out)
+{
 	if (mode & RAWMODE) {
 		while (write(STDOUT_FILENO, buf, bytes) == -1) {
 			if (errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -947,154 +1404,122 @@ void writeincom(int mode, t_win * win_in, unsigned char buf[], int bytes)
 			exit(1);
 		}
 		return;
+	} else if (encoding == UTF8ENCODING)
+		waddnstrcrcheck(win_in, (char *)buf, bytes,scrolledup == 0, mode, win_out);
+	else {
+		char *inbuf = (char *) buf, out[MAX_BUFLEN], *outbuf=out;
+		size_t insize = bytes, outsize = MAX_BUFLEN;
+		iconv(ibm850toutf8, &inbuf, &insize, &outbuf, &outsize);
+		waddnstrcrcheck(win_in, out, MAX_BUFLEN-outsize,scrolledup == 0, mode, win_out);
 	}
-	for (cnt = 0; cnt < bytes; cnt++) {
-		switch (buf[cnt]) {
-		case 201:
-		case 218:
-			waddch(win_in->ptr, ACS_ULCORNER);
-			break;
-		case 187:
-		case 191:
-			waddch(win_in->ptr, ACS_URCORNER);
-			break;
-		case 200:
-		case 192:
-			waddch(win_in->ptr, ACS_LLCORNER);
-			break;
-		case 188:
-		case 217:
-			waddch(win_in->ptr, ACS_LRCORNER);
-			break;
-		case 204:
-		case 195:
-			waddch(win_in->ptr, ACS_LTEE);
-			break;
-		case 185:
-		case 180:
-			waddch(win_in->ptr, ACS_RTEE);
-			break;
-		case 203:
-		case 194:
-			waddch(win_in->ptr, ACS_TTEE);
-			break;
-		case 202:
-		case 193:
-			waddch(win_in->ptr, ACS_BTEE);
-			break;
-		case 205:
-		case 196:
-			waddch(win_in->ptr, ACS_HLINE);
-			break;
-		case 186:
-		case 179:
-			waddch(win_in->ptr, ACS_VLINE);
-			break;
-		case 129:
-			waddch(win_in->ptr, 252);	/*u umlaut */
-			break;
-		case 132:
-			waddch(win_in->ptr, 228);	/*a umlaut */
-			break;
-		case 142:
-			waddch(win_in->ptr, 196);	/*A umlaut */
-			break;
-		case 148:
-			waddch(win_in->ptr, 246);	/*o umlaut */
-			break;
-		case 153:
-			waddch(win_in->ptr, 214);	/*O umlaut */
-			break;
-		case 154:
-			waddch(win_in->ptr, 220);	/*U umlaut */
-			break;
-		case 225:
-			waddch(win_in->ptr, 223);	/*sz */
-			break;
-		default:
-			{
-				if (buf[cnt] > 127)
-					waddch(win_in->ptr, '.');
-				else
-					waddch(win_in->ptr, buf[cnt]);
-			}
-		}
-	}
-
-/*      waddnstr(win_in->ptr, buf, bytes); */
-	wrefresh(win_in->ptr);
-
 	return;
 }
 
-int getstring(wint * wintab, char text[], char buf[])
+static void writeincomstr(int mode, int encoding, t_win * win_in, char buf[], t_win *win_out)
 {
-	int c;
+	int len;
+	len = strlen(buf);
+	writeincom(mode, encoding, win_in, (unsigned char *)buf, len, win_out);
+}
+
+static int outstring(char *buf, wchar_t *string, int bytes, int encoding)
+{
+	char *inbuf = (char *) string, *outbuf = buf;
+	size_t insize = bytes * sizeof(wchar_t), outsize = MAX_BUFLEN-1;
+	if (encoding == UTF8ENCODING) {
+		iconv(wcharttoutf8, &inbuf, &insize, &outbuf, &outsize);
+	}
+	else {
+		iconv(wcharttoibm850, &inbuf, &insize, &outbuf, &outsize);
+
+	}
+	buf[(MAX_BUFLEN-1)-outsize] = '\0';
+	return (MAX_BUFLEN-1)-outsize;
+}
+
+static int getstring(wint * wintab, char text[], char buf[])
+{
+	wchar_t c;
 	int ypos = 0, xpos = 0;
 	int bytes = 0;
-
+	wchar_t wbuf[MAX_BUFLEN];
 	WINDOW *win = winopen(wintab, 3, COLS, 10, 0, TRUE);
+	int done = 0;
 
 	wmove(win, 1, 2);
 	waddstr(win, text);
 	wrefresh(win);
 
 	do {
-		c = getch();
-		if (c != ERR) {
-			switch (c) {
-			case KEY_BACKSPACE:
-			case 127:
-				{
-					getyx(win, ypos, xpos);
-					if (xpos > 0 && bytes > 0) {
-						wmove(win, ypos, --xpos);
-						waddch(win, ' ');
-						wmove(win, ypos, xpos);
-						bytes--;
-					}
+		int r;
+		wint_t ci;
+		r = get_wch(&ci);
+		if (r != ERR) {
+			c = (wchar_t) ci;
+			if  (((r == KEY_CODE_YES) && (c == KEY_BACKSPACE))||
+				    ((r == OK) && ((c==127)|| (c==8)))) {
+				getyx(win, ypos, xpos);
+				if (bytes > 0) {
+					int width, j;
+					width = wcwidthcontrol(wbuf[bytes-1]);
+					for (j=0;j<width;j++)
+						mvwdelch(win, ypos, xpos-width);
+					xpos -= width;
+					wmove(win, ypos, xpos);
+					bytes--;
 				}
-				break;
-			case (int) '\n':
-			case (int) '\r':
-			case KEY_ENTER:
-				{
-					waddch(win, '\n');
-					buf[bytes++] = (char) '\n';
-					wrefresh(win);
-					buf[bytes] = 0;
-				}
-				break;
-			default:
-				{
-					waddch(win, (char) c);
-					buf[bytes++] = (char) c;
-				}
+			}
+			else if (( (r==KEY_CODE_YES) && (c == KEY_ENTER))||
+				   ( (r == OK) && ((c=='\n') || (c=='\r')))) {
+				wbuf[bytes++] = (wchar_t) '\n';
+				outstring(buf, wbuf, bytes, UTF8ENCODING);
+				done = 1;
+			}
+			else if (r == KEY_CODE_YES);
+				/*
+				 * Put in code for other KEYCODES here
+				 */
+			else if (bytes+2 < MAX_BUFLEN) {
+#if 0
+				int width;
+				width = wins_nwchrmy(win, c);
+				getyx(win, ypos, xpos);
+				wmove(win, ypos, xpos+width);
+#endif
+				wbuf[bytes++] = c;
+				drawinbuf(win, wbuf, bytes, bytes);
 			}
 			wrefresh(win);
 		}
-	}
-	while (c != '\n' && c != '\r' && c != KEY_ENTER);
+	} while (!done);
 	delwin(win);
 	winclose(wintab);
+
 	return 0;
 }
 
-int readoutg(t_win * win_out, wint * wintab, menuitem * top, char buf[],
-	     int keyesc)
+static int readoutg(t_win * win_out, wint * wintab, menuitem * top, char buf[],
+		int keyesc, int mode, int encoding, t_win *win_in)
 {
 	int out_cnt;
-	int c;
+	int r;
+	wint_t ci;
+	wchar_t c;
 	int ypos = 0, xpos = 0;
 	int value;
 
-	c = getch();
-	if (c == ERR)
+	r = get_wch(&ci);
+	if (r == ERR)
 		return 0;
 
+	c = (wchar_t) ci;
 	if (c == keyesc) {
-		if ((value = top_menu(wintab, top, 1)) == 0)
+		value = top_menu(wintab, top, 1);
+		if (value == 0) {
+			restorecursor(mode, win_out);
 			return 0;
+		}
+		restorecursor(mode, win_out);
 		buf[0] = '~';
 		switch (value) {
 		case 0x01:
@@ -1113,6 +1538,7 @@ int readoutg(t_win * win_out, wint * wintab, menuitem * top, char buf[],
 				getstring(wintab,
 					  "Please enter filename: ",
 					  &buf[2]);
+				restorecursor(mode, win_out);
 				return strlen(buf);
 			}
 		case 0x12:
@@ -1137,6 +1563,7 @@ int readoutg(t_win * win_out, wint * wintab, menuitem * top, char buf[],
 				getstring(wintab,
 					  "Please enter filename: ",
 					  buf + 2);
+				restorecursor(mode, win_out);
 				return strlen(buf);
 			}
 		case 0x21:
@@ -1160,134 +1587,194 @@ int readoutg(t_win * win_out, wint * wintab, menuitem * top, char buf[],
 		wrefresh(win_out->ptr);
 		return 2;
 	}
-	switch (c) {
-	case KEY_BACKSPACE:
-	case 127:
-		{
+	if  (((r == KEY_CODE_YES) && (c == KEY_BACKSPACE))||
+			((r == OK) && ((c==127)|| (c==8)))) {
+		if ((mode == SLAVEMODE) && scrolledup)
+			return 0;
+		while(win_out->curs_pos > 0) {
+			int width;
+			int j;
 			getyx(win_out->ptr, ypos, xpos);
-			if (win_out->bytes > 0) {
-				if (win_out->curs_pos < win_out->bytes) {
-					mvwaddnstr(win_out->ptr, ypos,
-						   --xpos,
-						   &win_out->
-						   string[win_out->
-							  curs_pos],
-						   win_out->bytes -
-						   win_out->curs_pos);
-					waddch(win_out->ptr, ' ');
-					memmove(&win_out->
-						string[win_out->curs_pos -
-						       1],
-						&win_out->string[win_out->
-								 curs_pos],
-						win_out->bytes -
-						win_out->curs_pos);
-				} else
-					mvwaddch(win_out->ptr, ypos,
-						 --xpos, ' ');
-
-				wmove(win_out->ptr, ypos, xpos);
-				win_out->bytes--;
-				win_out->curs_pos--;
-			}
-		}
-		break;
-	case KEY_LEFT:
-		if (win_out->curs_pos > 0) {
+			width = wcwidthcontrol(win_out->string[win_out->curs_pos-1]);
+			for (j=0;j<width;j++)
+				mvwdelch(win_out->ptr, ypos, xpos-width);
+			xpos -= width;
+			wmove(win_out->ptr, ypos, xpos);
+			if (win_out->curs_pos < win_out->bytes) {
+				memmove(&win_out->
+					string[win_out->curs_pos - 1],
+					&win_out->string[win_out-> curs_pos],
+					(win_out->bytes -
+					win_out->curs_pos) * sizeof(wchar_t));
+				}
+			win_out->bytes--;
 			win_out->curs_pos--;
-			getyx(win_out->ptr, ypos, xpos);
-			wmove(win_out->ptr, ypos, xpos - 1);
+			if (width)
+				break;
 		}
-		break;
-	case KEY_RIGHT:
-		if (win_out->curs_pos < win_out->bytes) {
+	}
+	else if (( (r==KEY_CODE_YES) && (c == KEY_ENTER))||
+		   ( (r == OK) && ((c=='\n') || (c=='\r')))) {
+		if ((mode == SLAVEMODE) && scrolledup)
+			return 0;
+		while (win_out->curs_pos < win_out->bytes) {
+			/* Move to end of the line  */
+			int width;
+			width = wcwidthcontrol(win_out->string[win_out->curs_pos]);
 			win_out->curs_pos++;
 			getyx(win_out->ptr, ypos, xpos);
-			wmove(win_out->ptr, ypos, xpos + 1);
-		}
-		break;
-	case KEY_ENTER:
-	case (int) '\n':
-	case (int) '\r':
-		{
-			if (win_out->curs_pos < win_out->bytes) {
-				getyx(win_out->ptr, ypos, xpos);
-				wmove(win_out->ptr, ypos,
-				      xpos + win_out->bytes -
-				      win_out->curs_pos);
+			wmove(win_out->ptr, ypos, xpos + width);
 			}
-			waddch(win_out->ptr, '\n');
-			win_out->string[win_out->bytes++] = (char) '\n';
-			wrefresh(win_out->ptr);
-			strncpy(buf, win_out->string, win_out->bytes);
-			wrefresh(win_out->ptr);
-			out_cnt = win_out->bytes;
-			win_out->bytes = 0;
-			win_out->curs_pos = 0;
-			return out_cnt;
+		waddch(win_out->ptr, '\n');
+		win_out->string[win_out->bytes++] = (wchar_t) '\n';
+		wrefresh(win_out->ptr);
+		out_cnt = outstring(buf, win_out->string, win_out->bytes, encoding);
+		if (mode == SLAVEMODE) {
+			char obuf[MAX_BUFLEN];
+			char *inbuf = (char *)win_out->string, *outbuf = obuf;
+			size_t insize = win_out->bytes * sizeof(wchar_t), outsize = MAX_BUFLEN;
+			iconv(wcharttoutf8, &inbuf, &insize, &outbuf, &outsize);
+			waddnstrcrcheck(win_in, obuf, MAX_BUFLEN-outsize, 0, mode, win_out);
 		}
+		win_out->bytes = 0;
+		win_out->curs_pos = 0;
+		return out_cnt;
+	}
+	else if (r == KEY_CODE_YES) {
+		switch(c) {
+			case KEY_LEFT:	/* Character of 0 width  */
+				while (win_out->curs_pos > 0) {
+					int width;
+					win_out->curs_pos--;
+					width = wcwidthcontrol(win_out->string[win_out->curs_pos]);
+					getyx(win_out->ptr, ypos, xpos);
+					wmove(win_out->ptr, ypos, xpos - width);
+					if (width)
+						break; /* Skip to non-width */
+				}
+				break;
+			case KEY_RIGHT:
+				{
+				/* Skip over 0 length characters  */
+				int skipped = 0;
+				while (win_out->curs_pos < win_out->bytes) {
+					int width;
+					width = wcwidthcontrol(win_out->string[win_out->curs_pos]);
+					if (width) {
+						if (skipped)
+							break;
+						skipped = 1;
+					}
+					win_out->curs_pos++;
+					getyx(win_out->ptr, ypos, xpos);
+					wmove(win_out->ptr, ypos, xpos + width);
+				}
+				break;
+			}
+			case KEY_UP:
+				scrolltext(win_in, 1, mode, win_out);
+				break;
+			case KEY_DOWN:
+				scrolltext(win_in, -1, mode, win_out);
+				break;
+			case KEY_NPAGE:
+				scrolltext(win_in, -win_in->max_y, mode, win_out);
+				break;
+			case KEY_PPAGE:
+				scrolltext(win_in, win_in->max_y, mode, win_out);
+				break;
+			case KEY_HOME:
+				while (win_out->curs_pos > 0) {
+					int width;
+					win_out->curs_pos--;
+					width = wcwidthcontrol(win_out->string[win_out->curs_pos]);
+					getyx(win_out->ptr, ypos, xpos);
+					wmove(win_out->ptr, ypos, xpos - width);
+				}
+				break;
+			case KEY_END:
+				while (win_out->curs_pos < win_out->bytes) {
+					/*
+					 * Move to end of the line
+					 */
+					int width;
+					width = wcwidthcontrol(win_out->string[win_out->curs_pos]);
+					win_out->curs_pos++;
+					getyx(win_out->ptr, ypos, xpos);
+					wmove(win_out->ptr, ypos, xpos + width);
+					}
+				break;
+			case KEY_DC:{
+				int skipped = 0;
+				if ((mode == SLAVEMODE) && scrolledup)
+					return 0;
+				while (win_out->curs_pos < win_out->bytes) {
+					int width;
+					int j;
+					getyx(win_out->ptr, ypos, xpos);
+					width = wcwidthcontrol(win_out->string[win_out->curs_pos]);
+					if (width) {
+						if (skipped)
+							break;
+						skipped = 1;
+					}
+					for (j=0;j<width;j++)
+						mvwdelch(win_out->ptr, ypos, xpos);
+					if (win_out->curs_pos + 1 < win_out->bytes) {
+						memmove(&win_out-> string[win_out->curs_pos],
+							&win_out->string[win_out-> curs_pos+1],
+							(win_out->bytes - (win_out->curs_pos+1)) * sizeof(wchar_t));
+					}
+					win_out->bytes--;
+				}
+				break;
+			}
+			case KEY_RESIZE:
+				break;
+			case KEY_BACKSPACE:
+				break;
+			case KEY_ENTER:
+				break;
+			default:
+				break;
+		}
+	}
+	else switch (c) {
+	case 8:
+	case 127:
+	case '\r':
+	case '\n':
 		break;
 	default:
-		{
-			waddch(win_out->ptr, (char) c);
+		/*
+		 * Don't try to edit while scrolled up in SLAVEmode.
+		 */
+		if ((mode == SLAVEMODE) && scrolledup)
+			return 0;
+		/*
+		 * It's just not possible because the cursor is off screen
+		 */
+		if (win_out->bytes < MAX_BUFLEN )	{
 			if (win_out->curs_pos < win_out->bytes) {
-				getyx(win_out->ptr, ypos, xpos);
-				waddnstr(win_out->ptr,
-					 &win_out->string[win_out->
-							  curs_pos],
-					 win_out->bytes -
-					 win_out->curs_pos);
 				memmove(&win_out->
 					string[win_out->curs_pos + 1],
-					&win_out->string[win_out->
-							 curs_pos],
-					win_out->bytes -
-					win_out->curs_pos);
-				win_out->string[win_out->curs_pos] =
-				    (char) c;
-				wmove(win_out->ptr, ypos, xpos);
-			} else
-				win_out->string[win_out->bytes] = (char) c;
-
+					&win_out->string[win_out-> curs_pos],
+					(win_out->bytes -
+					win_out->curs_pos) * sizeof(wchar_t));
+			}
+			win_out->string[win_out->curs_pos] =  c;
 			win_out->bytes++;
 			win_out->curs_pos++;
+			drawinbuf(win_out->ptr, win_out->string, win_out->bytes, win_out->curs_pos);
+			break;
 		}
 	}
 	wrefresh(win_out->ptr);
 	return 0;
 }
-void writemsg(char fname[], char caller[])
-{
-	char text_row[255];
-	char *text_ptr;
-	char buf[255];
-	FILE *f = fopen(fname, "r");
 
-	if (f == NULL) {
-		perror(fname);
-		return;
-	}
-	do {
-		if (fgets(text_row, 255, f) != 0) {
-			text_row[strlen(text_row) - 1] = '\r';
-			text_ptr = strchr(text_row, '$');
-			if (text_ptr != NULL) {
-				strcpy(buf, text_ptr + 2);
-				switch (*(text_ptr + 1)) {
-				case 'c':
-					{
-						strcpy(text_ptr, caller);
-						strcat(text_ptr, buf);
-					}
-				}
-			}
-			write(fd, text_row, strlen(text_row));
-		}
-	}
-	while (!feof(f));
-}
-
-void remotecommand(char buf[], int bytes)
+#if 0
+static void remotecommand(char buf[], int bytes)
 {
 	int firstchar;
 	if (bytes == 0)
@@ -1310,8 +1797,9 @@ void remotecommand(char buf[], int bytes)
 		write(fd, "Unknown command\r", 16);
 	}
 }
+#endif
 
-int compstr(const char st1[], char st2[], int maxbytes)
+static int compstr(const char st1[], char st2[], int maxbytes)
 {
 	int cnt;
 	for (cnt = 0;
@@ -1328,7 +1816,7 @@ int compstr(const char st1[], char st2[], int maxbytes)
 	return -1;
 }
 
-int eol(char c)
+static int eol(char c)
 {
 
 	if (c == '\r' || c == '\n' || c == 0x1A)
@@ -1337,18 +1825,17 @@ int eol(char c)
 		return FALSE;
 }
 
-int searche_key_words(char buf[], int *bytes, char *parms, int *parmsbytes,
+static int searche_key_words(char buf[], int *bytes, char *parms, int *parmsbytes,
 		      char restbuf[], int *restbytes)
 {
 	static char cmpstr[MAX_CMPSTRLEN];
 	static int cmpstrbyte = 0;
 	static int command = -1;
-        const char **pkey_words = remote_commands_enabled ? key_words : rkey_words;
+	const char **pkey_words = remote_commands_enabled ? key_words : rkey_words;
 
 	int cmdstpos = 0;
 	int cnt = 0;
 	int t = 0;
-
 
 	if (cmpstrbyte != 0) {
 		memmove(buf + cmpstrbyte, buf, *bytes);
@@ -1373,9 +1860,9 @@ int searche_key_words(char buf[], int *bytes, char *parms, int *parmsbytes,
 
 			t = -1;
 			while (*pkey_words[command] != '\0') {
-				if ((t =
-				     compstr(pkey_words[command], &buf[cnt],
-					     *bytes - cnt)) != -1)
+				t = compstr(pkey_words[command], &buf[cnt],
+					    *bytes - cnt);
+				if (t != -1)
 					break;
 				command++;
 			}
@@ -1419,9 +1906,8 @@ int searche_key_words(char buf[], int *bytes, char *parms, int *parmsbytes,
 	return t;
 }
 
-int sevenplname(int mode, WINDOW ** swin, wint * wintab, int *f,
-		int *logfile, char parms[], int parmsbytes, char buf[],
-		int bytes)
+static int sevenplname(int mode, WINDOW ** swin, wint * wintab, int *f,
+		int *logfile, char parms[], int parmsbytes)
 {
 	int cnt;
 	int part;
@@ -1512,7 +1998,8 @@ int sevenplname(int mode, WINDOW ** swin, wint * wintab, int *f,
 
 	return lines;
 }
-void statbits(int mode, char stat, int m)
+
+static void statbits(int mode, char stat, int m)
 {
 	if (mode == RAWMODE)
 		return;
@@ -1521,38 +2008,36 @@ void statbits(int mode, char stat, int m)
 	addch(stat);
 	attroff(A_REVERSE);
 	refresh();
-	return;
 }
 
-
-int cmd_call(char *call[], int mode)
+static int cmd_call(char *call[], int mode, int encoding)
 {
 	menuitem con[] = {
 		{"~Reconnect", 'R', M_ITEM, (void *) 0x01},
 		{"~Exit", 'E', M_ITEM, (void *) 0x02},
-		{"\0", 0, M_END, 0}
+		{"\0", 0, M_END, NULL}
 	};
 
 	menuitem fil[] = {
-		{"~Open Logfile", 'O', M_ITEM, 0},
-		{"~Close Logfile", 'C', M_ITEM, 0},
-		{"Send ~Textfile", 'T', M_ITEM, 0},
-		{"Send ~Binary", 'B', M_ITEM, 0},
-		{"Send ~AutoBin", 'A', M_ITEM, 0},
-		{"\0", 0, M_END, 0}
+		{"~Open Logfile", 'O', M_ITEM, NULL},
+		{"~Close Logfile", 'C', M_ITEM, NULL},
+		{"Send ~Textfile", 'T', M_ITEM, NULL},
+		{"Send ~Binary", 'B', M_ITEM, NULL},
+		{"Send ~AutoBin", 'A', M_ITEM, NULL},
+		{"\0", 0, M_END, NULL}
 	};
 
 	menuitem mod[] = {
-		{"~Slavemode", 'S', M_ITEM, 0},
-		{"~Talkmode", 'T', M_ITEM, 0},
-		{"~Rawmode", 'R', M_ITEM, 0},
-		{"\0", 0, M_END, 0}
+		{"~Slavemode", 'S', M_ITEM, NULL},
+		{"~Talkmode", 'T', M_ITEM, NULL},
+		{"~Rawmode", 'R', M_ITEM, NULL},
+		{"\0", 0, M_END, NULL}
 	};
 
 	menuitem win[] = {
-		{"~Clear", 'C', M_ITEM, 0},
-		{"~Resize", 'R', M_ITEM, 0},
-		{"\0", 0, M_END, 0}
+		{"~Clear", 'C', M_ITEM, NULL},
+		{"~Resize", 'R', M_ITEM, NULL},
+		{"\0", 0, M_END, NULL}
 	};
 
 	menuitem top[] = {
@@ -1560,7 +2045,7 @@ int cmd_call(char *call[], int mode)
 		{"~File", 'F', M_P_DWN, fil},
 		{"~Mode", 'M', M_P_DWN, mod},
 		{"~Window", 'W', M_P_DWN, win},
-		{"\0", 0, M_END, 0}
+		{"\0", 0, M_END, NULL}
 	};
 
 	wint wintab;
@@ -1588,14 +2073,19 @@ int cmd_call(char *call[], int mode)
 	int upllen = 0;
 	char *c, *t;
 	t_gp gp;
-	t_win win_in;
-	t_win win_out;
-	WINDOW *swin = 0;
+	t_win win_in = {
+		.ptr	= NULL,
+	};
+	t_win win_out = {
+		.ptr	= NULL,
+	};
+	WINDOW *swin = NULL;
 	int cnt;
 	int crc = 0;
 	char s[80];
 	int flags = 0;
 	int EOF_on_STDIN = FALSE;
+	sigset_t oursigs, oldsigs;
 
 	init_crc();
 
@@ -1603,15 +2093,20 @@ int cmd_call(char *call[], int mode)
 		paclen = sizeof(buf);
 
 	gp.dwn_cnt = 0;
-	wintab.next = 0;
+	wintab.next = NULL;
 
-	if ((fd = connect_to(call)) == -1)
+	fd = connect_to(call);
+	if (fd == -1)
 		return FALSE;
 
 	interrupted = FALSE;
+	sigwinchsignal = FALSE;
 	signal(SIGQUIT, cmd_intr);
 	signal(SIGINT, SIG_IGN);
 	signal(SIGTSTP, SIG_IGN);
+	signal(SIGWINCH, cmd_sigwinch);
+	sigemptyset(&oursigs);
+	sigaddset(&oursigs, SIGQUIT);
 
 	fcntl(fd, F_SETFL, O_NONBLOCK);
 	fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
@@ -1632,14 +2127,17 @@ int cmd_call(char *call[], int mode)
 		}
 	}
 
+	sigprocmask(SIG_BLOCK, &oursigs, &oldsigs);
+
 	while (TRUE) {
-		struct timeval tv;
+		struct timespec tv, *timeout;
+		int nfds;
 		if (inactivity_timeout_is_set == TRUE && uploadfile == -1 && downloadfile == -1) {
 			tv.tv_sec = inactivity_timeout.tv_sec;
-			tv.tv_usec = inactivity_timeout.tv_usec;
+			tv.tv_nsec = inactivity_timeout.tv_nsec;
 		} else {
 			tv.tv_sec = 0;
-			tv.tv_usec = 10;
+			tv.tv_nsec = 10000;		/* 10ms		*/
 		}
 		FD_ZERO(&sock_read);
 		if (EOF_on_STDIN == FALSE)
@@ -1650,13 +2148,31 @@ int cmd_call(char *call[], int mode)
 		if (uploadfile != -1)
 			FD_SET(fd, &sock_write);
 
-		if (select(fd + 1, &sock_read, &sock_write, NULL, (uploadfile == -1 && downloadfile == -1 && inactivity_timeout_is_set == FALSE) ? NULL : &tv) == -1) {
-			if (!interrupted && errno == EAGAIN) {
-				usleep(100000);
-				continue;
-			}
-			if (!interrupted)
+		if (uploadfile == -1 && downloadfile == -1 &&
+		    inactivity_timeout_is_set == FALSE)
+			timeout = NULL;
+		else
+			timeout = &tv;
+		nfds = pselect(fd + 1, &sock_read, &sock_write, NULL, timeout,
+			       &oldsigs);
+		if (nfds == -1) {
+			if (!interrupted) {
+				if (errno == EINTR)
+					continue;
+				if (errno == EAGAIN) {
+					usleep(100000);
+					continue;
+				}
+				if ((errno == EINTR) && sigwinchsignal) {
+					/*
+					 * Just process screen resize here.
+					 */
+					reinit_mode(mode, &wintab, &win_in, &win_out, call);
+					sigwinchsignal = 0;
+					continue;
+				}
 				perror("select");
+			}
 			break;
 		}
 		if (inactivity_timeout_is_set == TRUE && !FD_ISSET(fd, &sock_read) && !FD_ISSET(STDIN_FILENO, &sock_read)) {
@@ -1676,12 +2192,12 @@ int cmd_call(char *call[], int mode)
 				break;
 			}
 			if (bytes == -1) {
-			    	if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				 	usleep(100000);
+				if (errno == EWOULDBLOCK || errno == EAGAIN) {
+					usleep(100000);
 					continue;
 				}
 				if (errno != ENOTCONN)
-			 		perror("read");
+					perror("read");
 				break;
 			}
 			if (gp.dwn_cnt != 0) {
@@ -1702,8 +2218,9 @@ int cmd_call(char *call[], int mode)
 					convert_cr_lf(buf, bytes);
 					if (!sevenplus) {
 
-						writeincom(mode, &win_in,
-							   (unsigned char * ) buf, bytes);
+						writeincom(mode, encoding, &win_in,
+							   (unsigned char * ) buf, bytes, &win_out);
+						restorecursor(mode, &win_out);
 					} else {
 						for (cnt = 0; cnt < bytes;
 						     cnt++)
@@ -1734,17 +2251,19 @@ int cmd_call(char *call[], int mode)
 				}
 				switch (com_num) {
 				case 0:
-					{
 #if 0
-						/*
-						   FIXME! We should, no: WE MUST be able to turn off
-						   all remote commands to avoid mail bombs generating
-						   offensive mails with //e while sucking the BBS
-						 */
+					/*
+					 * FIXME! We should, no: WE MUST be
+					 * able to turn off all remote commands
+					 * to avoid mail bombs generating
+					 * offensive mails with //e while
+					 *sucking the BBS
+					 */
+					{
 						remotecommand(parms,
 							      parmsbytes);
-#endif
 					}
+#endif
 					break;
 				case 1:
 					{
@@ -1762,17 +2281,14 @@ int cmd_call(char *call[], int mode)
 					break;
 				case 2:
 					{
-						if ((sevenplcnt =
-						     sevenplname(mode,
-								 &swin,
-								 &wintab,
-								 &downloadfile,
-								 &logfile,
-								 parms,
-								 parmsbytes,
-								 buf,
-								 bytes)) !=
-						    -1)
+						sevenplcnt = sevenplname(mode,
+									 &swin,
+									 &wintab,
+									 &downloadfile,
+									 &logfile,
+									 parms,
+									 parmsbytes);
+						if (sevenplcnt != -1)
 							sevenplus = TRUE;
 					}
 					break;
@@ -1806,8 +2322,7 @@ int cmd_call(char *call[], int mode)
 
 				memcpy(buf, restbuf, restbytes);
 				bytes = restbytes;
-			}
-			while (restbytes != 0);
+			} while (restbytes != 0);
 		}
 		if (FD_ISSET(STDIN_FILENO, &sock_read)) {
 			if ((mode & RAWMODE) == RAWMODE) {
@@ -1816,7 +2331,7 @@ int cmd_call(char *call[], int mode)
 				/* bytes == 0? select() indicated that there
 				 * is data to read, but read() returned 0
 				 * bytes. -> terminate normaly
-                                 */
+				 */
 				if (bytes == 0)
 					EOF_on_STDIN = TRUE;
 				else if (bytes == -1) {
@@ -1830,7 +2345,7 @@ int cmd_call(char *call[], int mode)
 			} else {
 				bytes =
 				    readoutg(&win_out, &wintab, top, buf,
-					     0x1d);
+					     0x1d, mode, encoding, &win_in);
 				if (bytes == -1) {
 					wclear(win_in.ptr);
 					wrefresh(win_in.ptr);
@@ -1859,14 +2374,12 @@ int cmd_call(char *call[], int mode)
 					if (buf[2] != '\0'
 							&& buf[2] != '\n') {
 						c = buf + 2;
-						if ((t =
-									strchr(c,
-										'\n')) != NULL)
+						t = strchr(c, '\n');
+						if (t != NULL)
 							*t = '\0';
 					} else {
-						if ((c =
-									getenv("SHELL")) ==
-								NULL)
+						c = getenv("SHELL");
+						if (c == NULL)
 							c = "/bin/sh";
 					}
 
@@ -1895,24 +2408,26 @@ int cmd_call(char *call[], int mode)
 				case '?':
 				case 'h':
 				case 'H':
-					printf("\nTilde escapes:\n");
-					printf(".   close\n");
-					printf("~   send ~\n");
-					printf("r   reconnect\n");
-					printf("!   shell\n");
-					printf("Z   suspend program. Resume with \"fg\"\n");
-					printf("s   Stop upload\n");
-					printf("o   Open log\n");
-					printf("c   Close log\n");
-					printf("0   Switch GUI to \"RAW\" (line) mode - already here ;)\n");
-					printf("1   Switch GUI to \"Slave\" mode\n");
-					printf("2   Switch GUI to \"Talk\" (split) mode\n");
-					printf("u   Upload\n");
-					printf("a   Upload (autobin protocol)\n");
-					printf("b   Upload binary data (crlf conversion)\n");
-					printf("yd  YAPP Download\n");
-					printf("yu  YAPP Upload\n");
-					fflush(stdout);
+					writeincomstr(mode, encoding, &win_in,"\nTilde escapes:\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,".   close\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"~   send ~\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"r   reconnect\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"!   shell\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"Z   suspend program. Resume with \"fg\"\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"s   Stop upload\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"o   Open log\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"c   Close log\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"0   Switch GUI to \"RAW\" (line) mode - already here ;)\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"1   Switch GUI to \"Slave\" mode\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"2   Switch GUI to \"Talk\" (split) mode\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"u   Upload\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"a   Upload (autobin protocol)\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"b   Upload binary data (crlf conversion)\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"yd  YAPP Download\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"yu  YAPP Upload\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"i   IBM850 encoding\n", &win_out);
+					writeincomstr(mode, encoding, &win_in,"8   UTF-8 encoding\n", &win_out);
+					restorecursor(mode, &win_out);
 					continue;
 				case 'S':
 				case 's':
@@ -1925,6 +2440,7 @@ int cmd_call(char *call[], int mode)
 						statline(mode,
 								"No upload in progress");
 					}
+					restorecursor(mode, &win_out);
 					continue;
 				case 'A':
 				case 'a':
@@ -1935,10 +2451,11 @@ int cmd_call(char *call[], int mode)
 					if (uploadfile != -1) {
 						statline(mode,
 								"Already uploading");
+						restorecursor(mode, &win_out);
 						continue;
 					}
-					if ((t =
-								strchr(buf, '\n')) != NULL)
+					t = strchr(buf, '\n');
+					if (t != NULL)
 						*t = '\0';
 					t = buf + 2;
 					while (*t != '\0' && isspace(*t))
@@ -1946,12 +2463,14 @@ int cmd_call(char *call[], int mode)
 					if (*t == '\0') {
 						statline(mode,
 								"Upload requires a filename");
+						restorecursor(mode, &win_out);
 						continue;
 					}
 					uploadfile = open(t, O_RDONLY);
 					if (uploadfile == -1) {
 						statline(mode,
 								"Unable to open upload file");
+						restorecursor(mode, &win_out);
 						continue;
 					}
 					if (lseek(uploadfile, 0L, SEEK_END)
@@ -1987,84 +2506,84 @@ int cmd_call(char *call[], int mode)
 								TRUE);
 					}
 					switch (buf[1]) {
-						case 'a':
-						case 'A':
-							{
-								struct stat statbuf;
-								time_t file_time = 0L;
-								binup = TRUE;
-								crc = 0;
-								if (!fstat(uploadfile, &statbuf))
-									file_time =  statbuf.st_mtime;
-								else
-									file_time = time(0);
-
-
-								do {
-									upllen =
-										read
-										(uploadfile,
-										 uplbuf,
-										 128);
-
-									if (upllen
-											==
-											-1) {
-										close
-											(uploadfile);
-										uploadfile
-											=
-											-1;
-										delwin
-											(swin);
-										winclose
-											(&wintab);
-										sprintf
-											(s,
-											 "Error reading upload file: upload aborted");
-										statline
-											(mode,
-											 s);
-										break;
-									}
-									crc =
-										calc_crc
-										((unsigned char *) uplbuf,
-										 upllen,
-										 crc);
-								} while (upllen > 0);
-								lseek(uploadfile,
-										0L,
-										SEEK_SET);
-								sprintf(s,
-										"#BIN#%ld#|%u#$%s#%s\r",
-										uplsize,
-										crc,
-										unix_to_sfbin_date_string(file_time),
-										t);
-								if ( write(fd, s,
-											strlen(s)) != strlen(s)) {
-									perror("write");
-									exit(1);
-								}
-								uplpos = 0;
-								upldp = -1;
-								upllen = 0;
-							}
-							break;
-						case 'b':
-						case 'B':
+					case 'a':
+					case 'A':
+						{
+							struct stat statbuf;
+							time_t file_time = 0L;
 							binup = TRUE;
-							break;
-						case 'u':
-						case 'U':
-							binup = FALSE;
+							crc = 0;
+							if (!fstat(uploadfile, &statbuf))
+								file_time =  statbuf.st_mtime;
+							else
+								file_time = time(NULL);
+
+							do {
+								upllen =
+									read
+									(uploadfile,
+									 uplbuf,
+									 128);
+
+								if (upllen
+										==
+										-1) {
+									close
+										(uploadfile);
+									uploadfile
+										=
+										-1;
+									delwin
+										(swin);
+									winclose
+										(&wintab);
+									sprintf
+										(s,
+										 "Error reading upload file: upload aborted");
+									statline
+										(mode,
+										 s);
+									break;
+								}
+								crc =
+									calc_crc
+									((unsigned char *) uplbuf,
+									 upllen,
+									 crc);
+							} while (upllen > 0);
+							lseek(uploadfile,
+									0L,
+									SEEK_SET);
+							sprintf(s,
+									"#BIN#%ld#|%u#$%s#%s\r",
+									uplsize,
+									crc,
+									unix_to_sfbin_date_string(file_time),
+									t);
+							if ( write(fd, s,
+										strlen(s)) != strlen(s)) {
+								perror("write");
+								exit(1);
+							}
+							uplpos = 0;
+							upldp = -1;
+							upllen = 0;
+						}
+						restorecursor(mode, &win_out);
+						break;
+					case 'b':
+					case 'B':
+						binup = TRUE;
+						break;
+					case 'u':
+					case 'U':
+						binup = FALSE;
 					}
 					continue;
 				case 'O':
 				case 'o':
-					if ((t =
-								strchr(buf, '\n')) != NULL)
+					t = strchr(buf, '\n');
+					if (t != NULL)
 						*t = '\0';
 					if (logfile != -1) {
 						close(logfile);
@@ -2089,6 +2608,7 @@ int cmd_call(char *call[], int mode)
 						statline(mode, s);
 					} else
 						statbits(mode, 'L', 1);
+					restorecursor(mode, &win_out);
 					continue;
 				case 'C':
 				case 'c':
@@ -2100,10 +2620,12 @@ int cmd_call(char *call[], int mode)
 						statline(mode,
 								"Log file not open");
 					}
+					restorecursor(mode, &win_out);
 					continue;
 				case 'Y':
 				case 'y':
 					cmd_yapp(buf + 2, bytes - 2);
+					restorecursor(mode, &win_out);
 					continue;
 				case '~':
 					bytes--;
@@ -2133,9 +2655,21 @@ int cmd_call(char *call[], int mode)
 							&wintab, &win_in,
 							&win_out, call);
 					continue;
+				case '8':
+					encoding = UTF8ENCODING;
+					statline(mode, "UTF-8 encoding");
+					restorecursor(mode, &win_out);
+					continue;
+				case 'i':
+				case 'I':
+					encoding = ORIGINALENCODING;
+					statline(mode, "IBM850 encoding");
+					restorecursor(mode, &win_out);
+					continue;
 				default:
 					statline(mode,
 						 "Unknown '~' escape. Type ~h for a list");
+					restorecursor(mode, &win_out);
 					continue;
 				}
 			}
@@ -2151,8 +2685,10 @@ int cmd_call(char *call[], int mode)
 				if (uploadfile != -1) {
 					statline(mode,
 						 "Ignored. Type ~s to stop upload");
+					restorecursor(mode, &win_out);
 					continue;
 				}
+
 				convert_lf_cr(buf, bytes);
 
 				while (offset != bytes) {
@@ -2161,8 +2697,8 @@ int cmd_call(char *call[], int mode)
 					if (ret == 0)
 						break;
 					if (ret == -1) {
-			    			if (errno == EWOULDBLOCK || errno == EAGAIN) {
-				 			usleep(100000);
+						if (errno == EWOULDBLOCK || errno == EAGAIN) {
+							usleep(100000);
 							continue;
 						}
 						perror("write");
@@ -2186,6 +2722,7 @@ int cmd_call(char *call[], int mode)
 				winclose(&wintab);
 				statline(mode,
 					 "Upload complete: 0 bytes");
+				restorecursor(mode, &win_out);
 				continue;
 			}
 			if (upldp == -1) {
@@ -2201,6 +2738,7 @@ int cmd_call(char *call[], int mode)
 						"Upload complete: %ld bytes",
 						uplpos);
 					statline(mode, s);
+					restorecursor(mode, &win_out);
 					continue;
 				}
 				if (upllen == -1) {
@@ -2212,6 +2750,7 @@ int cmd_call(char *call[], int mode)
 						"Error reading upload file: upload aborted at %ld bytes",
 						uplpos);
 					statline(mode, s);
+					restorecursor(mode, &win_out);
 					continue;
 				}
 				if (!binup)
@@ -2231,17 +2770,18 @@ int cmd_call(char *call[], int mode)
 				if (errno != EWOULDBLOCK && errno != EAGAIN) {
 					sprintf(s, "Write error during upload. Connection lost");
 					statline(mode, s);
+					restorecursor(mode, &win_out);
 					perror("write");
 					break;
-			  	}
+				}
 				usleep(100000);
 				continue;
 			}
 /*                      if (uplpos / 1024 != (uplpos + bytes) / 1024)
-                           { */ /*      printf("\r%ld bytes sent    ", uplpos + bytes); */
+			   { */ /*      printf("\r%ld bytes sent    ", uplpos + bytes); */
 				sprintf(s, "%ld", uplpos + bytes);
 				dupdstatw(swin, s, FALSE);
-/*                      } */
+/*			} */
 
 			uplpos += bytes;
 			upldp += bytes;
@@ -2270,6 +2810,7 @@ int cmd_call(char *call[], int mode)
 	}
 	fcntl(STDIN_FILENO, F_SETFL, 0);
 
+	sigprocmask(SIG_SETMASK, &oldsigs, NULL);
 	signal(SIGQUIT, SIG_IGN);
 	signal(SIGINT, SIG_DFL);
 
@@ -2288,18 +2829,27 @@ int cmd_call(char *call[], int mode)
 	}
 }
 
+static void iconvclose(void)
+{
+	iconv_close(ibm850toutf8);
+	iconv_close(wcharttoibm850);
+	iconv_close(wcharttoutf8);
+	iconv_close(utf8towchart);
+}
 
 int main(int argc, char **argv)
 {
 	int p;
 	int mode = TALKMODE;
+	int encoding = UTF8ENCODING;	/* Maybe controversial?  */
 
+	setlocale(LC_ALL, "");
 	if (!isatty(STDIN_FILENO))
 		stdin_is_tty = 0;
 
- 	setlinebuf(stdin);
+	setlinebuf(stdin);
 
-	while ((p = getopt(argc, argv, "b:dhm:p:rs:RStT:vw:W")) != -1) {
+	while ((p = getopt(argc, argv, "b:dhm:p:rs:RStT:vw:Wi8")) != -1) {
 		switch (p) {
 		case 'b':
 			if (*optarg != 'e' && *optarg != 'l') {
@@ -2324,7 +2874,8 @@ int main(int argc, char **argv)
 			ax25mode = *optarg == 'e';
 			break;
 		case 'p':
-			if ((paclen = atoi(optarg)) == 0) {
+			paclen = atoi(optarg);
+			if (paclen == 0) {
 				fprintf(stderr,
 					"call: option '-p' requires a numeric argument\n");
 				return 1;
@@ -2336,6 +2887,11 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'r':
+			/*
+			 * This is used to format the scrollback buffer,
+			 * which is stored in raw
+			 */
+			COLS = 80;
 			mode = RAWMODE;
 			break;
 		case 's':
@@ -2346,15 +2902,17 @@ int main(int argc, char **argv)
 		case 'S':
 			be_silent = 1;
 			break;
-		case 'T':
-			{ double f = atof(optarg);
-			  inactivity_timeout.tv_sec = ((time_t) f) & 0x7fffffff;
-			  inactivity_timeout.tv_usec = (time_t ) (f - (double ) (time_t ) f);
-			  if (f < 0.001 || f > (double) (0x7fffffff) || (inactivity_timeout.tv_sec == 0 && inactivity_timeout.tv_usec == 0)) {
-			  	fprintf(stderr, "call: option '-T' must be > 0.001 (1ms) and < 69 years\n");
-				return 1;
-			  }
-			  inactivity_timeout_is_set = TRUE;
+		case 'T': {
+				double f = atof(optarg);
+
+				inactivity_timeout.tv_sec = f;
+				inactivity_timeout.tv_nsec = (f - (long) f) * 1000000000;
+
+				if (f < 0.001 || f > (double) LONG_MAX) {
+					fprintf(stderr, "call: option '-T' must be > 0.001 (1ms) and < %ld seconds\n", LONG_MAX);
+					return 1;
+				}
+				inactivity_timeout_is_set = TRUE;
 			}
 			break;
 		case 't':
@@ -2364,7 +2922,8 @@ int main(int argc, char **argv)
 			printf("call: %s\n", VERSION);
 			return 0;
 		case 'w':
-			if ((window = atoi(optarg)) == 0) {
+			window = atoi(optarg);
+			if (window == 0) {
 				fprintf(stderr,
 					"call: option '-w' requires a numeric argument\n");
 				return 1;
@@ -2386,6 +2945,12 @@ int main(int argc, char **argv)
 		case 'W':
 			wait_for_remote_disconnect = TRUE;
 			break;
+		case 'i':
+			encoding = ORIGINALENCODING;
+			break;
+		case '8':
+			encoding = UTF8ENCODING;
+			break;
 		case '?':
 		case ':':
 			usage();
@@ -2395,6 +2960,13 @@ int main(int argc, char **argv)
 	if (optind == argc || optind == argc - 1) {
 		usage();
 	}
+
+	ibm850toutf8 = iconv_open("UTF8", "IBM850");
+	wcharttoibm850 = iconv_open("IBM850", "WCHAR_T");
+	wcharttoutf8 = iconv_open("UTF8", "WCHAR_T");
+	utf8towchart = iconv_open("WCHAR_T", "UTF8");
+	atexit(iconvclose);
+
 	port = argv[optind];
 
 	if (ax25_config_load_ports() == 0) {
@@ -2438,12 +3010,11 @@ int main(int argc, char **argv)
 		break;
 	}
 
-	
 	if (!be_silent) {
-		printf("GW4PTS AX.25 Connect v1.11\n");
+		printf("GW4PTS AX.25 Connect %s\n", VERSION);
 		fflush(stdout);
 	}
-	while (cmd_call(argv + optind + 1, mode)) {
+	while (cmd_call(argv + optind + 1, mode, encoding)) {
 		if (!be_silent) {
 			printf("Wait 60 sec before reconnect\n");
 			fflush(stdout);

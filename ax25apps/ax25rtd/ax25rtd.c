@@ -19,9 +19,9 @@
 
 /*
  * This daemon tries to learn AX.25, ARP, IP route entries by listening
- * to the AX.25 traffic. It caches up to 256 entries (in "FIFO" mode) 
- * and saves the cache on demand or at shutdown in /var/ax25/ax25rtd/ip_routes 
- * and /var/ax25/ax25rtd/ax25_routes. The configuration file is 
+ * to the AX.25 traffic. It caches up to 256 entries (in "FIFO" mode)
+ * and saves the cache on demand or at shutdown in /var/ax25/ax25rtd/ip_routes
+ * and /var/ax25/ax25rtd/ax25_routes. The configuration file is
  * /etc/ax25/ax25rtd.conf, you can almost everything configure
  * there. See ax25rtcl.c for runtime maintainance.
  *
@@ -61,12 +61,12 @@ config *Config = NULL;
 
 int reload = 0;
 
-ip_rt_entry *ip_routes = NULL;
-int ip_routes_cnt = 0;
+ip_rt_entry *ip_routes;
+int ip_routes_cnt;
 int ip_maxroutes = IP_MAXROUTES;
 
-ax25_rt_entry *ax25_routes = NULL;
-int ax25_routes_cnt = 0;
+ax25_rt_entry *ax25_routes;
+int ax25_routes_cnt;
 int ax25_maxroutes = AX25_MAXROUTES;
 
 char ip_encaps_dev[32] = "";
@@ -93,13 +93,13 @@ config *port_get_config(char *port)
 	return NULL;
 }
 
-void sig_reload(int d)
+static void sig_reload(int d)
 {
 	reload = 1;
 	signal(SIGHUP, sig_reload);
 }
 
-void sig_debug(int d)
+static void sig_debug(int d)
 {
 	fprintf(stderr, "config:\n");
 	dump_config(2);
@@ -110,7 +110,7 @@ void sig_debug(int d)
 	signal(SIGUSR1, sig_debug);
 }
 
-void sig_term(int d)
+static void sig_term(int d)
 {
 	save_cache();
 	daemon_shutdown(0);
@@ -126,7 +126,7 @@ void daemon_shutdown(int reason)
 
 int main(int argc, char **argv)
 {
-	unsigned char buf[256];
+	char buf[256];
 	int size, s, cntrl_s, cntrl_fd;
 	socklen_t cntrl_len;
 	struct sockaddr_un cntrl_addr;
@@ -144,12 +144,14 @@ int main(int argc, char **argv)
 	if (fork())
 		return 0;
 
-	if ((s = socket(PF_PACKET, SOCK_PACKET, htons(ETH_P_AX25))) == -1) {
+	s = socket(PF_PACKET, SOCK_PACKET, htons(ETH_P_AX25));
+	if (s == -1) {
 		perror("AX.25 socket");
 		return 1;
 	}
 
-	if ((cntrl_s = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+	cntrl_s = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (cntrl_s < 0) {
 		perror("Control socket");
 		return 1;
 	}
@@ -215,10 +217,10 @@ int main(int argc, char **argv)
 				}
 			}
 		} else if (FD_ISSET(cntrl_s, &read_fds)) {
-			if ((cntrl_fd =
-			     accept(cntrl_s,
-				    (struct sockaddr *) &cntrl_addr,
-				    &cntrl_len)) < 0) {
+			cntrl_fd = accept(cntrl_s,
+					  (struct sockaddr *)&cntrl_addr,
+					  &cntrl_len);
+			if (cntrl_fd < 0) {
 				perror("accept Control");
 				save_cache();
 				daemon_shutdown(1);

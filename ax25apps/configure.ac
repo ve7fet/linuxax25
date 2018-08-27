@@ -25,7 +25,7 @@ AC_PROG_INSTALL
 AC_SUBST(AX25_LIB)
 AC_SUBST(NCURSES_LIB)
 AC_CHECK_LIB(ax25, ax25_config_load_ports, AX25_LIB="-lax25", AC_MSG_ERROR(Could not find the libax25 libraries; aborting))
-AC_CHECK_LIB(ncurses, initscr, NCURSES_LIB="-lncurses", AC_MSG_ERROR(Could not find the ncurses library; aborting))
+AC_CHECK_LIB(ncursesw, initscr, NCURSES_LIB="-lncursesw", AC_MSG_ERROR(Could not find the ncursesw library; aborting))
 
 # Checks for header files.
 AC_HEADER_DIRENT

@@ -319,7 +319,7 @@ static void facility(unsigned char *data, int lgtot)
 	char digis[80], digid[80];
 	char indorig[10], inddest[10];
 	char addstorig[20], addstdest[20];
-	char *d, *factot;
+	unsigned char *d, *factot;
 	char buf[512];
 	char *result = buf;
 
@@ -430,10 +430,10 @@ static void facility(unsigned char *data, int lgtot)
 			lgadind = lgaddcall - (lgad + 1) / 2 - 5;
 
 			if (fct == 0xCB) {
-				strncpy(indorig, data, lgadind);
+				strncpy(indorig, (char *)data, lgadind);
 				indorig[lgadind] = '\0';
 			} else {
-				strncpy(inddest, data, lgadind);
+				strncpy(inddest, (char *)data, lgadind);
 				inddest[lgadind] = '\0';
 			}
 

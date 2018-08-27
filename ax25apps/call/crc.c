@@ -6,6 +6,11 @@
    created: Mark Wahl DL4YBG 94/01/17
    updated: Mark Wahl DL4YBG 94/01/17
 */
+#define _DEFAULT_SOURCE
+#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE_EXTENDED
+
+#include "crc.h"
 
 static int crcbit[8] = {
 	0x9188, 0x48c4, 0x2462, 0x1231, 0x8108, 0x4084, 0x2042, 0x1021

@@ -23,7 +23,7 @@ int ibmhack = 0;		/* IBM mapping? */
  * (158 and 159 are mapped to space)
  */
 
-unsigned char ibm_map[32] = {
+static unsigned char ibm_map[32] = {
 	199, 252, 233, 226, 228, 224, 229, 231,
 	234, 235, 232, 239, 238, 236, 196, 197,
 	201, 230, 198, 244, 246, 242, 251, 249,
@@ -38,8 +38,8 @@ void lprintf(int dtype, char *fmt, ...)
 {
 	va_list args;
 	char str[1024];
-	unsigned char *p;
 	chtype ch;
+	char *p;
 
 	va_start(args, fmt);
 	vsnprintf(str, 1024, fmt, args);
@@ -70,7 +70,7 @@ void lprintf(int dtype, char *fmt, ...)
 	} else {
 		for (p = str; *p != '\0'; p++)
 			if ((*p < 32 && *p != '\n')
-			    || (*p > 126 && *p < 160 && sevenbit))
+			    || (*p > 126 && (unsigned char) *p < 160 && sevenbit))
 				*p = '.';
 		if (fputs(str, stdout) == -1)
 			exit(1);
@@ -81,11 +81,11 @@ void lprintf(int dtype, char *fmt, ...)
 
 int initcolor(void)
 {
-	initscr();
-	if (has_colors() == FALSE )
-	{
+	initscr();		/* Start ncurses */
+	if (!has_colors()) {
 		endwin();
-		return 0;
+		fprintf(stderr, "Your terminal does not support color\n");
+		exit(1);
 	}
 	start_color();		/* Initialize color support */
 	refresh();		/* Clear screen */
@@ -111,7 +111,6 @@ int initcolor(void)
 	init_pair(T_TCPHDR, COLOR_BLUE, COLOR_BLACK);
 	init_pair(T_FLEXNET, COLOR_BLUE, COLOR_BLACK);
 	init_pair(T_OPENTRAC, COLOR_YELLOW, COLOR_BLACK);
-
 
 	return 1;
 }

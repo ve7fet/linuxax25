@@ -31,88 +31,32 @@
   Steve Fraser vk5asf, June 2005
 */
 
-/*
-  Version 1.0.6
-
-
-*/
-
-/*
-  Version 1.1.0
-  added support for baudrates 57600 and 115200
-  Lee Woldanski ve7fet, Jan 2011
-*/
-
-/*
-  Version 1.1.1
-  added syslog changes from upstream source per Ralf Baechle
-  Lee Woldanski ve7fet, Nov 2014
-
-/* Define the current version number
- *
- * The first digit represents the major release (0 is a prototype release)
- *
- * The second represents major changes that might affect configuration
- * file formats or compilation sequences, or anything that may make
- * existing setups change.
- *
- * The last digit(s) marks simple bug fixes.
- *
- */
-
-#define VERS2 "Version 1.1.1"
-
 #define IPPROTO_AX25 93
 #define DEFAULT_UDP_PORT 10093
 
-/* local includes */
-#include	"../pathnames.h"
+#include <limits.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
 
-/* system includes */
-#include	<ctype.h>
-#include	<errno.h>
-#include	<fcntl.h>
-#include	<memory.h>
-#include	<netdb.h>
-#include	<setjmp.h>
-#include	<signal.h>
-#include	<stdio.h>
-#define __USE_XOPEN
-#include	<stdlib.h>
-#include	<string.h>
-#include	<unistd.h>
-#include	<limits.h>
-#include	<arpa/inet.h>
-#include	<netinet/in.h>
-#include	<netinet/in_systm.h>
-#include	<netinet/ip.h>
-#include	<netinet/ip_icmp.h>
-#include	<sys/ioctl.h>
-#include	<sys/socket.h>
-#include	<termio.h>
-#include	<sys/termios.h>
-#include	<sys/time.h>
-#include	<sys/types.h>
-#include	<netax25/daemon.h>
-
-int udp_mode;                   /* true if we need a UDP socket */
-int ip_mode;                    /* true if we need the raw IP socket */
-unsigned short my_udp;          /* the UDP port to use (network byte order) */
-char ttydevice[PATH_MAX];       /* the tty device for serial comms */
-int ttyspeed;                   /* The baud rate on the tty device */
-unsigned char mycallsign[7];    /* My callsign, shifted ASCII with SSID */
-unsigned char mycallsign2[7];   /* My seconds port callsign, shifted ASCII with SSID */
-unsigned char myalias[7];       /* An alias to use */
-unsigned char myalias2[7];      /* An alias for second port */
-char bc_text[128];              /* The text for beacon messages */
-int bc_interval;                /* The interval, in seconds, between beacons */
-int bc_every;                   /* true=every, false=after */
-int digi;                       /* True if we are connected to a TNC */
-int loglevel;                   /* Verbosity level */
+extern int udp_mode;                   /* true if we need a UDP socket */
+extern int ip_mode;                    /* true if we need the raw IP socket */
+extern unsigned short my_udp;          /* the UDP port to use (network byte order) */
+extern char ttydevice[PATH_MAX];       /* the tty device for serial comms */
+extern int ttyspeed;                   /* The baud rate on the tty device */
+extern unsigned char mycallsign[7];    /* My callsign, shifted ASCII with SSID */
+extern unsigned char mycallsign2[7];   /* My seconds port callsign, shifted ASCII with SSID */
+extern unsigned char myalias[7];       /* An alias to use */
+extern unsigned char myalias2[7];      /* An alias for second port */
+extern char bc_text[128];              /* The text for beacon messages */
+extern int bc_interval;                /* The interval, in seconds, between beacons */
+extern int bc_every;                   /* true=every, false=after */
+extern int digi;                       /* True if we are connected to a TNC */
+extern int loglevel;                   /* Verbosity level */
 /* addition for dual port flag */
-int dual_port;
+extern int dual_port;
 
-struct {
+struct ax25ipd_stats {
 	int kiss_in;            /* # packets received */
 	int kiss_toobig;        /* packet too large */
 	int kiss_badtype;       /* control byte non-zero */
@@ -130,7 +74,9 @@ struct {
 	int ip_tooshort;        /* packet too short to be a valid frame */
 	int ip_not_for_me;      /* packet not for me (in digi mode) */
 	int ip_i_am_dest;       /* I am destination (in digi mode) */
-} stats;
+};
+
+extern struct ax25ipd_stats stats;
 
 #define MAX_FRAME 2048
 
@@ -201,7 +147,6 @@ void io_open(void);
 void io_start(void);
 void send_ip(unsigned char *, int, unsigned char *);
 void send_tty(unsigned char *, int);
-int io_error(int, unsigned char *, int, int, int, int);
 
 /* crc.c */
 unsigned short int compute_crc(unsigned char *, int);
@@ -209,17 +154,9 @@ unsigned short int pppfcs(unsigned short, unsigned char *, int);
 unsigned short int compute_crc(unsigned char *, int);
 int ok_crc(unsigned char *, int);
 
-/* ax25ipd.c */
-int main(int, char **);
-void greet_world(void);
-void do_stats(void);
-void hupper(int);
-void usr1_handler(int);
-void int_handler(int);
-void term_handler(int);
-
 /* io.c */
 extern int ttyfd_bpq;
+extern int ttyfd;
 
 /* bpqether.c */
 int send_bpq(unsigned char *buf, int len);

@@ -11,10 +11,14 @@
  * toolset in january 1997 by rob mayfield, vk5xxx/vk5zeu
  */
 
-#include <stdio.h>
-#include <signal.h>
+#include <limits.h>
 #include <setjmp.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <syslog.h>
+#include <unistd.h>
 
 #include <netax25/daemon.h>
 #include <config.h>
@@ -23,27 +27,121 @@
 #include "../pathnames.h"
 #include "ax25ipd.h"
 
-jmp_buf restart_env;
+int udp_mode;                   /* true if we need a UDP socket */
+int ip_mode;                    /* true if we need the raw IP socket */
+unsigned short my_udp;          /* the UDP port to use (network byte order) */
+char ttydevice[PATH_MAX];       /* the tty device for serial comms */
+int ttyspeed;                   /* The baud rate on the tty device */
+unsigned char mycallsign[7];    /* My callsign, shifted ASCII with SSID */
+unsigned char mycallsign2[7];   /* My seconds port callsign, shifted ASCII with SSID */
+unsigned char myalias[7];       /* An alias to use */
+unsigned char myalias2[7];      /* An alias for second port */
+char bc_text[128];              /* The text for beacon messages */
+int bc_interval;                /* The interval, in seconds, between beacons */
+int bc_every;                   /* true=every, false=after */
+int digi;                       /* True if we are connected to a TNC */
+int loglevel;                   /* Verbosity level */
+struct ax25ipd_stats stats;     /* Usage statistics */
 
-/* Prototypes */
-void hupper(int);
+int dual_port;                  /* addition for dual port flag */
 
-int opt_version = 0;
-int opt_loglevel = 0;
-int opt_nofork = 0;
-int opt_help = 0;
-char opt_configfile[PATH_MAX];
-char opt_ttydevice[PATH_MAX];
+static jmp_buf restart_env;
 
-struct option options[] = {
+static int opt_version;
+static int opt_loglevel;
+static int opt_nofork;
+static int opt_help;
+static char opt_configfile[PATH_MAX];
+static char opt_ttydevice[PATH_MAX];
+
+static struct option options[] = {
 	{"version", 0, NULL, 'v'},
 	{"loglevel", 1, NULL, 'l'},
 	{"help", 0, NULL, 'h'},
 	{"configfile", 1, NULL, 'c'},
 	{"ttydevice", 1, NULL, 'd'},
         {"nofork", 0, NULL, 'f'},
-	{0, 0, 0, 0}
+	{NULL, 0, NULL, 0}
 };
+
+static void greet_world(void)
+{
+        printf("\nax25ipd %s\n", VERSION);
+        printf
+            ("Copyright 1991, Michael Westerhof, Sun Microsystems, Inc.\n");
+        printf
+            ("This software may be freely used, distributed, or modified, providing\nthis header is not removed\n\n");
+        fflush(stdout);
+}
+
+static void do_stats(void)
+{
+        int save_loglevel;
+
+/* save the old loglevel, and force at least loglevel 1 */
+        save_loglevel = loglevel;
+        loglevel = 1;
+
+        printf("\nSIGUSR1 signal: statistics and configuration report\n");
+
+        greet_world();
+
+        dump_config();
+        dump_routes();
+        dump_params();
+
+        printf("\nInput stats:\n");
+        printf("KISS input packets:  %d\n", stats.kiss_in);
+        printf("           too big:  %d\n", stats.kiss_toobig);
+        printf("          bad type:  %d\n", stats.kiss_badtype);
+        printf("         too short:  %d\n", stats.kiss_tooshort);
+        printf("        not for me:  %d\n", stats.kiss_not_for_me);
+        printf("  I am destination:  %d\n", stats.kiss_i_am_dest);
+        printf("    no route found:  %d\n", stats.kiss_no_ip_addr);
+        printf("UDP  input packets:  %d\n", stats.udp_in);
+        printf("IP   input packets:  %d\n", stats.ip_in);
+        printf("   failed CRC test:  %d\n", stats.ip_failed_crc);
+        printf("         too short:  %d\n", stats.ip_tooshort);
+        printf("        not for me:  %d\n", stats.ip_not_for_me);
+        printf("  I am destination:  %d\n", stats.ip_i_am_dest);
+        printf("\nOutput stats:\n");
+        printf("KISS output packets: %d\n", stats.kiss_out);
+        printf("            beacons: %d\n", stats.kiss_beacon_outs);
+        printf("UDP  output packets: %d\n", stats.udp_out);
+        printf("IP   output packets: %d\n", stats.ip_out);
+        printf("\n");
+
+        fflush(stdout);
+
+/* restore the old loglevel */
+        loglevel = save_loglevel;
+}
+
+static void hupper(int i)
+{
+        printf("\nSIGHUP!\n");
+        longjmp(restart_env, 1);
+}
+
+static void usr1_handler(int i)
+{
+        printf("\nSIGUSR1!\n");
+        do_stats();
+}
+
+static void int_handler(int i)
+{
+        printf("\nSIGINT!\n");
+        do_stats();
+        exit(1);
+}
+
+static void term_handler(int i)
+{
+        printf("\nSIGTERM!\n");
+        do_stats();
+        exit(1);
+}
 
 int main(int argc, char **argv)
 {
@@ -168,85 +266,5 @@ int main(int argc, char **argv)
 	/* and let the games begin */
 	io_start();
 
-	return (0);
-}
-
-
-void greet_world(void)
-{
-	printf("\nax25ipd %s / %s\n", VERS2, VERSION);
-	printf
-	    ("Copyright 1991, Michael Westerhof, Sun Microsystems, Inc.\n");
-	printf
-	    ("This software may be freely used, distributed, or modified, providing\nthis header is not removed\n\n");
-	fflush(stdout);
-}
-
-void do_stats(void)
-{
-	int save_loglevel;
-
-/* save the old loglevel, and force at least loglevel 1 */
-	save_loglevel = loglevel;
-	loglevel = 1;
-
-	printf("\nSIGUSR1 signal: statistics and configuration report\n");
-
-	greet_world();
-
-	dump_config();
-	dump_routes();
-	dump_params();
-
-	printf("\nInput stats:\n");
-	printf("KISS input packets:  %d\n", stats.kiss_in);
-	printf("           too big:  %d\n", stats.kiss_toobig);
-	printf("          bad type:  %d\n", stats.kiss_badtype);
-	printf("         too short:  %d\n", stats.kiss_tooshort);
-	printf("        not for me:  %d\n", stats.kiss_not_for_me);
-	printf("  I am destination:  %d\n", stats.kiss_i_am_dest);
-	printf("    no route found:  %d\n", stats.kiss_no_ip_addr);
-	printf("UDP  input packets:  %d\n", stats.udp_in);
-	printf("IP   input packets:  %d\n", stats.ip_in);
-	printf("   failed CRC test:  %d\n", stats.ip_failed_crc);
-	printf("         too short:  %d\n", stats.ip_tooshort);
-	printf("        not for me:  %d\n", stats.ip_not_for_me);
-	printf("  I am destination:  %d\n", stats.ip_i_am_dest);
-	printf("\nOutput stats:\n");
-	printf("KISS output packets: %d\n", stats.kiss_out);
-	printf("            beacons: %d\n", stats.kiss_beacon_outs);
-	printf("UDP  output packets: %d\n", stats.udp_out);
-	printf("IP   output packets: %d\n", stats.ip_out);
-	printf("\n");
-
-	fflush(stdout);
-
-/* restore the old loglevel */
-	loglevel = save_loglevel;
-}
-
-void hupper(int i)
-{
-	printf("\nSIGHUP!\n");
-	longjmp(restart_env, 1);
-}
-
-void usr1_handler(int i)
-{
-	printf("\nSIGUSR1!\n");
-	do_stats();
-}
-
-void int_handler(int i)
-{
-	printf("\nSIGINT!\n");
-	do_stats();
-	exit(1);
-}
-
-void term_handler(int i)
-{
-	printf("\nSIGTERM!\n");
-	do_stats();
-	exit(1);
+	return 0;
 }

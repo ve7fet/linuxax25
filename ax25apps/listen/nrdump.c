@@ -42,7 +42,7 @@ static void netrom_inp_dump(unsigned char *data, int length)
 	int tt;
 	int alen;
 	int i;
-	
+
 	if (data[0]==0xff) {
 		lprintf(T_AXHDR, "INP Route Information Frame:\n");
 		i=1;
@@ -191,7 +191,6 @@ void netrom_dump(unsigned char *data, int length, int hexdump, int type)
 		break;
 	}
 }
-
 
 static void netrom_flags(int flags)
 {

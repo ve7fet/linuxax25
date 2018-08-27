@@ -77,7 +77,7 @@ u16 pppfcs(u16 fcs, unsigned char *cp, int len)
 	while (len--)
 		fcs = (fcs >> 8) ^ fcstab[(fcs ^ *cp++) & 0xff];
 
-	return (fcs);
+	return fcs;
 }
 
 /*
@@ -108,7 +108,7 @@ int ok_crc(unsigned char *buf, int l)
 
 	fcs = PPPINITFCS;
 	fcs = pppfcs(fcs, buf, l);
-	return (fcs == PPPGOODFCS);
+	return fcs == PPPGOODFCS;
 }
 
 /*

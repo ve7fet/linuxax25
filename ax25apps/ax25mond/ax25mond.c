@@ -20,7 +20,6 @@
 
 /*--------------------------------------------------------------------------*/
 
-#define VERSION "1.0"
 #define CONFFILE "/etc/ax25/ax25mond.conf"
 #define MAX_SOCKETS  5
 #define MAX_CONNECTS 50
@@ -47,6 +46,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <config.h>
+
 /* For older kernels  */
 #ifndef PF_PACKET
 #define PF_PACKET PF_INET
@@ -62,22 +63,22 @@ static union {
 
 /*--------------------------------------------------------------------------*/
 
-int sock_list[MAX_SOCKETS];
-char sock_monmode[MAX_SOCKETS];
-char sock_filename[MAX_SOCKETS][100];
-int sock_num = 0;
-int conn_list[MAX_CONNECTS];
-struct sockaddr conn_addr[MAX_CONNECTS];
-socklen_t conn_addrlen[MAX_CONNECTS];
-char conn_monmode[MAX_CONNECTS];
-int conn_num = 0;
-int highest_sock_fd;
-int end = 0;
+static int sock_list[MAX_SOCKETS];
+static char sock_monmode[MAX_SOCKETS];
+static char sock_filename[MAX_SOCKETS][100];
+static int sock_num = 0;
+static int conn_list[MAX_CONNECTS];
+static struct sockaddr conn_addr[MAX_CONNECTS];
+static socklen_t conn_addrlen[MAX_CONNECTS];
+static char conn_monmode[MAX_CONNECTS];
+static int conn_num = 0;
+static int highest_sock_fd;
+static int end = 0;
 
 /*--------------------------------------------------------------------------*/
 
 /* from buildsaddr.c */
-struct sockaddr *build_sockaddr(const char *name, int *addrlen)
+static struct sockaddr *build_sockaddr(const char *name, int *addrlen)
 {
 	char *host_name;
 	char *serv_name;
@@ -89,10 +90,10 @@ struct sockaddr *build_sockaddr(const char *name, int *addrlen)
 	host_name = strcpy(buf, name);
 	serv_name = strchr(buf, ':');
 	if (!serv_name)
-		return 0;
+		return NULL;
 	*serv_name++ = 0;
 	if (!*host_name || !*serv_name)
-		return 0;
+		return NULL;
 
 	if (!strcmp(host_name, "local") || !strcmp(host_name, "unix")) {
 		addr.su.sun_family = AF_UNIX;
@@ -108,13 +109,15 @@ struct sockaddr *build_sockaddr(const char *name, int *addrlen)
 		addr.si.sin_addr.s_addr = INADDR_ANY;
 	} else if (!strcmp(host_name, "loopback")) {
 		addr.si.sin_addr.s_addr = inet_addr("127.0.0.1");
-	} else if ((addr.si.sin_addr.s_addr = inet_addr(host_name)) == -1) {
-		struct hostent *hp = gethostbyname(host_name);
-		endhostent();
-		if (!hp)
-			return 0;
-		addr.si.sin_addr.s_addr =
-		    ((struct in_addr *) (hp->h_addr))->s_addr;
+	} else {addr.si.sin_addr.s_addr = inet_addr(host_name);
+		if (addr.si.sin_addr.s_addr == -1) {
+			struct hostent *hp = gethostbyname(host_name);
+			endhostent();
+			if (!hp)
+				return NULL;
+			addr.si.sin_addr.s_addr =
+			    ((struct in_addr *) (hp->h_addr))->s_addr;
+		}
 	}
 
 	if (isdigit(*serv_name & 0xff)) {
@@ -123,7 +126,7 @@ struct sockaddr *build_sockaddr(const char *name, int *addrlen)
 		struct servent *sp = getservbyname(serv_name, NULL);
 		endservent();
 		if (!sp)
-			return 0;
+			return NULL;
 		addr.si.sin_port = sp->s_port;
 	}
 
@@ -133,7 +136,7 @@ struct sockaddr *build_sockaddr(const char *name, int *addrlen)
 
 /*--------------------------------------------------------------------------*/
 
-void add_socket(char *sockname, char monmode)
+static void add_socket(char *sockname, char monmode)
 {
 	struct sockaddr *saddr;
 	int saddrlen;
@@ -156,8 +159,8 @@ void add_socket(char *sockname, char monmode)
 	else
 		sock_filename[sock_num][0] = 0;
 
-	if ((sock_list[sock_num] =
-	     socket(saddr->sa_family, SOCK_STREAM, 0)) < 0) {
+	sock_list[sock_num] = socket(saddr->sa_family, SOCK_STREAM, 0);
+	if (sock_list[sock_num] < 0) {
 		fprintf(stderr,
 			"WARNING: Error opening socket \"%s\": %s\n",
 			sockname, strerror(errno));
@@ -189,7 +192,7 @@ void add_socket(char *sockname, char monmode)
 
 /*--------------------------------------------------------------------------*/
 
-void close_sockets(void)
+static void close_sockets(void)
 {
 	int i;
 
@@ -203,7 +206,7 @@ void close_sockets(void)
 
 /*--------------------------------------------------------------------------*/
 
-void quit_handler(int dummy)
+static void quit_handler(int dummy)
 {
 	end = 1;
 }
@@ -323,7 +326,7 @@ int main(int argc, char *argv[])
 			FD_SET(sock_list[i], &conn_request);
 		tv.tv_sec = 0;
 		tv.tv_usec = 0;
-		select(highest_sock_fd + 1, &conn_request, 0, 0, &tv);
+		select(highest_sock_fd + 1, &conn_request, NULL, NULL, &tv);
 		for (i = 0; i < sock_num; i++)
 			if (FD_ISSET(sock_list[i], &conn_request)) {
 				conn_list[conn_num] = accept(sock_list[i],
@@ -339,7 +342,7 @@ int main(int argc, char *argv[])
 		FD_SET(monrx_fd, &monavail);
 		tv.tv_sec = 0;
 		tv.tv_usec = 10;
-		select(monrx_fd + 1, &monavail, 0, 0, &tv);
+		select(monrx_fd + 1, &monavail, NULL, NULL, &tv);
 		if (FD_ISSET(monrx_fd, &monavail)) {
 			monfromlen = sizeof(monfrom);
 			size =
@@ -370,7 +373,7 @@ int main(int argc, char *argv[])
 		FD_SET(monrxtx_fd, &monavail);
 		tv.tv_sec = 0;
 		tv.tv_usec = 10;
-		select(monrxtx_fd + 1, &monavail, 0, 0, &tv);
+		select(monrxtx_fd + 1, &monavail, NULL, NULL, &tv);
 		if (FD_ISSET(monrxtx_fd, &monavail)) {
 			monfromlen = sizeof(monfrom);
 			size =

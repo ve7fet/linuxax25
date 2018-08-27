@@ -16,9 +16,9 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  */
- 
+
 /* Defines for defaults */
- 
+
 #define IP_MAXROUTES	4096
 #define AX25_MAXROUTES	4096
 #define AX25_MAXCALLS	32
@@ -28,7 +28,7 @@
 #define NEW_ARP		1
 #define NEW_ROUTE	2
 #define NEW_IPMODE	4
-  
+
 #define SEG_FIRST       0x80
 #define SEG_REM         0x7F
 
@@ -36,7 +36,7 @@
 #define PID_ARP         0xCD
 #define PID_IP          0xCC
 #define PID_NETROM	0xCF
-  
+
 #define HDLCAEB         0x01
 #define SSSID_SPARE     0x40
 #define AX25_REPEATED	0x80
@@ -50,13 +50,12 @@
 #define AXLEN		7
 #define IPLEN		20
 
-
 /* structs for the caches */
 
 typedef struct ip_rt_entry_ {
 	struct ip_rt_entry_	*next, *prev;
 	unsigned long		ip;
-	unsigned char		iface[14];
+	char			iface[14];
 	ax25_address		call;
 	char			ipmode;
 	time_t			timestamp;
@@ -65,7 +64,7 @@ typedef struct ip_rt_entry_ {
 
 typedef struct ax25_rt_entry_ {
 	struct ax25_rt_entry_	*next, *prev;
-	unsigned char		iface[14];
+	char			iface[14];
 	ax25_address		call;
 	ax25_address		digipeater[AX25_MAX_DIGIS];
 	int			ndigi;
@@ -95,16 +94,14 @@ typedef struct config_ {
 
 	unsigned long netmask;
 	unsigned long ip;
-	
+
 	int nmycalls;
 	ax25_address mycalls[AX25_MAXCALLS];
-	
+
 	struct full_sockaddr_ax25 ax25_default_path;
 } config;
 
 /* global variables */
-
-extern const char * Version;
 
 extern int reload;
 
@@ -127,7 +124,7 @@ void load_config(void);
 void reload_config(void);
 void load_cache(void);
 void save_cache(void);
-void interpret_command(int fd, unsigned char *buf);
+void interpret_command(int fd, char *buf);
 
 /* listener.c */
 

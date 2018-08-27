@@ -2,7 +2,7 @@
 .SH NAME
 listen \- monitor AX.25 traffic
 .SH SYNOPSIS
-.B listen [-8] [-a] [-c] [-h] [-i] [-p port] [-r] [-t] [-v]
+.B listen [-8] [-a] [-c] [-h] [-i] [-p port] [-r] [-t..] [-v]
 .SH DESCRIPTION
 .LP
 .B Listen
@@ -57,7 +57,21 @@ Dump the data portion in a "readable" fashion, which is more suitable
 for tracing plaintext AX.25 traffic. CR-LF conversion is done.
 .TP 10
 .BI \-t
-Displays a timestamp with each packet received.
+Don't print a timestamp on each dump line.
+.TP 10
+.BI -tt
+Print an unformatted timestamp on each dump line.
+.TP 10
+.BI -ttt
+Print a delta (micro-second resolution) between current and previous line
+on each dump line.
+.TP 10
+.BI -tttt
+Print a timestamp in default format proceeded by  date  on  each dump line.
+.TP 10
+.BI -ttttt
+Print a delta  (micro-second  resolution)  between current and first
+line on each dump line.
 .TP 10
 .BI \-v
 Display the version.

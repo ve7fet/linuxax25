@@ -45,7 +45,6 @@
 
 #include <stdlib.h>
 
-
 /* FIXME */
 static unsigned long get_from_arp(unsigned char *data, int size)
 {
@@ -164,12 +163,12 @@ int set_arp(config * config, long ip, ax25_address * call)
 	return 0;
 }
 
-/* dl9sau: use iproute2 for advanced routing. 
+/* dl9sau: use iproute2 for advanced routing.
  * Anyone likes to implement this directly, without system()?
  */
 #define	RT_DEL		0
 #define	RT_ADD		1
-int iproute2(long ip, char *dev, int what)
+static int iproute2(long ip, char *dev, int what)
 {
 	char buffer[256];
 	char ipa[32];
@@ -178,9 +177,9 @@ int iproute2(long ip, char *dev, int what)
 	sprintf(ipa, "%d.%d.%d.%d",
 		(int) (ip & 0x000000FF),
 		(int) ((ip & 0x0000FF00) >> 8),
-                (int) ((ip & 0x00FF0000) >> 16),
+		(int) ((ip & 0x00FF0000) >> 16),
 		(int) ((ip & 0xFF000000) >> 24));
-	
+
 	/* ip rule add  table 44 */
 	sprintf(buffer, "/sbin/ip route %s %s dev %s table %s proto ax25rtd", (what ? "add" : "del"), ipa, dev, iproute2_table);
 
@@ -396,7 +395,8 @@ void ax25_receive(int sock)
 	socklen_t asize;
 
 	asize = sizeof(sa);
-	if ((size = recvfrom(sock, buf, sizeof(buf), 0, &sa, &asize)) < 0) {
+	size = recvfrom(sock, buf, sizeof(buf), 0, &sa, &asize);
+	if (size < 0) {
 		perror("recvfrom");
 		save_cache();
 		daemon_shutdown(1);
@@ -413,7 +413,7 @@ void ax25_receive(int sock)
 
 	data = buf;
 
-	/* 
+	/*
 	 * KISS data?
 	 */
 
@@ -451,7 +451,7 @@ void ax25_receive(int sock)
 	srccall.ax25_call[6] &= 0x1e;
 	SKIP(ALEN);
 
-	/* 
+	/*
 	 * How long is our control field?
 	 */
 
@@ -472,7 +472,6 @@ void ax25_receive(int sock)
 		else
 			return;
 
-
 		SKIP(ALEN);
 	}
 
@@ -492,7 +491,7 @@ void ax25_receive(int sock)
 			ctl &= ~LAPB_PF;
 	}
 
-	/* 
+	/*
 	 * Check if info frame and get PID
 	 */
 

@@ -32,18 +32,18 @@
 #include "../pathnames.h"
 
 static const struct option lopts[] = {
-	{"add", 1, 0, 'a'},
-	{"del", 1, 0, 'd'},
-	{"list", 1, 0, 'l'},
-	{"expire", 1, 0, 'e'},
-	{"save", 0, 0, 's'},
-	{"reload", 0, 0, 'r'},
-	{"shutdown", 0, 0, 'q'},
-	{"Version", 0, 0, 'V'},
-	{"help", 0, 0, 'h'},
-	{"debug", 0, 0, 'x'},
-	{"version", 0, 0, 'v'},
-	{NULL, 0, 0, 0}
+	{"add", 1, NULL, 'a'},
+	{"del", 1, NULL, 'd'},
+	{"list", 1, NULL, 'l'},
+	{"expire", 1, NULL, 'e'},
+	{"save", 0, NULL, 's'},
+	{"reload", 0, NULL, 'r'},
+	{"shutdown", 0, NULL, 'q'},
+	{"Version", 0, NULL, 'V'},
+	{"help", 0, NULL, 'h'},
+	{"debug", 0, NULL, 'x'},
+	{"version", 0, NULL, 'v'},
+	{NULL, 0, NULL, 0}
 };
 
 static const char *sopts = "a:d:l:e:srqvVh";
@@ -63,7 +63,7 @@ static void usage(void)
 	fprintf(stderr, "          -r|--reload\n");
 	fprintf(stderr, "          -q|--shutdown\n");
 	fprintf(stderr, "          -V|--Version\n");
-	fprintf(stderr, "	  -h|--help\n");
+	fprintf(stderr, "          -h|--help\n");
 	fprintf(stderr, "          -v|--version\n");
 	exit(1);
 }
@@ -133,7 +133,7 @@ static void list_ax25(void)
 	printf("Callsign  Port   Last update         Path\n");
 
 /*
-                DB0PRA-15 scc3   Tue Aug  6 16:35:38 1996 
+		DB0PRA-15 scc3   Tue Aug  6 16:35:38 1996
 */
 
 	while (1) {
@@ -198,8 +198,8 @@ static void list_ip(void)
 	offs = 0;
 	printf("IP Address      Port   Callsign  Mode Last update\n");
 
-/*	
-	        255.255.255.255 scc3   DB0PRA-15 v    Thu Jan  7 06:54:19 1971
+/*
+		255.255.255.255 scc3   DB0PRA-15 v    Thu Jan  7 06:54:19 1971
  */
 	while (1) {
 		len = read(sock, buf + offs, sizeof(buf) - offs - 1);
@@ -265,7 +265,6 @@ static void debug(void)
 	fd_set read_fds, write_fds;
 	struct timeval tv;
 
-
 	sock = open_socket();
 
 	while (1) {
@@ -306,8 +305,8 @@ static void debug(void)
 int main(int argc, char **argv)
 {
 	int sock, cmd, k, len;
-	unsigned char buf[256];
 	int opt_ind = 0;
+	char buf[256];
 	long when;
 
 	cmd = getopt_long(argc, argv, sopts, lopts, &opt_ind);

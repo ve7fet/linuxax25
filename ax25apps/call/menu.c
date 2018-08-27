@@ -1,10 +1,13 @@
 /*
- * menu (c)1995 Alexander Tietzel (DG6XA) 
+ * menu (c)1995 Alexander Tietzel (DG6XA)
  * little Menu-System for use with ncurses
  * date        activity                             autor
  * 22.07.1995  wininfo->wint (vector->single chain) Alexander Tietzel (DG6XA)
  * 25.07.1995  some minor changes                   Alexander Tietzel (DG6XA)
  */
+#define _DEFAULT_SOURCE
+#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE_EXTENDED
 
 #include <curses.h>
 #include <stdlib.h>
@@ -90,7 +93,7 @@ void winclose(wint * wtab)
 	}
 
 	doupdate();
-	lwin->next = 0;
+	lwin->next = NULL;
 	free(awin);
 }
 
@@ -199,7 +202,6 @@ int p_dwn_menu(wint * wtab, menuitem * menustr, int starty, int startx)
 	if (c == 0x1b)
 		return 0;
 
-
 	if (c == KEY_RIGHT || c == KEY_LEFT)
 		return c;
 	else
@@ -234,7 +236,6 @@ void menu_write_item(WINDOW * win, int xpos, int reverse, const char st[])
 	if (reverse)
 		wattroff(win, A_REVERSE);
 }
-
 
 int top_menu(wint * wtab, menuitem menustr[], int ystart)
 {

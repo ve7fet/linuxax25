@@ -1,13 +1,16 @@
 AX25 Apps
 ========
 
-ax25ipd is a custom release, not associated with the official source.
+ax25ipd is a custom release, loosely associated with the official source.
        Steve Fraser vk5asf, introduced in Jun 2005 supporting of dynamic DNS hosts
        additionally Cathryn Mataga added ability to route packets over axip links 
        that are not from the gateway callsign.
        Read more information in related ChangeLog.
 
-ax25ipd supports baud rates of 57600 and 115200. Previous versions (<1.1.0) will
+       We try wherever possible to add patches/bug fixes from the upstream code, 
+       however, the official code DOES NOT support some of these features.
+
+ax25ipd now supports ALL standard Linux baud rates. Previous versions (<1.1.0) will
        default to 9600 if:
 	* your system does not support rates >9600
 	* if you try and set a speed >38400
@@ -18,7 +21,7 @@ configured to use a speed >38400 (since it will default to 9600).
 
 Note that this only affects serial communications and not IP/UDP.
 
-  -- Lee Woldanski <ve7fet@tparc.org>  Thu 20 Jan 2011 14:00:00 -0800
+  -- Lee Woldanski <ve7fet@tparc.org>  Mon 27 Aug 2018 14:00:00 -0800
 
 Listen now by default is NOT setuid root which means that normal users will
 not be able to run it out of the box.  If you want everyone to run

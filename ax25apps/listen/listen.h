@@ -1,3 +1,23 @@
+#define GCC_VERSION (__GNUC__ * 10000		\
+		     + __GNUC_MINOR__ * 100	\
+		     + __GNUC_PATCHLEVEL__)
+
+#if GCC_VERSION >= 40500
+
+/*
+ * Mark a position in code as unreachable.  This can be used to
+ * suppress control flow warnings after asm blocks that transfer
+ * control elsewhere.
+ *
+ * Early snapshots of gcc 4.5 don't support this and we can't detect
+ * this in the preprocessor, but we can live with this because they're
+ * unreleased.
+ */
+#define unreachable() \
+	do { __builtin_unreachable(); } while (0)
+#else
+#define unreachable() do { } while (1)
+#endif
 
 #define T_ERROR		1
 #define T_PORT		2
@@ -15,20 +35,18 @@
 #define T_OPENTRAC	14
 
 /* In utils.c */
-extern int color;			/* Colorized mode */
+extern int color;			/* Colorized mode */
 extern int sevenbit;			/* Are we on a 7-bit terminal? */
 extern int ibmhack;			/* IBM mapping? */
 
-extern int timestamp;
-
 void display_timestamp(void);
-	
+
 void lprintf(int dtype, char *fmt, ...);
 int  initcolor(void);
 char *servname(int port, char *proto);
 
 /* In listen.c */
-void data_dump(unsigned char *, int, int);
+void data_dump(void *, int, int);
 int  get16(unsigned char *);
 int  get32(unsigned char *);
 

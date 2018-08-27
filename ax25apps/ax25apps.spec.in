@@ -68,6 +68,7 @@ rm -rf $RPM_BUILD_ROOT
 * Sat Aug 11 2018 Lee Woldanski <ve7fet@tparc.org> 1.0.6-1
 - Add Debian packaging files
 - Change default conf installation to /usr/share/doc
+- Sync with upstream source to 2017 patches
 
 * Mon Dec 01 2014 Lee Woldanski <ve7fet@tparc.org> 1.0.5-1
 - Fix segfault in listen

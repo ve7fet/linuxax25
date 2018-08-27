@@ -4,6 +4,115 @@ ax25apps (1.0.6) unstable; urgency=low
   * Change the way the default conf files are installed. They will now be 
   put in somewhere like /usr/share/doc/ax25apps/conf with .dist extensions 
   to ensure that the default config files don't clobber working files
+  * Synchronized our source tree with upstream official source patches
+  current to 2017 (latest patch level). Summary of changes follow, but see
+  the official source tree for further details.
+  * Tree-wide changes:
+      Remove useless initializations to 0 or NULL.
+      Whitespace changes for consistency.
+      Sort out variable and function declarations:
+        Make static what can be made static.
+        Add declaration where they were missing.
+        Don't define variables in headers.
+        Move declaations to the proper locations.
+        Pick up declarations from the proper headers.
+      Cleanup header file inclusion:
+        We were including way too many system header files, some even multiple
+        times and it wasn't immediately visible. Clean this.
+        This also drops definitions of __USE_XOPEN which never had the desired
+        effect with glibc.
+  * listen:
+      Change behaviour, now -t option disables timestamps (timestamps are
+      enabled by default, without -t).
+      Remove useless postincrement op. GCC would have done that itself but now
+      the code is slightly less eyesore. Broken out from a patch by Wietse
+      Ruyg <pe1oez@dds.nl>.
+      Remove code controlled by NEW_AX25_STACK.
+      Fix overzealous GCC 7 compiler warnings.
+  * call:
+      UTF-8 support for call. Patch by Cathryn Mataga.
+        1. Now supports UTF8 or IBM850 as the encoding style over AX25.
+        1a. Attention was paid to make sure that wide characters worked
+        with East Asian fonts.
+        2. Now the screen can be resized correctly. The program no longer
+        crashes when it is resized.
+        3. Added a scrollback buffer. Use the up and down arrow keys or the
+        page up/page down keys to scroll through history. After the screen
+        begins scrolling, press 'up arrow' to view history.
+        4.  Many visual quirks have been fixed.
+      THIS VERSION IS NOW DEPENDENT ON iconv AND WIDE CHARACTER VERSIONS OF
+      ncurses (ie libncursesw5-dev).
+      Fix buffer overflow. When sending files of 1GB or larger, size_buffer
+      was not large enough to hold the number including a trailing \0.
+      Fix structure mismatch
+      GCC with LTO enabled warn. This was caused by different .c files
+      being built with different libc feature selection macros.
+      Harden against compiler overoptimization. A compiler won't know that
+      the interrupted variable can be changed behind its back in a signal
+      handler so it might do clever overoptimizations.
+      Fix declaration of unix2yapp(). It didn't match the actual function
+      definition.
+      Don't reinstall SIGQUIT signal handler. This is Linux software so we
+      don't have to deal with this kind of UNIX V7 or SVR3 braindamage of
+      resetting the signal handlers.
+      Fix parsing of the argument of the -T option.
+      Fix race condition between select(2) and signal delivery. If a signal
+      is delivered between the start of the main select loop and select might
+      wait for a long time. Fixing this with select is not possible so switch
+      to pselect. Unlike select, pselect takes a struct timespec pointer as
+      its argument so rewrite the related infrastructure to work with struct
+      timespec instead of struct timeval. For now the race did only affect the
+      SIGQUIT delivery.
+      Remove unused function writemsg().
+      Don't use C++ comments.
+      Remove unused definition of MAXCMDLEN.
+      The curses terminal connection displays the destination call in the
+      upper left. The call comes from commandline arg. Ensure to write it in
+      upper case.
+      Fix use of glibc feature selection macros. __USE_XOPEN should not be
+      used directly by application code. Other feature selection macros must
+      be defined before inclusion of any system header files.
+      Fix possible buffer overflow. When downloading a file with a very long
+      filename the 80 byte buffer used by start_ab_download() might
+      overflow. Increase the buffer to a sufficient size and switch to using
+      snprintf for double safety.
+      Remove unused arguments from sevenplname()
+  * ax25ipd:
+      Replace bzero use with memset. bzero is a mega-ancient use of bsdism.
+      Remove code for ICMP mode. Supposedly it didn't work and it was never
+      being built anyway.
+      Fix glibc feature selection macros.
+      Get rid of __bsdi__ ifdefery. I don't think this was ever meant to run
+      on a BSD/i386 or BSD/OS system.
+      Remove USE_SGTTY ifdefery.
+      USE_TERMIOS is never defined.
+      USE_TERMIO is always defined.
+      Add support for all Linux-supported bit rates. For all Linux-supported
+      architectures this adds support for: 57600, 115200, 230400, 460800,
+      500000, 576000, 1000000, 1152000, 1500000, 2000000, 2500000, 3000000,
+      3500000 and 4000000 bits per second.
+      For SPARC this also adds support for: 76800, 153600, 307200, 614400 and
+      921600 bits per second.
+      As before 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800,
+      9600, 19200 and 38400 remain supported.
+      Fix stats. The stats structure was defined in the ax25ipd.h header as a
+      static variable resulting in each compilation unit having its own stats
+      variable. The sole reader, the do_stats() function would thus only see
+      and print all-zero stats.
+      Make function do_stats() static. It's only being used from within
+      ax25ipd.c.
+      Make function greet_world() static. It's only being used from within
+      ax25ipd.c. To avoid the need for a prototype within ax25ipd.c move the
+      function above its first caller.
+      Remove pointless prototype for main().
+      Sort out prototypes for hupper(). There were two - and they can be
+      avoided entirely.
+      Sort out prototypes for usr1_handler(). Make usr1_handler() static,
+      remove its prototype from the header and reorder code to avoid prototypes.
+      Sort out prototypes for int_handler().
+      Sort out prototype for term_handler().
+      Sort out prototype for io_error(). io_error() has no callers outside its
+      defining file.
 
  -- Lee Woldanski <ve7fet@tparc.org>  Sat, 11 Aug 2018 14:00:00 -0800
  

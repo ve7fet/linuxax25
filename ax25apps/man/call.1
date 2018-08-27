@@ -8,11 +8,11 @@ For AX.25
 .sp 1
 For NET/ROM
 .br
-.B call [-d] [-h] [-p paclen] [-r] [-t] [-v] port callsign
+.B call [-d] [-h] [-p paclen] [-r] [-t] [-T timeout] [-v] port callsign
 .sp 1
 For Rose
 .br
-.B call [-d] [-h] [-r] [-t] [-v] port callsign address [[via] digipeater]
+.B call [-d] [-h] [-r] [-t] [-T timeout] [-v] port callsign address [[via] digipeater]
 .br
 .SH DESCRIPTION
 .LP
@@ -42,6 +42,9 @@ Rose node tables. For Rose connects to work
 must have been used to set a callsign/uid mapping for the userid in use.
 .SH OPTIONS
 .TP 10
+.BI "\-8"
+UTF-8 encoding (default)
+.TP 10
 .BI "\-b l|e"
 Sets the method of backoff to use with AX.25 connections. The default is
 taken from the port specification, but can be overridden by this option.
@@ -57,6 +60,8 @@ Turn on socket level debugging.
 .BI \-h
 Selects Slave mode.
 .TP 10
+.BI \-i
+Use IBM850 encoding
 .BI "\-m s|e"
 Sets the AX.25 mode to use. The default is taken from the port
 specification, but can be overridden by this option. Valid values are
@@ -68,21 +73,11 @@ for extended (modulus 128) AX.25 operation.
 .BI "\-p paclen"
 Specify a specific maximum amount of data to be sent in each AX.25 packet. 
 .TP 10
-.BI "\-s mycall"
-Connect using the specified source call (you may need to be root).
-.TP 10
-.BI \-R
-Disable all remote commands like autobin (#BIN#), 7plus downloads, //echo, etc.
-This is useful for scripting where you just don't like the remote site to trigger uncaught conditions here.
-.TP 10
-.BI \-S
-Be silent. Useful for using call in shellscripts (together with option \-r) in order to be really transparent.
-.TP 10
-.BI "\-T timeout"
-Set idle timeout seconds after a connection will be closed automaticaly when there's no data being transferred (in- and outbound). If timeout is set to 3600, the connection will close after 1h inactivity. A value of 0.5 is 500ms.
-.TP 10
 .BI \-r
 Selects Raw mode.
+.TP 10
+.BI "\-s mycall"
+Connect using the specified source call (you may need to be root).
 .TP 10
 .BI \-t
 Selects Talk mode.
@@ -92,6 +87,16 @@ Display the version.
 .TP 10
 .BI "\-w window"
 Specify a specific AX.25 window for this connection. Only valid in AX.25 mode.
+.TP 10
+.BI \-S
+Be silent. Useful for using call in shellscripts (together with option \-r) in order to be really transparent.
+.TP 10
+.BI \-R
+Disable all remote commands like autobin (#BIN#), 7plus downloads, //echo, etc.
+This is useful for scripting where you just don't like the remote site to trigger uncaught conditions here.
+.TP 10
+.BI "\-T timeout"
+Set idle timeout seconds after a connection will be closed automaticaly when there's no data being transferred (in- and outbound). If timeout is set to 3600, the connection will close after 1h inactivity. A value of 0.5 is 500ms.
 .TP 10
 .BI "\-W"
 Wait for remote disconnect even if stdin is closed. Normaly, "echo q | call ax0 db0fhn" closes immediately after "echo q" terminates; thus we never see the greeting from db0fhn. With the -W option, call waits until the ax25-connection is disconnected (i.e. db0fhn disconnects after "q" command). Very useful for scripting. You might like to combine it with the -T option.
@@ -120,6 +125,9 @@ Change to Slave mode
 .BI ~2
 Change to Talk mode
 .TP 16
+.BI ~8
+UTF-8 encoding
+.TP 16
 .BI ~a
 Start a file transfer (Autobin)
 .TP 16
@@ -131,6 +139,9 @@ Close the logfile
 .TP 16
 .BI ~h
 List escapes
+.TP 16
+.BI ~i
+IBM850 encoding
 .TP 16
 .BI "~o [filename]"
 Open a logfile (default 'logfile.txt')

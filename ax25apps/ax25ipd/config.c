@@ -12,16 +12,22 @@
  */
 
 #include <stdio.h>
-#include <sys/types.h>
-#include <netdb.h>
+#include <stdlib.h>
+#include <limits.h>
 #include <memory.h>
+#include <netdb.h>
 #include <fcntl.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <syslog.h>
+
 #include "ax25ipd.h"
+
+#include "../pathnames.h"
 
 /* Initialize the config table */
 void config_init(void)
@@ -81,7 +87,8 @@ void config_read(char *f)
 	else
 		fname=f;
 
-	if ((cf = fopen(fname, "r")) == NULL) {
+	cf = fopen(fname, "r");
+	if (cf == NULL) {
 		fprintf(stderr,
 			"Config file %s not found or could not be opened\n",
 			fname);
@@ -93,7 +100,8 @@ void config_read(char *f)
 	while (fgets(buf, 255, cf) != NULL) {
 		strcpy(cbuf, buf);
 		lineno++;
-		if ((e = parse_line(buf)) < 0) {
+		e = parse_line(buf);
+		if (e < 0) {
 			fprintf(stderr, "Config error at line %d: ",
 				lineno);
 			if (e == -1)
