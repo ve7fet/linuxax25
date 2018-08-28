@@ -13,7 +13,8 @@ nrattach_SOURCES = nrattach.c
 nrparms_SOURCES = nrparms.c
 nrsdrv_SOURCES = nrsdrv.c
 
-AM_CPPFLAGS = -DAX25_SYSCONFDIR=\""$(AX25_SYSCONFDIR)"\" \
+AM_CPPFLAGS = -D_GNU_SOURCE \
+	      -DAX25_SYSCONFDIR=\""$(AX25_SYSCONFDIR)"\" \
 	      -DAX25_LOCALSTATEDIR=\""$(AX25_LOCALSTATEDIR)"\" 
 
 AX25_SYSCONFDIR=${sysconfdir}/ax25/

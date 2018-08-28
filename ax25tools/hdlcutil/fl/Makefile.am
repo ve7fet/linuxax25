@@ -3,7 +3,7 @@ if HAVE_FLTK
 sbin_PROGRAMS = xfsmmixer xfhdlcchpar xfhdlcst xfsmdiag
 endif
 
-AM_CPPFLAGS = $(X_CFLAGS) -I$(srcdir)/..
+AM_CPPFLAGS = -D_GNU_SOURCE $(X_CFLAGS) -I$(srcdir)/..
 LDDADD = ../hdrvcomm.o
 AM_LDFLAGS = $(X_LIBS) -lX11 $(FLTK_LIB) $(LDDADD)
 
