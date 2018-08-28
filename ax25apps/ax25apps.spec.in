@@ -10,9 +10,9 @@ URL:            http://linuxax25.googlecode.com/
 Source0:        %{name}-@VERSION@.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-@VERSION@-%{release}-root-%(%{__id_u} -n)
 %if 0%{?mdkversion}
-BuildRequires:	libax25-devel >= 1.0.1, libncurses-devel
+BuildRequires:	libax25-devel >= 1.0.1, libncursesw-devel
 %else
-BuildRequires:	libax25-devel >= 1.0.1, ncurses-devel
+BuildRequires:	libax25-devel >= 1.0.1, ncursesw-devel
 %endif
 Requires:       libax25 >= 1.0.0
 
@@ -65,10 +65,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/ax25/ax25rtd/*
 
 %changelog
-* Sat Aug 11 2018 Lee Woldanski <ve7fet@tparc.org> 1.0.6-1
+* Mon Aug 27 2018 Lee Woldanski <ve7fet@tparc.org> 2.0.0-1
 - Add Debian packaging files
 - Change default conf installation to /usr/share/doc
 - Sync with upstream source to 2017 patches
+- Going to make this version 2.0.0, as it now requires ncursesw for call
+- listen changes some of its options
+- ax25ipd now supports more baud rates
 
 * Mon Dec 01 2014 Lee Woldanski <ve7fet@tparc.org> 1.0.5-1
 - Fix segfault in listen

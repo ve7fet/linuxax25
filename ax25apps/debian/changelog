@@ -1,5 +1,9 @@
-ax25apps (1.0.6) unstable; urgency=low
+ax25apps (2.0.0) unstable; urgency=low
 
+  * Releasing this as version 2.0.0 as there are significant changes that
+  may break compatibility with the version 1.x.x code, namely call now
+  supports UTF-8, listen changed some of its options, and ax25ipd supports
+  more baud rates.
   * Add files for Debian package building
   * Change the way the default conf files are installed. They will now be 
   put in somewhere like /usr/share/doc/ax25apps/conf with .dist extensions 
@@ -114,7 +118,7 @@ ax25apps (1.0.6) unstable; urgency=low
       Sort out prototype for io_error(). io_error() has no callers outside its
       defining file.
 
- -- Lee Woldanski <ve7fet@tparc.org>  Sat, 11 Aug 2018 14:00:00 -0800
+ -- Lee Woldanski <ve7fet@tparc.org>  Mon, 27 Aug 2018 14:00:00 -0800
  
 ax25apps (1.0.5) unstable; urgency=low
 
