@@ -1,3 +1,13 @@
+libax25 1.1.2 
+
+  * Add new Debian packaging rules to fix the conflict with the header
+  files that are supplied with glibc (ax25.h, netrom.h, rose.h). Now
+  we will properly "divert" them to the ones supplied with this package,
+  and restore them if the package is removed. This allows the libax25-dev
+  package to properly install without conflicts and errors.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Sat, 08 Sep 2018 08:00:00 -0800
+
 libax25 1.1.1
 
   * Packaging for Debian

@@ -1,3 +1,15 @@
+#! /usr/bin/dh-exec 
 usr/lib/*/lib*.a
 usr/lib/*/lib*.so
-usr/include/*
+usr/include/netax25/ax25.h => usr/include/netax25/ax25.h.libax25  
+usr/include/netax25/ax25io.h  
+usr/include/netax25/axconfig.h  
+usr/include/netax25/axlib.h  
+usr/include/netax25/daemon.h  
+usr/include/netax25/mheard.h  
+usr/include/netax25/nrconfig.h  
+usr/include/netax25/procutils.h  
+usr/include/netax25/rsconfig.h  
+usr/include/netax25/ttyutils.h
+usr/include/netrom/netrom.h => usr/include/netrom/netrom.h.libax25
+usr/include/netrose/rose.h => usr/include/netrose/rose.h.libax25
