@@ -1,5 +1,6 @@
 #!/bin/bash
 # script updated October-22-2017 for VE7FET new AX.25 github repository (F6BVP)
+# script update January-13-2019 by VE7FET to correct error checking and update for installconf changes
 # Copy this script file in /usr/local/src/ax25/updAX25.sh
 # cd into /usr/local/src/ax25
 # and execute command : sudo chmod a+x updAX25.sh
@@ -20,7 +21,7 @@ Blue='\e[34m'
 White='\e[37m'
 BluW='\e[37;44m'
 
-echo -e "${BluW}\t\n\t Script provided by Charles S. Schuman modified by F6BVP for updating AX.25 libraries and applications\t\n\t\t\t ${Red} October-22-2017    \n \t\t${Yellow}       k4gbb1@gmail.com \n${Reset}"
+echo -e "${BluW}\t\n\t Script provided by Charles S. Schuman modified by F6BVP for updating AX.25 libraries and applications\t\n\t\t\t ${Red} January-13-2019    \n \t\t${Yellow}       k4gbb1@gmail.com \n${Reset}"
 
   if ! uid=0
    then su
@@ -59,27 +60,31 @@ fi
      exit 1
   fi
 
-echo -e "${Green} Now unarchiving AX.25 files ${Reset}"
+echo -e "${Green} Now unarchiving AX.25 files${Reset}"
   rm -fr linuxax25-master
   unzip master.zip
 #Libax25 (updating configure.ac for automake > 1.12 compliance)
   cd /usr/local/src/ax25/$LIBAX25
 #  
-  echo -e "${Green}\t Creating Makefile(s) to prepare libraries compilation ${Reset}"
+  echo -e "${Green}\t Creating Makefile(s) to prepare libraries compilation${Reset}"
   ./autogen.sh
   ./configure > liberror.txt 2>&1
   echo -e -n "\t  *"
-  echo -e "${Green}\t Compiling Runtime Lib files ${Reset}"
+  echo -e "${Green}\t Compiling Runtime Lib files${Reset}"
 
 # Clean old binaries
   make clean
+  if [ $? -ne 0 ]
+    then
+     echo -e "${Red}\t Libax25 Compile error - See liberror.txt${Reset}"
+     exit 1
+  fi
 # Compile
   echo -n "  *"   
   make
-  echo -e "\t  *" 
   if [ $? -ne 0 ]
     then
-     echo -e "${Red}\t Libax25 Compile error - See liberror.txt ${Reset}"
+     echo -e "${Red}\t Libax25 Compile error - See liberror.txt${Reset}"
      exit 1
   fi
   echo  "  *\n"
@@ -109,33 +114,36 @@ echo -e "${Green} Now unarchiving AX.25 files ${Reset}"
 #Libax25 (updating configure.ac for automake > 1.12 compliance)
   cd /usr/local/src/ax25/$APPS
 #  
-  echo -e "${Green}\t Creating Makefile(s) to prepare apps compilation ${Reset}"
+  echo -e "${Green}\t Creating Makefile(s) to prepare apps compilation${Reset}"
   ./autogen.sh
   ./configure > appserror.txt 2>&1
   echo -n -e "\t  *" 
 # Clean old binaries
   make clean
+  if [ $? -ne 0 ]
+   then
+     echo -e "${Red}\t Ax25-Apps Compile Error - see appserror.txt${Reset}"
+     exit 1
+  fi
 # Compile Ax25-apps
   echo -n "  *" 
   echo -e "${Green}\t Compiling Ax25 apps ${Reset}"
   make
-  echo -n -e "\t  *" 
   if [ $? -ne 0 ]
    then
-     echo -e "${Red}\t Ax25-Apps Compile Error - see appserror.txt ${Reset}"
+     echo -e "${Red}\t Ax25-Apps Compile Error - see appserror.txt${Reset}"
      exit 1
   fi
 # Install Ax25-apps
   echo "  *" 
 #  make  install >> appserror.txt 2>&1
   make  install
-  echo -e "\t  *" 
   if [ $? -ne 0 ]
   then
-     echo -e "${Red} Ax25-Apps Install Error - see appserror.txt ${Reset}"
+     echo -e "${Red} Ax25-Apps Install Error - see appserror.txt${Reset}"
      exit 1
   else
-     echo -e "${Green} Ax25-apps Installed ${Reset}"
+     echo -e "${Green} Ax25-apps Installed${Reset}"
      rm appserror.txt
   fi
 
@@ -146,19 +154,23 @@ echo -e "${Green} Now unarchiving AX.25 files ${Reset}"
   cd /usr/local/src/ax25/$TOOLS
 #  
   echo -n -e "\t  *" 
-  echo -e "${Green}\t Creating Makefile(s) to prepare apps compilation ${Reset}"
+  echo -e "${Green}\t Creating Makefile(s) to prepare apps compilation${Reset}"
   ./autogen.sh
   ./configure > toolserror.txt 2>&1
 # Clean old binaries
   make clean
-# Compile Ax.25 tools
-  echo -e "${Green}\t Compiling AX.25 tools ${Reset}"
-  echo -e "\t  *" 
-  make
-  echo -e "\t  *" 
     if [ $? -ne 0 ]
       then
-        echo -e "${Red}\t AX.25 tools Compile error - See toolserror.txt ${Reset}"
+        echo -e "${Red}\t AX.25 tools Compile error - See toolserror.txt${Reset}"
+        exit 1
+    fi
+# Compile Ax.25 tools
+  echo -e "${Green}\t Compiling AX.25 tools${Reset}"
+  echo -e "\t  *" 
+  make
+    if [ $? -ne 0 ]
+      then
+        echo -e "${Red}\t AX.25 tools Compile error - See toolserror.txt${Reset}"
         exit 1
     fi
 # Install Ax.25 tools
@@ -166,10 +178,10 @@ echo -e "${Green} Now unarchiving AX.25 files ${Reset}"
   make install
   if [ $? -ne 0 ]
     then
-      echo -e "${Red}\t AX.25 tools Install error - See toolserror.txt ${Reset}"
+      echo -e "${Red}\t AX.25 tools Install error - See toolserror.txt${Reset}"
       exit 1
     else
-      echo -e "${Green} AX.25 tools Installed  ${Reset}"
+      echo -e "${Green} AX.25 tools Installed${Reset}"
       rm toolserror.txt
     fi
 
@@ -179,8 +191,8 @@ echo -e "${Green} Now unarchiving AX.25 files ${Reset}"
   cd /usr/local/bin/
   chmod 4775 *
   echo -e "\t \e[030;42m   Ax.25 Libraries, applications and tools were successfully rebuilt and installed${Reset}"
-      echo -e "${Green} If this is a first install of AX.25 tools execute 'make installconf' from ax25tools directory${Reset}"
-      echo -e "${Green} If this is a first install of AX.25 apps execute 'make installconf' from ax25apps directory${Reset}"
-      echo -e "${Green} in order to create sample configuration files into /usr/local/etc/ax25/${Reset}"
-  echo -e "\t \e[030;42m   Now it is time to compile and install AX.25 application programs${Reset}"
+  echo -e "${Green} If this is a first install of AX.25 tools or apps, sample config files were installed in the doc ${Reset}" 
+  echo -e "${Green} folder on your system. This is likely something like /usr/local/share/doc or /usr/share/doc. ${Reset}"
+  echo -e "${Green} Look in doc/ax25apps/conf and doc/ax25tools/conf for sample conf files, and copy them to your ${Reset}"
+  echo -e "${Green} etc/ax25 folder and edit (may be /etc/ax25 or /usr/local/etc/ax25, depending on your system).${Reset}"
 # (End of Script)
