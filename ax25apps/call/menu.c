@@ -9,7 +9,7 @@
 #define _XOPEN_SOURCE
 #define _XOPEN_SOURCE_EXTENDED
 
-#include <curses.h>
+#include <ncursesw/curses.h>
 #include <stdlib.h>
 #include <string.h>
 #include "menu.h"

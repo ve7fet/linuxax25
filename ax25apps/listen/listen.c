@@ -8,7 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
-#include <curses.h>
+#include <ncursesw/curses.h>
 #include <signal.h>
 #include <errno.h>
 

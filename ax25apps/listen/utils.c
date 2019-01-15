@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <curses.h>
+#include <ncursesw/curses.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <string.h>
