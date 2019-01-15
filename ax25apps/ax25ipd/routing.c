@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <netdb.h>
 #include <sys/socket.h>
+#include <stdlib.h>
 
 #include "ax25ipd.h"
 
