@@ -35,7 +35,7 @@ AC_SUBST(AX25_LIB)
 AC_SUBST(UTIL_LIB)
 AC_SUBST(FLTK_LIB)
 
-AC_CHECK_LIB(z, zlibVersion,Z_LIB="-lz",Z_LIB=)
+AC_CHECK_LIB(z, zlibVersion,Z_LIB="-lz",AC_MSG_ERROR([Could not find the zlib libraries; aborting]))
 
 AC_CHECK_LIB(ax25, ax25_config_load_ports, AX25_LIB="-lax25", AC_MSG_ERROR([Could not find the libax25 libraries; aborting]))
 
@@ -51,7 +51,8 @@ AM_CONDITIONAL(HAVE_FLTK, test -n "$FLTK_LIB" )
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h paths.h pty.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h syslog.h termios.h unistd.h utime.h utmp.h zlib.h])
+AC_INCLUDES_DEFAULT # Checks for sys/types.h, sys/stat.h, stdlib.h, string.h, memory.h, strings.h, inttypes.h, stdint.h and unistd.h
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h paths.h pty.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h syslog.h termios.h utime.h utmp.h zlib.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

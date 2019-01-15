@@ -31,7 +31,8 @@ AC_CHECK_LIB(ncursesw, initscr, NCURSES_LIB="-lncursesw", AC_MSG_ERROR(Could not
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h memory.h netdb.h netinet/in.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termio.h termios.h unistd.h utime.h])
+AC_INCLUDES_DEFAULT # Checks for sys/types.h, sys/stat.h, stdlib.h, string.h, memory.h, strings.h, inttypes.h, stdint.h and unistd.h
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h memory.h netdb.h netinet/in.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termio.h termios.h utime.h ncursesw/curses.h],,AC_MSG_ERROR([Required headers missing; aborting]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
