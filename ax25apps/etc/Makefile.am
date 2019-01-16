@@ -7,15 +7,15 @@ vardir = $(AX25_LOCALSTATEDIR)/ax25rtd
 var_DATA = ax25_route ip_route
 
 edit = sed \
-        -e 's|@sbindir[@]|$(sbindir)|g' \
-        -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
-        -e 's|@prefix[@]|$(prefix)|g' \
-        -e 's|@datadir[@]|$(datadir)|g'
+	-e 's|@sbindir[@]|$(sbindir)|g' \
+	-e 's|@sysconfdir[@]|$(sysconfdir)|g' \
+	-e 's|@prefix[@]|$(prefix)|g' \
+	-e 's|@datadir[@]|$(datadir)|g'
 
 do_subst:
-        @list='$(doc_DATA)'; for p in $$list; do \
-        $(edit) $(srcdir)/$$p.in >$$p; \
-        done
+	@list='$(doc_DATA)'; for p in $$list; do \
+	$(edit) $(srcdir)/$$p.in >$$p; \
+	done
 
 CLEANFILES = $(doc_DATA)
 
