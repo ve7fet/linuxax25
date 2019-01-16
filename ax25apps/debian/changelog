@@ -4,6 +4,8 @@ ax25apps (2.0.1) unstable; urgency=low
   variable substitution.
   * Added better header file checking to configure script. Now aborts on
   missing headers.
+  * Build call and listen against the ncursesw/curses.h header, they were
+  being built against the generic curses.h.
 
  -- Lee Woldanski <ve7fet@tparc.org>  Tue, 15 Jan 2019 21:55:00 -0800
 
