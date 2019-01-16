@@ -1,3 +1,12 @@
+ax25tools (1.0.5) unstable; urgency=low
+
+  * Fixing the default conf file installation. Correct the file names and
+  variable substitution.
+  * Added better header file checking to configure script. Now aborts on
+  missing headers.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Tue, 15 Jan 2019 23:00:00 -0800
+
 ax25tools (1.0.4) unstable; urgency=low
 
   * Add files to build Debian packages.

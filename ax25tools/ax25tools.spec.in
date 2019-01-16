@@ -90,22 +90,25 @@ rm -rf $RPM_BUILD_ROOT
 %doc doc/README.user_call
 %doc doc/README.yamdrv
 %doc doc/TIPS.axgetput 
-%config %{_sysconfdir}/ax25/ax25.profile
-%config %{_sysconfdir}/ax25/ax25d.conf
-%config %{_sysconfdir}/ax25/axports
-%config %{_sysconfdir}/ax25/axspawn.conf
-%config %{_sysconfdir}/ax25/nrbroadcast
-%config %{_sysconfdir}/ax25/nrports
-%config %{_sysconfdir}/ax25/rip98d.conf
-%config %{_sysconfdir}/ax25/rsports
-%config %{_sysconfdir}/ax25/rxecho.conf
-%config %{_sysconfdir}/ax25/ttylinkd.conf
+%doc doc/conf/ax25.profile
+%doc doc/conf/ax25d.conf
+%doc doc/conf/axports
+%doc doc/conf/axspawn.conf
+%doc doc/conf/nrbroadcast
+%doc doc/conf/nrports
+%doc doc/conf/rip98d.conf
+%doc doc/conf/rsports
+%doc doc/conf/rxecho.conf
+%doc doc/conf/ttylinkd.conf
 %{_bindir}/*
 %{_sbindir}/*
 %{_mandir}/man?/*
 %{_localstatedir}/ax25/mheard/*
 
 %changelog
+* Tue Jan 15 2019 Lee Woldanski <ve7fet@tparc.org> 1.0.5-1
+- Fix default conf installation filename and variable substitution
+
 * Sat Aug 11 2018 Lee Woldanski <ve7fet@tparc.org> 1.0.4-1
 - Fix some security bugs with printf formatting
 - Add Debian files for package building
