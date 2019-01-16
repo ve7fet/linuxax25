@@ -1,3 +1,12 @@
+ax25apps (2.0.1) unstable; urgency=low
+
+  * Fixing the default conf file installation. Correct the file names and 
+  variable substitution.
+  * Added better header file checking to configure script. Now aborts on 
+  missing headers.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Tue, 15 Jan 2019 21:55:00 -0800
+
 ax25apps (2.0.0) unstable; urgency=low
 
   * Releasing this as version 2.0.0 as there are significant changes that 
