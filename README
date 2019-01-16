@@ -6,6 +6,10 @@ However Lee Woldanski <ve7fet@tparc.org> performed a remarkable job reorganizing
 
 Bernard Pidoux <f6bvp@amsat.org>  Wed, Oct 25 2017
 
+***Building from Source***
+See the "Releases" link on this page to download the current source tarballs.
+
+
 ***Debian Package Building***
 You should be able to build a Debian package (.deb) for any of libax25 (will also build a -dev package with header files), ax25tools, or ax25apps.
  
