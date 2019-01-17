@@ -30,6 +30,43 @@ listen then after installing the binaries as root type
 This version includes support for Mat DG2FEF's new AX.25 subsystem. Binaries
 are not interchangeable but require recompile.
 
+  -- Craig Small <csmall@small.dropbear.id.au>
 
-  - Craig Small <csmall@small.dropbear.id.au>
+***Building from Source***
 
+To build this package from a source tarball, you need the following:
+	A GNU/Linux system
+	autoconf
+	automake
+	libtool
+	libc
+	gcc
+
+On a Debian/Ubuntu, or similar system, you would need at least the following 
+packages:
+	autotools-dev 
+	autoconf 
+	automake 
+	libtool 
+	zlib1g-dev 
+	libncursesw5-dev
+
+Quick and dirty build, with all the defaults, can be accomplished with:
+	./autogen.sh && ./configure && make && make install
+
+This will typically install everything under /usr/local. If you want it 
+installed elsewhere, see the INSTALL file for options you can pass to 
+the ./configure script.
+
+
+***Sample Config Files***
+
+By default, the sample config files will be installed in:
+	/usr/local/share/doc/ax25apps/conf
+
+You would typically copy them to /usr/local/etc/ax25 and modify them 
+to fit your needs.
+
+If you installed the software from a binary package, then the sample 
+files likely are in /usr/share/doc/ax25apps/conf, and would need to 
+be moved to /etc/ax25 and modified.
