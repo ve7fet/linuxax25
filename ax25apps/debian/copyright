@@ -1,6 +1,14 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: ax25apps
+Upstream-Name: ax25-apps
 Source: https://github.com/ve7fet/linuxax25 
+
+Files: *
+Copyright: 1999-2018 Various authors see below
+License: LGPL-3.0+
+
+Files: debian/*
+Copyright: 2018 Lee Woldanski <ve7fet@tparc.org>
+License: LGPL-3.0+
 
 Files: ax25ipd
 Copyright: 1999-2018 Michael Westerhof
@@ -33,14 +41,6 @@ Copyright: 1999-2018 Alexander Tietzel DG6XA <TIETZE_A@etech.fh-hamburg.de>
            1999-2018 Steve Henson G6IXS <shenson@nyx.cs.du.edu>
            1999-2018 Mark Wahl
            1999-2018 Werner Almesberger
-License: LGPL-3.0+
-
-Files: *
-Copyright: 1999-2018 Various authors see above
-License: LGPL-3.0+
-
-Files: debian/*
-Copyright: 2018 Lee Woldanski <ve7fet@tparc.org>
 License: LGPL-3.0+
 
 License: LGPL-3.0+

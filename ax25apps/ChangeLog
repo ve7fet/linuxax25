@@ -6,8 +6,9 @@ ax25apps (2.0.1) unstable; urgency=low
   missing headers.
   * Build call and listen against the ncursesw/curses.h header, they were 
   being built against the generic curses.h.
+  * Update Debian packaging files to compatibility level 10.
 
- -- Lee Woldanski <ve7fet@tparc.org>  Tue, 15 Jan 2019 21:55:00 -0800
+ -- Lee Woldanski <ve7fet@tparc.org>  Fri, 18 Jan 2019 18:45:00 -0800
 
 ax25apps (2.0.0) unstable; urgency=low
 

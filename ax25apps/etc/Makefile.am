@@ -1,4 +1,4 @@
-noinst_SCRIPTS = do_subst
+BUILT_SOURCES = do_subst
 
 docdir = $(datadir)/doc/ax25apps/conf
 doc_DATA = ax25ipd.conf ax25mond.conf ax25rtd.conf

@@ -1,13 +1,13 @@
 Source: ax25apps
-Section: hamradio 
+Section: hamradio
 Priority: optional
 Maintainer: Lee Woldanski <ve7fet@tparc.org>
-Build-Depends: debhelper (>= 9), autotools-dev, libncursesw5-dev, libax25-dev
-Standards-Version: 3.9.6
+Build-Depends: debhelper (>= 10), libncursesw5-dev, libax25-dev
+Standards-Version: 4.1.2
 Homepage: https://github.com/ve7fet/linuxax25 
 
 Package: ax25apps
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libax25 (>= 0.0.12)
-Description: A collection of user tools for AX.25 Amateur Radio applications 
+Description: collection of user tools for AX.25 Amateur Radio applications 
  User tools for AX.25 Amateur Radio applications.

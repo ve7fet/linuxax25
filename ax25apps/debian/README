@@ -10,4 +10,29 @@ current autotools, corrects build dependencies, and adds some bug fixes.
 Until the modified source makes it into CVS, it will be available
 from https://github.com/ve7fet/linuxax25
 
- -- Lee Woldanski <ve7fet@tparc.org>  Tue, 07 Aug 2018 03:03:25 +0000
+***Building a Debian Package***
+
+To build a Debian (Ubuntu) package from this source tarball, you will need
+the following additional packages installed:
+        libtool
+        dpkg-dev
+        debhelper
+        devscripts
+        fakeroot
+        lintian
+        dh-make
+
+From inside the source folder (ax25apps), run the following:
+        ./autogen.sh
+        debuild -us -uc
+
+That should build a set of un-signed packages (.deb) in the parent folder.
+
+To clean up/start over, the following commands are useful:
+        fakeroot debian/rules clean
+        ./autogen.sh clean
+
+Note, you can build a package on a Pi if you want to make armhf packages 
+instead (or do it in a cross-compiler, if you like).
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Fri, 18 Jan 2019 18:55:00 -0800
