@@ -11,4 +11,32 @@ conf files from this package (moved to ax25-tools).
 Until the modified source makes it into CVS, it will be available
 from https://github.com/ve7fet/linuxax25 
 
- -- Lee Woldanski <ve7fet@tparc.org>  Mon, 06 Aug 2018 08:00:00 -0800
+***Building a Debian Package***
+
+To build a Debian (Ubuntu) package from this source tarball, you will need
+the following additional packages installed:
+        libtool
+        dpkg-dev
+        debhelper
+        devscripts
+        fakeroot
+        lintian
+        dh-make
+        config-package-dev
+        dh-exec
+
+From inside the source folder (libax25), run the following:
+        ./autogen.sh
+        debuild -us -uc
+
+That should build a set of un-signed packages (.deb) in the parent folder.
+
+To clean up/start over, the following commands are useful:
+        fakeroot debian/rules clean
+        ./autogen.sh clean
+
+Note, this source is multi-arch aware... you can build a package on a Pi
+if you want to make armhf packages instead (or do it in a cross-compiler, if
+you like).
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Fri, 18 Jan 2019 16:15:00 -0800

@@ -1,3 +1,13 @@
+libax25 1.1.3
+
+  * Update the Debian packaging files to compatibility level 10. Also 
+  fixed some of the package rules to put the right doc files in the 
+  right package.
+  * Update the README with some better instructions for building from
+  source or building Debian packages.
+
+-- Lee Woldanski <ve7fet@tparc.org>  Fri, 18 Sep 2018 16:15:00 -0800
+
 libax25 1.1.2 
 
   * Add new Debian packaging rules to fix the conflict with the header
@@ -6,7 +16,7 @@ libax25 1.1.2
   and restore them if the package is removed. This allows the libax25-dev
   package to properly install without conflicts and errors.
 
- -- Lee Woldanski <ve7fet@tparc.org>  Sat, 08 Sep 2018 08:00:00 -0800
+-- Lee Woldanski <ve7fet@tparc.org>  Sat, 08 Sep 2018 08:00:00 -0800
 
 libax25 1.1.1
 

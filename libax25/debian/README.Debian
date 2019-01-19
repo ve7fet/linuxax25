@@ -8,7 +8,8 @@ files are:
         netrom/netrom.h
 
 Those files belong to libax25, and as such, this package is marked to replace
-them. Those files will be overwritten by the ones found in the libax25-dev
-package.
+them. The replacement will be done as a diversion, when the libax25-dev package 
+is installed. If the libax25-dev package is removed, the original files will 
+be restored.
 
- -- Lee Woldanski <ve7fet@tparc.org>  Mon, 06 Aug 2018 15:27:47 +0000
+ -- Lee Woldanski <ve7fet@tparc.org>  Fri, 18 Jan 2019 16:15:00 -8000

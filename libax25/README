@@ -9,24 +9,67 @@ This library set is still really under test but is now released for
 general use. 
 
 You are supposed to use glibc 2.1 (libc6 unstable libraries) for this
-package.  I have attempted to cater for glibc 2.0 users here.
+package.  
 
-To compile this I used:
-  * A Mageia GNU/Linux system
-  * autoconf 2.69
-  * automake 1.15.1
-  * libtool 2.4.6
-  * Gnu C  5.4.0 (Mageia 5.4.0-5.mga6) 
-  * Gnu make               4.1
-  * Linux C Library        Dynamic linker (ldd)   2.22
+***Building from Source***
 
-Briefly, the shell command './autogen.sh && ./configure && make && make install'
-will install AX25 library
+To build this package from a source tarball, you need the following:
+	A GNU/Linux system
+	autoconf
+	automake
+	libtool
+	libc
+	gcc
 
-  -- Bernard Pidoux <f6bvp@amsat.org>  Sat, Oct 22 2017 11:15 
+On a Debian/Ubuntu, or similar system, you would need at least the following 
+packages:
+	autotools-dev 
+	autoconf 
+	automake 
+	libtool 
+	zlib1g-dev 
+
+Quick and dirty build, with all the defaults, can be accomplished with:
+	./autogen.sh && ./configure && make && make install
+
+This will typically install everything under /usr/local. If you want it 
+installed elsewhere, see the INSTALL file for options you can pass to 
+the ./configure script.
+
+
+***Building a Debian Package***
+
+To build a Debian (Ubuntu) package from this source tarball, you will need 
+the following additional packages installed:
+	libtool 
+	dpkg-dev 
+	debhelper 
+	devscripts 
+	fakeroot 
+	lintian 
+	dh-make 
+	config-package-dev 
+	dh-exec
+
+From inside the source folder (libax25), run the following:
+	./autogen.sh
+	debuild -us -uc
+
+That should build a set of un-signed packages (.deb) in the parent folder.
+
+To clean up/start over, the following commands are useful:
+	fakeroot debian/rules clean
+	./autogen.sh clean
+
+Note, this source is multi-arch aware... you can build a package on a Pi 
+if you want to make armhf packages instead (or do it in a cross-compiler, if 
+you like).
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Fri, 18 Jan 2019 16:15:00 -0800
+
 
 This library is copyright by the respective authors (see AUTHORS for a list)
 and licensed under the GNU LGPL (see COPYING for more information).
 
-  -- Craig Small <csmall@small.dropbear.id.au>
+ -- Craig Small <csmall@small.dropbear.id.au>
 

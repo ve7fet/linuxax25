@@ -1,23 +1,25 @@
 Source: libax25
 Priority: optional
 Maintainer: Lee Woldanski <ve7fet@tparc.org>
-Build-Depends: debhelper (>= 9), config-package-dev (>= 5.0~), autotools-dev, dh-exec, libc6 (>= 2.7-1~)
-Standards-Version: 3.9.6 
+Build-Depends: debhelper (>= 10), config-package-dev (>= 5.0~), dh-exec, libc6 (>= 2.7-1~)
+Standards-Version: 4.1.2
 Section: libs
-Homepage: https://github.com/ve7fet/linuxax25 
+Homepage: https://github.com/ve7fet/linuxax25
+
+Package: libax25
+Architecture: any
+Multi-Arch: same
+Depends: ${shlibs:Depends}, ${misc:Depends}, zlib1g (>= 1:1.1.4)
+Description: AX.25 runtime libraries for running Amateur Radio programs
+ AX.25 runtime libraries that are needed for running Amateur Radio programs
 
 Package: libax25-dev
 Section: libdevel
-Architecture: any 
+Architecture: any
+Multi-Arch: same
 Depends: libax25 (= ${binary:Version}), ${misc:Depends}, libc6-dev, zlib1g-dev
 Provides: ${diverted-files} 
-Conflicts: ${diverted-files} 
-Description: AX.25 development libraries for building and running Amateur Radio programs 
+Conflicts: ${diverted-files}
+Description: AX.25 development libraries for building and running Amateur Radio programs
  AX.25 development libraries and Header files for building and running programs
  that are used for Amateur Radio.
-
-Package: libax25
-Architecture: any 
-Depends: ${shlibs:Depends}, ${misc:Depends}, zlib1g (>= 1:1.1.4)
-Description: AX.25 runtime libraries for running Amateur Radio programs 
- AX.25 runtime libraries that are needed for running Amateur Radio programs
