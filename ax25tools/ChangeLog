@@ -4,8 +4,9 @@ ax25tools (1.0.5) unstable; urgency=low
   variable substitution.
   * Added better header file checking to configure script. Now aborts on
   missing headers.
+  * Update Debian packaging files to compatibility level 10.
 
- -- Lee Woldanski <ve7fet@tparc.org>  Tue, 15 Jan 2019 23:00:00 -0800
+ -- Lee Woldanski <ve7fet@tparc.org>  Fri, 18 Jan 2019 22:00:00 -0800
 
 ax25tools (1.0.4) unstable; urgency=low
 

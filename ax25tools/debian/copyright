@@ -1,6 +1,17 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: ax25tools
+Upstream-Name: ax25-tools
 Source: https://github.com/ve7fet/linuxax25 
+
+Files: *
+Copyright: 1999-2018 Jonathon Naylor G4KLX <g4klx@g4klx.demon.co.uk>
+           1999-2018 Craig Small VK2XLZ <csmall@small.dropbear.id.au>
+           2002 Thomas Osterried DL9SAU <thomas@x-berg.in-berlin.de>
+           2011-2018 Lee Woldanski <ve7fet@tparc.org>
+License: LGPL-3.0+
+
+Files: debian/*
+Copyright: 2018 Lee Woldanski <ve7fet@tparc.org>
+License: LGPL-3.0+
 
 Files: m6pack
 Copyright: 19990-2018 Iñki Arenaza EB2EBU <iarenaza@escomposlinux.org>
@@ -62,17 +73,6 @@ License: LGPL-3.0+
 
 Files: net2kiss setcrystal sethdlc smdiag smmixer xfhdlcchpar xfhdlcst xfsmdiag xfsmmixer
 Copyright: 1999-2018 Thomas Sailer HB9JNX <t.sailer@alumni.ethz.ch>
-License: LGPL-3.0+
-
-Files: *
-Copyright: 1999-2018 Jonathon Naylor G4KLX <g4klx@g4klx.demon.co.uk>
-           1999-2018 Craig Small VK2XLZ <csmall@small.dropbear.id.au>
-           2002 Thomas Osterried DL9SAU <thomas@x-berg.in-berlin.de>
-           2011-2018 Lee Woldanski <ve7fet@tparc.org> 
-License: LGPL-3.0+
-
-Files: debian/*
-Copyright: 2018 Lee Woldanski <ve7fet@tparc.org>
 License: LGPL-3.0+
 
 License: LGPL-3.0+

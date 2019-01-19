@@ -25,6 +25,7 @@ as Net/ROM and ROSE configuration.
  * axctl - configure/Kill running AX.25 connections
  * axparms - configure AX.25 interfaces
  * axspawn - allow automatic login to a Linux system
+ * axwrapper - run non-ax.25-aware programs from ax25d
  * beacon - transmit periodic messages on an AX.25 port
  * bpqparms - configure BPQ ethernet devices
  * mheardd - display AX.25 calls recently heard
@@ -108,6 +109,9 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Tue Jan 15 2019 Lee Woldanski <ve7fet@tparc.org> 1.0.5-1
 - Fix default conf installation filename and variable substitution
+- Added better header file checking to configure script. Now aborts on
+  missing headers.
+
 
 * Sat Aug 11 2018 Lee Woldanski <ve7fet@tparc.org> 1.0.4-1
 - Fix some security bugs with printf formatting
