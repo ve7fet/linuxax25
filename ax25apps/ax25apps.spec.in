@@ -52,9 +52,9 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %doc AUTHORS ChangeLog COPYING README
 %doc doc/COPYING.ax25ipd  doc/HISTORY.ax25ipd doc/README.ax25ipd  doc/README.ax25rtd  doc/TODO.ax25rtd
-%doc doc/conf/ax25ipd.conf
-%doc doc/conf/ax25mond.conf
-%doc doc/conf/ax25rtd.conf
+%config %{_sysconfdir}/ax25/ax25ipd.conf
+%config %{_sysconfdir}/ax25/ax25mond.conf
+%config %{_sysconfdir}/ax25/ax25rtd.conf
 %{_bindir}/call
 %{_bindir}/listen
 %{_sbindir}/ax25ipd
@@ -65,7 +65,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/ax25/ax25rtd/*
 
 %changelog
-* Tue Jan 15 2019 Lee Woldanski <ve7fet@tparc.org> 2.0.1-1
+* Thu Jan 31 2019 Lee Woldanski <ve7fet@tparc.org> 2.0.1-1
 - Fix default conf installation filename and variable substitution
 
 * Mon Aug 27 2018 Lee Woldanski <ve7fet@tparc.org> 2.0.0-1
