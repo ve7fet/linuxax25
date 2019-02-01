@@ -1,6 +1,6 @@
 SUBDIRS = ax25 hdlcutil kiss 6pack netrom rose tcpip user_call yamdrv dmascc man doc etc
 
-EXTRA_DIST = pathnames.h ax25tools.spec SVNREV
+EXTRA_DIST = pathnames.h ax25tools.spec
 
 AM_CPPFLAGS = -D_GNU_SOURCE \
 	      -DAX25_SYSCONFDIR=\""$(sysconfdir)/ax25/"\" \

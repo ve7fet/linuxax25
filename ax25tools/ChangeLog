@@ -1,12 +1,16 @@
 ax25tools (1.0.5) unstable; urgency=low
 
   * Fixing the default conf file installation. Correct the file names and
-  variable substitution.
+  variable substitution. We will install in etc/ax25 by default, but
+  on an upgrade, the conf files will be installed with a .dist extension,
+  so they don't clobber existing user files.
   * Added better header file checking to configure script. Now aborts on
   missing headers.
   * Update Debian packaging files to compatibility level 10.
+  * Remove the distribution/dependency on the SVNREV file, which is
+  not currently used.
 
- -- Lee Woldanski <ve7fet@tparc.org>  Fri, 18 Jan 2019 22:00:00 -0800
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 31 Jan 2019 21:00:00 -0800
 
 ax25tools (1.0.4) unstable; urgency=low
 
