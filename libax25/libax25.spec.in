@@ -62,7 +62,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*.so
 
 %changelog
-* Jan 18 2019 Lee Woldanski <ve7fet@tparc.org> 1.1.3
+* Jan 31 2019 Lee Woldanski <ve7fet@tparc.org> 1.1.3
 - Update Debian packaging rules, update documentation
 
 * Sep 09 2018 Lee Woldanski <ve7fet@tparc.org> 1.1.2
