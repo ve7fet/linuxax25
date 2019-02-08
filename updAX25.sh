@@ -186,10 +186,10 @@ echo -e "${Green} Now unarchiving AX.25 files${Reset}"
     fi
 
 # Set permissions for /usr/local/sbin/ and /usr/local/bin
-  cd /usr/local/sbin/
-  chmod 4775 *
-  cd /usr/local/bin/
-  chmod 4775 *
+#  cd /usr/local/sbin/
+#  chmod 4775 *
+#  cd /usr/local/bin/
+#  chmod 4775 *
   echo -e "\t \e[030;42m   Ax.25 Libraries, applications and tools were successfully rebuilt and installed${Reset}"
   echo -e "${Green} If this is a first install of AX.25 tools or apps, sample config files were installed in the doc ${Reset}" 
   echo -e "${Green} folder on your system. This is likely something like /usr/local/share/doc or /usr/share/doc. ${Reset}"
