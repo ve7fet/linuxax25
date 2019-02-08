@@ -1,6 +1,5 @@
 Name:          	@PACKAGE_NAME@ 
 Version:        @BASEVERSION@@EXTRAVERSION@
-Release:        @SVNREV@ 
 Summary:        AX.25 ham radio applications
 
 Group:          Applications/Communications
@@ -8,7 +7,7 @@ Group:          Applications/Communications
 License:        GPLv2+ and BSD
 URL:            http://linuxax25.googlecode.com/
 Source0:        %{name}-@VERSION@.tar.gz
-BuildRoot:      %{_tmppath}/%{name}-@VERSION@-%{release}-root-%(%{__id_u} -n)
+BuildRoot:      %{_tmppath}/%{name}-@VERSION@-root-%(%{__id_u} -n)
 %if 0%{?mdkversion}
 BuildRequires:	libax25-devel >= 1.0.1, libncursesw-devel
 %else
