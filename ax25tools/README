@@ -33,6 +33,20 @@ installed elsewhere, see the INSTALL file for options you can pass to
 the ./configure script.
 
 
+***Building the X-related Utilities***
+
+By default, there will be no attempt to build the X-related utilities, 
+even if all the dependencies exist.
+
+To build the X-related utilities (in fl), you will need to explicitly 
+add the --with-xutils option to ./configure.
+
+In addition, you will need (on Debian/Ubuntu) the following packages, and all 
+their associated dependencies:
+	libx11-dev
+	libfltk1.3-dev
+
+
 ***Building a Debian Package***
 
 To build a Debian (Ubuntu) package from this source tarball, you will need 

@@ -106,10 +106,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/ax25/mheard/*
 
 %changelog
-* Thu Jan 31 2019 Lee Woldanski <ve7fet@tparc.org> 1.0.5-1
+* Sat Feb 09 2019 Lee Woldanski <ve7fet@tparc.org> 1.0.5-1
 - Fix default conf installation filename and variable substitution
 - Added better header file checking to configure script. Now aborts on
   missing headers.
+- Fix default configure to not attempt to build X-related utilities, 
+  unless explicitly configured to do so with --with-xutils
 
 
 * Sat Aug 11 2018 Lee Woldanski <ve7fet@tparc.org> 1.0.4-1

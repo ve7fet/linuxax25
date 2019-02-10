@@ -9,8 +9,12 @@ ax25tools (1.0.5) unstable; urgency=low
   * Update Debian packaging files to compatibility level 10.
   * Remove the distribution/dependency on the SVNREV file, which is
   not currently used.
+  * Fix the configure script to not attempt to build the tools requiring
+  X and FLTK, unless the --with-xutils option is passed explicitly
+  * Better checks in the configure script for all the necessary X and
+  FLTK header files
 
- -- Lee Woldanski <ve7fet@tparc.org>  Thu, 31 Jan 2019 21:00:00 -0800
+ -- Lee Woldanski <ve7fet@tparc.org>  Sat, 09 Feb 2019 19:15:00 -0800
 
 ax25tools (1.0.4) unstable; urgency=low
 

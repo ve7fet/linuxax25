@@ -4,13 +4,17 @@ AC_CONFIG_SRCDIR([pathnames.h])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
-# Determine versions for package managers.
+dnl Determine versions for package managers.
 basever=$(echo $PACKAGE_VERSION | sed -e 's@-.*$@@')
 AC_SUBST(BASEVERSION, [$basever])
 extraver=$(echo $PACKAGE_VERSION | sed -e 's@'$basever'@@' -e 's@^-@_@')
 AC_SUBST(EXTRAVERSION, [$extraver])
 
-# Checks for programs.
+dnl Check options
+AC_ARG_WITH([xutils], 
+	[AS_HELP_STRING([--with-xutils], [build tools that require X support (also requires GL and fltk libraries)])])
+
+dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_SED
 AC_PROG_CC
@@ -19,15 +23,12 @@ AC_PROG_INSTALL
 AC_PROG_GCC_TRADITIONAL
 AC_PROG_LN_S
 
-# Check for X and set a conditional
-AC_PATH_XTRA
-AM_CONDITIONAL(HAVE_X, test -z "$no_x")
-
 dnl Checks for libraries.
 AC_SUBST(Z_LIB)
 AC_SUBST(AX25_LIB)
 AC_SUBST(UTIL_LIB)
 AC_SUBST(FLTK_LIB)
+FOUND_FLTK=""
 
 AC_CHECK_LIB(z, zlibVersion,Z_LIB="-lz",AC_MSG_ERROR([Could not find the zlib libraries; aborting]))
 
@@ -35,20 +36,38 @@ AC_CHECK_LIB(ax25, ax25_config_load_ports, AX25_LIB="-lax25", AC_MSG_ERROR([Coul
 
 AC_CHECK_LIB(util, openpty, UTIL_LIB="-lutil", AC_MSG_ERROR([Could not find the util libraries; aborting]))
 
-AC_CHECK_LIB(GL, main, GL_LIB="-lGL",
-AC_CHECK_LIB(MesaGL, main, GL_LIB="-lMesaGL", GL_LIB=, ${X_LIBS} ${X_PRE_LIBS} -lXi -lXext -lX11 ${X_EXTRA_LIBS}),${X_LIBS} ${X_PRE_LIBS} -lXi -lXext -lX11 ${X_EXTRA_LIBS})
-if test -n "$GL_LIB"; then
-  AC_CHECK_LIB(fltk, main, FLTK_LIB="-lfltk $GL_LIB $X_PRE_LIBS -lXi -lXext -lX11 $X_EXTRA_LIBS", FLTK_LIB=, ${GL_LIB} ${X_LIBS} ${X_PRE_LIBS} -lXi -lXext -lX11 ${X_EXTRA_LIBS})
+if test "$with_xutils" = "yes"; then
+dnl Check for X and set a conditional
+AC_PATH_XTRA
+AM_CONDITIONAL([HAVE_X], [test -z "$no_x"])
+dnl Check for required X headers
+AC_CHECK_HEADERS([X11/X.h X11/Xlib.h X11/Xutil.h],,AC_MSG_ERROR([Required headers missing; aborting]))
+AC_CHECK_LIB([fltk], [fl_local_ctrl], 
+	[AC_DEFINE([HAVE_FLTK],[1],["Define to 1 if you have fltk."]) FOUND_FLTK="yes"; \
+	FLTK_LIB="-lfltk $X_PRE_LIBS -lX11 $X_EXTRA_LIBS"], 
+	[AC_MSG_ERROR([Could not find the fltk libraries; aborting])], 
+	[$LIBGL $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS]) 
+AM_CONDITIONAL([HAVE_FLTK],[test -n "$FLTK_LIB"])
+dnl Check for FLTK header PRESENCE ONLY, normal check fails
+AC_CHECK_HEADERS([FL/Fl.H FL/Fl_Window.H FL/Fl_Box.H FL/Fl_Value_Slider.H \
+		  FL/Fl_Check_Button.H FL/Fl_Button.H FL/Fl_Output.H FL/Fl_Round_Button.H \
+		  FL/Fl_Group.H FL/x.H FL/fl_draw.H X11/X.h X11/Xlib.h \
+		  X11/Xutil.h],,AC_MSG_ERROR([Required headers missing; aborting]),-)
+else
+    AC_MSG_NOTICE([*** no --with-xutils, skipping tools requiring X ***])
+dnl Since we're not building the X tools, set HAVE_X and HAVE_FLTK to no
+    AM_CONDITIONAL([HAVE_X], [test x$xutils = xtrue])
+    AM_CONDITIONAL([HAVE_FLTK], [test x$xutils = xtrue])
 fi
-AM_CONDITIONAL(HAVE_FLTK, test -n "$FLTK_LIB" )
 
-
-# Checks for header files.
+dnl Checks for header files.
 AC_HEADER_STDC
 AC_INCLUDES_DEFAULT # Checks for sys/types.h, sys/stat.h, stdlib.h, string.h, memory.h, strings.h, inttypes.h, stdint.h and unistd.h
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h paths.h pty.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h syslog.h termios.h utime.h utmp.h zlib.h])
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h paths.h \
+		  pty.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h \
+		  syslog.h termios.h utime.h utmp.h zlib.h],,AC_MSG_ERROR([Required headers missing; aborting]))
 
-# Checks for typedefs, structures, and compiler characteristics.
+dnl Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
 AC_C_CONST
 AC_TYPE_UID_T
@@ -58,7 +77,7 @@ AC_TYPE_SIZE_T
 AC_HEADER_TIME
 AC_STRUCT_TM
 
-# Checks for library functions.
+dnl Checks for library functions.
 AC_FUNC_CHOWN
 AC_FUNC_FORK
 AC_FUNC_MALLOC
