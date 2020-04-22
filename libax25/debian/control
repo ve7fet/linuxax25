@@ -1,7 +1,7 @@
 Source: libax25
 Priority: optional
 Maintainer: Lee Woldanski <ve7fet@tparc.org>
-Build-Depends: debhelper (>= 10), config-package-dev (>= 5.0~), dh-exec, libc6 (>= 2.7-1~)
+Build-Depends: debhelper (>= 10), config-package-dev (>= 5.0~), dh-exec, libc6 (>= 2.7-1~), zlib1g-dev
 Standards-Version: 4.1.2
 Section: libs
 Homepage: https://github.com/ve7fet/linuxax25
