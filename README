@@ -1,6 +1,6 @@
 
 This is NOT the official Linux AX.25 software suite (libax25, ax25-apps, and ax25-tools). 
-The official home is hosted by the Linux Ham group at http://www.linux-ax25.org/wiki/Main_Page That is where official development should take place.
+The official home is hosted by the Linux Ham group at https://linux-ax25.in-berlin.de/wiki/Main_Page That is where official development should take place.
 
 However Lee Woldanski <ve7fet@tparc.org> performed a remarkable job reorganizing AX.25 suite in order to facilitate packaging on many distro. Lee also fixed a number of bugs.
 
