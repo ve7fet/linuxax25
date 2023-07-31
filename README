@@ -20,6 +20,8 @@ automake
 libtool
 m4
 
+For further information, see the README contained in each of the libax25, ax25apps, and ax25tools folders.
+
 
 ***Debian Package Building***
 You should be able to build a Debian package (.deb) for any of libax25 (will also build a -dev package with header files), ax25tools, or ax25apps.
