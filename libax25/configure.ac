@@ -16,17 +16,15 @@ AC_SUBST(EXTRAVERSION, [$extraver])
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_GCC_TRADITIONAL
-AC_PROG_LIBTOOL
+LT_INIT
 
 # Checks for libraries.
 AC_FUNC_SETPGRP
-AC_TYPE_SIGNAL
 AC_SUBST(Z_LIB)
 AC_CHECK_LIB(z, zlibVersion,Z_LIB="-lz",AC_MSG_ERROR([Could not find the zlib libraries; aborting]))
 
 
 # Checks for header files.
-AC_HEADER_STDC
 AC_INCLUDES_DEFAULT # Checks for sys/types.h, sys/stat.h, stdlib.h, string.h, memory.h, strings.h, inttypes.h, stdint.h and unistd.h
 AC_CHECK_HEADERS([fcntl.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h termios.h],,AC_MSG_ERROR([Required headers missing; aborting]))
 

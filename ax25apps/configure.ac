@@ -1,7 +1,7 @@
 AC_PREREQ(2.61)
 AC_INIT(ax25apps, 2.0.1, linux-hams@vger.kernel.org)
 AC_CONFIG_SRCDIR([pathnames.h])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
 # Determine versions for package managers.
@@ -23,7 +23,6 @@ AC_CHECK_LIB(ncursesw, initscr, NCURSES_LIB="-lncursesw", AC_MSG_ERROR(Could not
 
 # Checks for header files.
 AC_HEADER_DIRENT
-AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_INCLUDES_DEFAULT # Checks for sys/types.h, sys/stat.h, stdlib.h, string.h, memory.h, strings.h, inttypes.h, stdint.h and unistd.h
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h memory.h netdb.h netinet/in.h sys/ioctl.h sys/socket.h sys/time.h syslog.h termio.h termios.h utime.h ncursesw/curses.h],,AC_MSG_ERROR([Required headers missing; aborting]))
@@ -32,7 +31,6 @@ AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h memory.h netdb.h netinet/in.h sys
 AC_C_CONST
 AC_C_INLINE
 AC_TYPE_OFF_T
-AC_HEADER_TIME
 AC_STRUCT_TM
 AC_C_VOLATILE
 
@@ -42,7 +40,6 @@ AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_MKTIME
 AC_FUNC_SELECT_ARGTYPES
-AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_UTIME_NULL
 AC_CHECK_FUNCS([bzero gethostbyname inet_ntoa memchr memmove memset select socket strcasecmp strchr strdup strerror strrchr strtol strtoul utime])

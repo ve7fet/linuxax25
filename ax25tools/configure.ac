@@ -1,7 +1,7 @@
 AC_PREREQ(2.61)
 AC_INIT(ax25tools, 1.0.5, linux-hams@vger.kernel.org)
 AC_CONFIG_SRCDIR([pathnames.h])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror dist-bzip2])
 
 dnl Determine versions for package managers.
@@ -52,7 +52,7 @@ dnl Check for FLTK header PRESENCE ONLY, normal check fails
 AC_CHECK_HEADERS([FL/Fl.H FL/Fl_Window.H FL/Fl_Box.H FL/Fl_Value_Slider.H \
 		  FL/Fl_Check_Button.H FL/Fl_Button.H FL/Fl_Output.H FL/Fl_Round_Button.H \
 		  FL/Fl_Group.H FL/x.H FL/fl_draw.H X11/X.h X11/Xlib.h \
-		  X11/Xutil.h],,AC_MSG_ERROR([Required headers missing; aborting]),-)
+		  X11/Xutil.h],,AC_MSG_ERROR([Required headers missing; aborting]),)
 else
     AC_MSG_NOTICE([*** no --with-xutils, skipping tools requiring X ***])
 dnl Since we're not building the X tools, set HAVE_X and HAVE_FLTK to no
@@ -61,10 +61,9 @@ dnl Since we're not building the X tools, set HAVE_X and HAVE_FLTK to no
 fi
 
 dnl Checks for header files.
-AC_HEADER_STDC
 AC_INCLUDES_DEFAULT # Checks for sys/types.h, sys/stat.h, stdlib.h, string.h, memory.h, strings.h, inttypes.h, stdint.h and unistd.h
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h paths.h \
-		  pty.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h \
+		  pty.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h sys/types.h \
 		  syslog.h termios.h utime.h utmp.h zlib.h],,AC_MSG_ERROR([Required headers missing; aborting]))
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -74,7 +73,6 @@ AC_TYPE_UID_T
 AC_TYPE_PID_T
 AC_TYPE_MODE_T
 AC_TYPE_SIZE_T
-AC_HEADER_TIME
 AC_STRUCT_TM
 
 dnl Checks for library functions.
@@ -83,7 +81,6 @@ AC_FUNC_FORK
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
-AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_FUNC_STRTOD
 AC_FUNC_UTIME_NULL
