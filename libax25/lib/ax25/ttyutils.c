@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <limits.h>
 
 #include <netax25/ttyutils.h>
 #include "pathnames.h"
@@ -100,7 +101,7 @@ int tty_speed(int fd, int speed)
 
 int tty_is_locked(char *tty)
 {
-	char buffer[50], *s;
+	char buffer[PATH_MAX], *s;
 	FILE *fp;
 	int pid = 0;
 
@@ -109,7 +110,9 @@ int tty_is_locked(char *tty)
 	else
 		s = tty;
 
-	sprintf(buffer, "%s/LCK..%s", LOCK_SERIAL_DIR, s);
+	memset(buffer, 0, sizeof(buffer));
+	sprintf(buffer, "%s/LCK..", LOCK_SERIAL_DIR);
+	strncat(buffer+strlen(buffer), s, sizeof(buffer)-strlen(buffer)-1);
 
 	if ((fp = fopen(buffer, "r")) == NULL)
 		return FALSE;
@@ -129,7 +132,7 @@ int tty_is_locked(char *tty)
 
 int tty_lock(char *tty)
 {
-	char buffer[50], *s;
+	char buffer[PATH_MAX], *s;
 	FILE *fp;
 
 	if ((s = strrchr(tty, '/')) != NULL)
@@ -137,7 +140,9 @@ int tty_lock(char *tty)
 	else
 		s = tty;
 
-	sprintf(buffer, "%s/LCK..%s", LOCK_SERIAL_DIR, s);
+	memset(buffer, 0, sizeof(buffer));
+	sprintf(buffer, "%s/LCK..", LOCK_SERIAL_DIR);
+	strncat(buffer+strlen(buffer), s, sizeof(buffer)-strlen(buffer)-1);
 
 	if ((fp = fopen(buffer, "w")) == NULL)
 		return FALSE;
@@ -151,14 +156,16 @@ int tty_lock(char *tty)
 
 int tty_unlock(char *tty)
 {
-	char buffer[50], *s;
+	char buffer[PATH_MAX], *s;
 
 	if ((s = strrchr(tty, '/')) != NULL)
 		s++;
 	else
 		s = tty;
 
-	sprintf(buffer, "%s/LCK..%s", LOCK_SERIAL_DIR, s);
+	memset(buffer, 0, sizeof(buffer));
+	sprintf(buffer, "%s/LCK..", LOCK_SERIAL_DIR);
+	strncat(buffer+strlen(buffer), s, sizeof(buffer)-strlen(buffer)-1);
 
 	return unlink(buffer) == 0;
 }
