@@ -1,5 +1,5 @@
 /*
- * this is a port of wampes ethertap whith my extension for bpqether
+ * this is a port of wampes ethertap with my extension for bpqether
  *
  * (c) 20020630 Thomas Osterried  dl9sau
  * License: GPL
@@ -139,8 +139,19 @@ static int tun_alloc(char *dev)
 	 */
 	ifr.ifr_flags = IFF_TAP;
 	if (*dev) {
-		strncpy(ifr.ifr_name, dev, IFNAMSIZ);
-		ifr.ifr_name[IFNAMSIZ-1] = 0;
+		/*
+		 * This error check convinces GCC the following strncpy 
+		 * won't overflow its destination.
+		 * Sadly the rest of the code is such spaghetty that I
+		 * can't convince myself this is not possible either.
+		 */
+		if (strlen(dev) >= IFNAMSIZ) {
+			close(fd);
+			fprintf(stderr, "Network device name \"%s\" exceeds system limit %d / IFNAMSIZ.\n", dev, IFNAMSIZ);
+
+			return -1;
+		}
+		strcpy(ifr.ifr_name, dev);
 	}
 
 	err = ioctl(fd, TUNSETIFF, (void *)&ifr);
