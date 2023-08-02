@@ -16,6 +16,7 @@
 #include <netax25/axlib.h>
 #include <netrose/rose.h>
 #include <netax25/rsconfig.h>
+#include <netax25/util.h>
 
 #include "pathnames.h"
 
@@ -237,6 +238,8 @@ int rs_config_load_ports(void)
 			while (isspace(*s & 0xff)) ++s;
 
 			memset(&ifr, 0, sizeof(ifr));
+			if (strlen(s) >= IFNAMSIZ)
+				unreachable();
 			strncpy(ifr.ifr_name, s, IFNAMSIZ-1);
 			ifr.ifr_name[IFNAMSIZ-1] = 0;
 

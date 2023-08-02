@@ -10,5 +10,6 @@ nobase_netax25_HEADERS = \
         procutils.h \
         mheard.h \
         ax25.h \
-	ax25io.h
+	ax25io.h \
+	util.h
 

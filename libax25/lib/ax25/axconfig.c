@@ -16,6 +16,7 @@
 #include <netax25/axlib.h>
 #include <netrose/rose.h>
 #include "pathnames.h"
+#include <netax25/util.h>
 
 typedef struct _axport
 {
@@ -308,10 +309,12 @@ int ax25_config_load_ports(void)
 				break;
 			s = strchr(buffer, ':');
 			if (s) *s = 0;
-				s = buffer;
+			s = buffer;
 			while (isspace(*s & 0xff)) ++s;
 
 			memset(&ifr, 0, sizeof(ifr));
+			if (strlen(s) >= IFNAMSIZ)
+				unreachable();
 			strncpy(ifr.ifr_name, s, IFNAMSIZ-1);
 			ifr.ifr_name[IFNAMSIZ-1] = 0;
 

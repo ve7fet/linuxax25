@@ -17,6 +17,7 @@
 #include "pathnames.h"
 #include <netax25/axlib.h>
 #include <netax25/nrconfig.h>
+#include <netax25/util.h>
 
 typedef struct _nrport
 {
@@ -291,6 +292,8 @@ int nr_config_load_ports(void)
 			while (isspace(*s & 0xff)) ++s;
 
 			memset(&ifr, 0, sizeof(ifr));
+			if (strlen(s) >= IFNAMSIZ)
+				unreachable();
 			strncpy(ifr.ifr_name, s, IFNAMSIZ-1);
 			ifr.ifr_name[IFNAMSIZ-1] = 0;
 
