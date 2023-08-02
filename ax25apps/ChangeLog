@@ -1,3 +1,10 @@
+ax25apps (2.1.0) unstable; urgency=low
+
+  * Update code with upstream patches and bug fixes from 2019 to
+  2023-05-13.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Tue, 02 Aug 2023 09:40:00 -0700
+
 ax25apps (2.0.1) unstable; urgency=low
 
   * Fixing the default conf file installation. Correct the file names and 
