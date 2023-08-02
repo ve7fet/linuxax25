@@ -52,16 +52,18 @@ static char * ts_format(unsigned int sec, unsigned int usec)
 	static char buf[sizeof("00:00:00.000000")];
 	unsigned int hours, minutes, seconds;
 
-	hours = sec / 3600;
-	minutes = (sec % 3600) / 60;
 	seconds  = sec % 60;
+        sec      = sec / 60;
+        minutes  = sec % 60;
+        sec      = sec / 60;
+        hours    = sec % 24;
 
 	/*
 	 * The real purpose of these checks is to let GCC figure out the
 	 * value range of all variables thus avoid bogus warnings.  For any
 	 * halfway modern GCC the checks will be optimized away.
 	 */
-	if (hours >= 60)
+	if (hours >= 24)
 		unreachable();
 	if (minutes >= 60)
 		unreachable();

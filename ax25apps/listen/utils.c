@@ -118,12 +118,12 @@ int initcolor(void)
 char *servname(int port, char *proto)
 {
 	struct servent *serv;
-	static char str[16];
+	static char str[6];
 
 	if ((serv = getservbyport(htons(port), proto)))
-		strncpy(str, serv->s_name, 16);
+		return serv->s_name;
 	else
-		snprintf(str, 16, "%i", port);
+		snprintf(str, sizeof(str), "%i", port);
 
 	return str;
 }
