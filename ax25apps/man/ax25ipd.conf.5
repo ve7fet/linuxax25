@@ -1,16 +1,16 @@
 .TH AX25IPD.CONF 5 "7 July 1997" Linux "Linux Programmer's Manual"
 .SH NAME
-ax25ipd.conf \- Control the operation of ax25ipd.
+ax25ipd.conf \- Control the operation of @@@ax25ipd@@@.
 .SH DESCRIPTION
 .LP
 The
 .B ax25ipd.conf
-file controls the operation of the ax25ipd(8) program. The operation of the
+file controls the operation of the @@@ax25ipd@@@(8) program. The operation of the
 config file can best be seen in an example:
 .LP
 #
 .br
-# ax25ipd configuration file for station floyd.vk5xxx.ampr.org
+# @@@ax25ipd@@@ configuration file for station floyd.vk5xxx.ampr.org
 .br
 #
 .br
@@ -24,7 +24,7 @@ socket ip
 .br
 #
 .br
-# Set ax25ipd mode of operation. (digi or tnc)
+# Set @@@ax25ipd@@@ mode of operation. (digi or tnc)
 .br
 #
 .br
@@ -72,7 +72,7 @@ mode tnc
 .br
 # if you use tun/tap or ethertap instead of kissattach you may say, without
 .br
-# leading slashes (!! - that's how ax25ipd consideres using the tty kiss
+# leading slashes (!! - that's how @@@ax25ipd@@@ considers using the tty kiss
 .br
 # driver or tun/tap or ethertap):
 .br
@@ -92,7 +92,7 @@ mode tnc
 .br
 # with bpqether or pty, you do not need to care about the speed
 .br
-# tun/tap: as descriped in /usr/src/linux/Documentatioa/networking/tuntap.txt,
+# tun/tap: as described in /usr/src/linux/Documentation/networking/tuntap.txt,
 .br
 # make a device # like this:
 .br
@@ -102,13 +102,13 @@ mode tnc
 .br
 # As serial port, you could assign physical ports like ttyS0 or ptys.
 .br
-# ax25ipd supports BSD-style pseudo-terminals as well as the Unix98 pty's.
+# @@@ax25ipd@@@ supports BSD-style pseudo-terminals as well as the Unix98 pty's.
 .br
 # If the tty argument is "/dev/ptmx", then Unix98 behaviour
 .br
-# will automaticaly take effekt. With Unix98 pty's, the slave tty name
+# will automatically take effect. With Unix98 pty's, the slave tty name
 .br
-# could not be forseen. That's why ax25ipd will print the corresponding
+# could not be forseen. That's why @@@ax25ipd@@@ will print the corresponding
 .br
 # slave pty name as a separate line on stdout.
 .br
@@ -198,8 +198,19 @@ route vk2abc 44.1.1.1 d
 .br
 .LP
 More to come ...
+.br
+For the
+.I speed
+statement 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600,
+19200, 38400, 57600, 115200, 230400, 460800, 500000, 576000, 1000000, 1152000,
+1500000, 2000000, 2500000, 3000000, 3500000 and 4000000 are supported on
+all architectures on Linux.  On
+.B SPARC
+in addition to these line speeds 76800, 153600, 307200, 614400 and 921600 bits
+per second are also supported.  If a system does not support a particular line
+speed, a speed of 9600 bits per second will be set instead.
 .SH FILES
 .LP
 /etc/ax25/ax25ipd.conf
 .SH "SEE ALSO"
-.BR ax25ipd (8).
+.BR @@@ax25ipd@@@ (8).

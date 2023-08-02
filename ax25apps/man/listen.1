@@ -1,11 +1,11 @@
-.TH LISTEN 1 "27 August 1996" Linux "Linux Programmer's Manual"
+.TH @@@LISTEN@@@ 1 "27 August 1996" Linux "Linux Programmer's Manual"
 .SH NAME
-listen \- monitor AX.25 traffic
+@@@listen@@@ \- monitor AX.25 traffic
 .SH SYNOPSIS
-.B listen [-8] [-a] [-c] [-h] [-i] [-p port] [-r] [-t..] [-v]
+.B @@@listen@@@ [-8] [-a] [-c] [-h] [-i] [-p port] [-r] [-t..] [-v]
 .SH DESCRIPTION
 .LP
-.B Listen
+.B @@@Listen@@@
 uses SOCK_PACKET facilities to provide a network monitor of all AX.25
 traffic heard by the system. Since KISS is implicitly promiscuous no
 special driver configurations are needed.
@@ -15,22 +15,22 @@ IP, ICMP, TCP and UDP. It also displays IP, TCP, ICMP, TCP and UDP
 encapsulated within NET/ROM frames. The program also displays AX.25 and IP
 encapsulated within an IP frame, but see RFC1326 for reasons not to do so.
 .LP
-.B Listen
+.B @@@Listen@@@
 makes an attempt at decoding some of the more common routing protocols. RSPF
 and RIP (both \(lqnormal\(rq and G8BPQs RIP98) are traced. JNOS style
 NET/ROM node polls are also displayed.
 .LP
-.B Listen
+.B @@@Listen@@@
 can use colors to make the output more readable. The ncurses library is used
-to accomplish this. 
+to accomplish this.
 .B Color support defaults to being disabled,
-and the 
+and the
 .BR -c
 parameter is used to enable it.
 .SH OPTIONS
 .TP 10
 .BI \-8
-Indicates that the terminal is capable of printing 8-bit characters. This 
+Indicates that the terminal is capable of printing 8-bit characters. This
 parameter is required for the -i parameter to work.
 .TP 10
 .BI \-a
@@ -78,7 +78,7 @@ Display the version.
 .SH FILES
 /etc/ax25/axports
 .SH "SEE ALSO"
-.BR call (1),
+.BR @@@call@@@ (1),
 .BR mheard (1),
 .BR beacon (1),
 .BR ax25 (4),
@@ -87,7 +87,7 @@ Display the version.
 .BR kissattach (8).
 .LP
 .SH BUGS
-.B Listen
+.B @@@Listen@@@
 does not validate the checksums of frames that support them (ie IP),
 therefore corrupt frames will be displayed with bogus values. The MSS
 of a TCP frame that contains that option is not displayed.

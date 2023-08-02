@@ -20,8 +20,8 @@
 /*
  * This daemon tries to learn AX.25, ARP, IP route entries by listening
  * to the AX.25 traffic. It caches up to 256 entries (in "FIFO" mode)
- * and saves the cache on demand or at shutdown in /var/ax25/ax25rtd/ip_routes
- * and /var/ax25/ax25rtd/ax25_routes. The configuration file is
+ * and saves the cache on demand or at shutdown in /var/ax25/ax25rtd/ip_route
+ * and /var/ax25/ax25rtd/ax25_route. The configuration file is
  * /etc/ax25/ax25rtd.conf, you can almost everything configure
  * there. See ax25rtcl.c for runtime maintainance.
  *

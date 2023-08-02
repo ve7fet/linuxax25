@@ -66,8 +66,8 @@ runtime maintainance through ax25rtctl or to set up new routes by other
 daemons (a Flexnet router, perhaps?)
 
 On startup ax25rtd reads the configuration file and afterwards preloads
-the caches from the files /var/ax25/ax25rtd/ax25_routes and
-/var/ax25/ax25rtd/ip_routes. On SIGTERM or ax25rtctl --save it saves the
+the caches from the files /var/ax25/ax25rtd/ax25_route and
+/var/ax25/ax25rtd/ip_route. On SIGTERM or ax25rtctl --save it saves the
 caches to those files.
 
 ax25rtd.conf
@@ -230,8 +230,8 @@ ax25rtctl -e <minutes>
 ax25rtctl --save
 ax25rtctl -s
 
-	Saves the AX.25 and IP cache to /var/ax25/ax25rtd/ax25_routes and
-	/var/ax25/ax25rtd/ip_routes (or the files specified in
+	Saves the AX.25 and IP cache to /var/ax25/ax25rtd/ax25_route and
+	/var/ax25/ax25rtd/ip_route (or the files specified in
 	/etc/ax25/ax25rtd.conf).
 
 ax25rtctl --reload
@@ -264,7 +264,7 @@ is equivalent to
    ax25rtctl --add ax25 dl0tha 9k6 0 dbpra
 
 All commands return port names in their output, though.
-With one exception: ax25_routes and ip_routes use interface names.
+With one exception: ax25_route and ip_route use interface names.
 
 
 /var/ax25/ax25rtd/control
