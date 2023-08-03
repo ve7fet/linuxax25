@@ -37,6 +37,11 @@
  *              type SOCK_PACKET family AF_INET sockets.
  *            - added support for new PF_PACKET family with sockaddr_ll
  *
+ * *** 20210727 Ralf Baechle:
+ * 	      - removed AF_INET and PF_PACKET as they are no longer 
+ * 	       supported in newer kernels (>2.1.68) and just create 
+ * 	       warnings. 
+ *
  * ***
  *
  * This program is free software; you can redistribute it and/or modify
@@ -68,33 +73,10 @@
 
 #include <sys/socket.h>
 
-/*
- * dl9sau:
- * uncomment this if you have problems with sockaddr_pkt.
- * sockaddr_pkt is the right way for type SOCK_PACKET on family AF_INET sockets.
- * especially because the "sockaddr" on recvfrom is truncated (internaly
- * it's sockaddr_pkt) -- and because we use this sockaddr for retransmitting,
- * it's really better to use the sockaddr_spkt.
- * default is to use SOCKADDR_SPKT
- */
-#define	USE_SOCKADDR_SPKT	1
-
-/* dl9sau: since linux 2.2.x, SOCK_PACKET is obsolete  */
-#define	USE_SOCKADDR_SLL	1
-
-#ifdef	USE_SOCKADDR_SLL
-#undef	USE_SOCKADDR_SPKT
-#endif
-
 #include <features.h>    /* for the glibc version number */
-#ifdef	USE_SOCKADDR_SPKT
-#include <net/if_packet.h>
-#endif
-#ifdef	USE_SOCKADDR_SLL
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <netpacket/packet.h>
-#endif
 #include <net/ethernet.h>
 
 #include <netinet/in.h>
@@ -111,9 +93,9 @@
 #define MAXCALLS	8
 
 struct config {
-	char		from[14];	/* sockaddr.sa_data is 14 bytes	*/
+	char		from[IFNAMSIZ];
 	int		from_idx;
-	char		to[14];
+	char		to[IFNAMSIZ];
 	int		to_idx;
 	ax25_address	calls[MAXCALLS];/* list of calls to echo	*/
 	int		ncalls;		/* number of calls to echo	*/
@@ -356,23 +338,10 @@ static int check_calls(struct config *cfg, unsigned char *buf, int len)
 
 int main(int argc, char **argv)
 {
-#ifdef	USE_SOCKADDR_SLL
 	struct sockaddr_ll sll;
 	struct sockaddr *psa = (struct sockaddr *)&sll;
 	const socklen_t sa_len = sizeof(struct sockaddr_ll);
 	int from_idx;
-#else
-#ifdef	USE_SOCKADDR_SPKT
-	struct sockaddr_pkt spkt;
-	struct sockaddr *psa = (struct sockaddr *)&spkt;
-	const int sa_len = sizeof(struct sockaddr_pkt);
-#else
-	struct sockaddr sa_generic;
-	struct sockaddr *psa = &sa_generic;
-	const int sa_len = sizeof(struct sockaddr);
-#endif
-	char from_dev_name[sizeof(psa->sa_data)];
-#endif
 	int s, size;
 	socklen_t alen;
 	unsigned char buf[1500];
@@ -403,17 +372,12 @@ int main(int argc, char **argv)
 	if (list == NULL)
 		return 1;
 
-#ifdef	USE_SOCKADDR_SLL
 	s = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_AX25));
 	if (s == -1) {
-#else
-	if ((s = socket(AF_INET, SOCK_PACKET, htons(ETH_P_AX25))) == -1) {
-#endif
 		perror("rxecho: socket:");
 		return 1;
 	}
 
-#ifdef	USE_SOCKADDR_SLL
 	for (p = list; p != NULL; p = p->next) {
 		int i;
 
@@ -441,7 +405,6 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-#endif
 
 	if (!daemon_start(FALSE)) {
 		fprintf(stderr, "rxecho: cannot become a daemon\n");
@@ -466,26 +429,11 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-#ifdef	USE_SOCKADDR_SLL
 		from_idx = sll.sll_ifindex;
-#else
-		/*
-		 * dl9sau: save the names of the iface the frame came from;
-		 * we'll overwrite psa->sa_data it for sendto() and need the
-		 * name again when multiplexing to more than one iface
-		 */
-		strncpy(from_dev_name, psa->sa_data, sizeof(from_dev_name)-1);
-		from_dev_name[sizeof(from_dev_name)-1] = 0;
-#endif
 
 		for (p = list; p != NULL; p = p->next)
-#ifdef	USE_SOCKADDR_SLL
 			if (p->from_idx == from_idx && (check_calls(p, buf, size) == 0)) {
 				sll.sll_ifindex = p->to_idx;
-#else
-			if ((strcmp(p->from, from_dev_name) == 0) && (check_calls(p, buf, size) == 0)) {
-				strcpy(psa->sa_data, p->to);
-#endif
 				/*
 				 * cave: alen (set by recvfrom()) may > salen
 				 *   which means it may point beyound of the
