@@ -3,7 +3,7 @@
 .\"
 .\" portions from setserial.8 by Rickard E. Faith (faith@cs.unc.edu)
 .\" "
-.TH SETHDLC 8 "1 October 1996" "Sethdlc 0.1" "Linux Programmer's Manual"
+.TH SETHDLC 8 "27 April 2008" "Sethdlc 0.1" "Linux Programmer's Manual"
 .SH NAME
 sethdlc \- get/set Linux HDLC packet radio modem driver port information
 .SH SYNOPSIS
@@ -66,7 +66,7 @@ instructs the driver to send a calibration pattern for
 .I cal
 seconds.
 
-Without the 
+Without the
 .B \-p,
 .B \-a
 and
@@ -76,7 +76,7 @@ option,
 will stay in the foreground and display received packets. The AX.25 header
 and eventually a FlexNet compressed header are decoded. CTRL-C terminates
 .B sethdlc.
-Specifying additional options, 
+Specifying additional options,
 .B sethdlc
 may display additional information.
 
@@ -87,14 +87,14 @@ accepts the following options:
 
 .TP
 .B \-b
-Trace the bits at the output of the demodulator, after RX clock recovery. 
+Trace the bits at the output of the demodulator, after RX clock recovery.
 This option is only available if \fBsethdlc\fP
 and the soundcard modem kernel driver is compiled with debugging support on.
 This is useful for driver debugging.
 .TP
 .B \-d
 Trace DCD, PTT and other status information on stdout. \fBsethdlc\fP
-displays two times per second a line containing these informations.
+displays two times per second a line containing this information.
 .TP
 .B \-h
 Display an overview of the available command line parameters and exit.
@@ -110,13 +110,13 @@ interrogated.  It will usually have the following form:
 .B \-s
 Trace the bits at the demodulator output, \fIbefore\fP
 the RX clock recovery, to stdout. This option is only available the modem driver
-is compiled with debugging support on. It may not be available on some modem, such 
+is compiled with debugging support on. It may not be available on some modem, such
 as the \fIpar96\fP.
 
 .SH PARAMETERS
 The following parameters can be assigned to a soundcard radio modem port.
 
-All numerical parameter values are assumed to be in decimal unless preceeded by "0x".
+All numerical parameter values are assumed to be in decimal unless preceded by "0x".
 
 The
 .B mode
@@ -161,14 +161,14 @@ The
 .B seriobase
 parameter optionally sets the address of a serial port, where
 the driver will output a PTT signal at the TxD and RTS pins, and a DCD
-signal at the DTR pin. As Baycom modems do have their own PTT pin, this 
+signal at the DTR pin. As Baycom modems do have their own PTT pin, this
 parameter is not used by the Baycom modem driver.
 
 The
 .B pariobase
 parameter optionally sets the address of a LPT port where
 the driver will output a PTT signal on the DATA0 line and a DCD signal
-on the DATA1 line. As Baycom modems do have their own PTT pin, this 
+on the DATA1 line. As Baycom modems do have their own PTT pin, this
 parameter is not used by the Baycom modem driver.
 
 The
@@ -198,7 +198,7 @@ time to actually clock the last bits out to the transmitter.
 The
 .B slottime
 parameter specifies how often the channel access algorithm is executed.
-Unlike \fIkissparms\fP, the unit is \fItens of ms\fP. Unless you have very 
+Unlike \fIkissparms\fP, the unit is \fItens of ms\fP. Unless you have very
 specific requirements, set this to 100ms (i.e. 10).
 
 The
@@ -220,7 +220,7 @@ sets the modem to half duplex mode.
 .SH CONSIDERATIONS OF CONFIGURING BAYCOM PORTS
 It is important to note that sethdlc merely tells the Linux kernel
 where it should expect to find the I/O port and IRQ lines of a
-particular serial port.  It does 
+particular serial port.  It does
 .I not
 configure the hardware to use a
 particular I/O port.  In order to do that, you will need to physically

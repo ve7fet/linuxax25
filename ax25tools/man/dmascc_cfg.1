@@ -1,8 +1,8 @@
-.TH DMASCC_CFG 1 "30 June 1999" Linux "Linux Programmer's Manual"
+.TH DMASCC_CFG 8 "30 June 1999" Linux "Linux Programmer's Manual"
 .SH NAME
 dmascc_cfg \- Configure dmascc devices
 .SH SYNOPSIS
-.B dmascc <interface> [<options>]
+.B dmascc_cfg <interface> [<options>]
 .SH DESCRIPTION
 .LP
 .B dmascc_cfg
@@ -14,10 +14,10 @@ used by root.
 .BI "\-\-speed "\fIfrequency\fR
 Set frequency of baud rate generator to \fIfrequency\fR. A value of 0
 disables the baud rate generator and the digital PLL. Use the \fB\-\-show\fR
-option to check whether the frequency you selected could be approximated 
+option to check whether the frequency you selected could be approximated
 with sufficient accuracy.
 .TP 10
-.BI "\-\-nrzi "\fR[\fI0\fR|\fI1\fR] 
+.BI "\-\-nrzi "\fR[\fI0\fR|\fI1\fR]
 \fI0\fR selects NRZ mode, \fI1\fR selects NRZI mode.
 .TP 10
 .BI "\-\-clocks "\fIinteger\fR
@@ -82,7 +82,7 @@ Set the minimum time between the transmitter turning off to when it turns
 on to \fImilliseconds\fR. Maximum wait time is 2500 ms.
 .TP 10
 .BI "\-\-persist "\fIf\fR
-Set the persistance parameter to \fIf\fR. Must be between 0 and 255 
+Set the persistence parameter to \fIf\fR. Must be between 0 and 255
 (inclusive).
 .TP 10
 .BI "\-\-dma "\fIchannel\fR

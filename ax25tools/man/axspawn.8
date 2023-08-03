@@ -1,4 +1,4 @@
-.TH AXSPAWN 8 "25 August 1996" Linux "Linux System Managers Manual"
+.TH AXSPAWN 8 "13 April 2008" Linux "Linux System Managers Manual"
 .SH NAME
 axspawn \- Allow automatic login to a Linux system.
 .SH SYNOPSIS
@@ -40,7 +40,7 @@ and
 standards.
 axspawn searches in /etc/ax25/bcpasswd (first) and ~user/.bcpasswd (second)
 for a match of the required authentication mechanism and password.
-md5 and baycom passwords may differ. md5 passwords gain over baycom passwords. 
+md5 and baycom passwords may differ. md5 passwords gain over baycom passwords.
 
 Note: you could "lock" special "friends" out by specifying an empty password
 in /etc/ax25/bcpasswd (line "n0call:md5:"). -> md5 Passwords are enforced. But
@@ -48,7 +48,7 @@ the length is shorter than the minimum (len 8 for md5, len 20 for baycom);
 user's password file is not searched because in /etc/ax25/bcpasswd its already
 found..
 
-Syntax and caveeats for /etc/ax25/bcpasswd: 
+Syntax and caveeats for /etc/ax25/bcpasswd:
   - Has to be a regular file (no symlink). Not world-readable/writable.
   - Example lines:
     # Thomas
@@ -82,7 +82,7 @@ properly.
 .TP 5
 .B -c, --changeuser
 Allow connecting ax25 users to change their username for login. They'll be
-asked for their real login name. 
+asked for their real login name.
 .TP 5
 .B -e, --embedded
 Special treatment for axspawn on non-standard conform embedded devices.

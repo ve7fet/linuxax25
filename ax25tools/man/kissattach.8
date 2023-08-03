@@ -1,10 +1,10 @@
-.TH KISSATTACH 8 "1 August 2017" Linux "Linux System Managers Manual"
+.TH KISSATTACH 8 "28 March 2019" Linux "Linux System Managers Manual"
 .SH NAME
 kissattach, spattach \- Attach a KISS or 6PACK interface
 .SH SYNOPSIS
-.B kissattach [-b] [-6] [-l] [-m mtu] [-v] tty port [inetaddr]
+.B kissattach [-b] [-6] [-l] [-m mtu] [-v] [-i inetaddr] tty port [inetaddr]
 .sp
-.B spattach [-b] [-l] [-m mtu] [-v] tty port [inetaddr]
+.B spattach [-b] [-6] [-l] [-m mtu] [-v] [-i inetaddr] tty port [inetaddr]
 .SH DESCRIPTION
 .LP
 Attach a KISS or a 6PACK interface to what is normally a tty line connected
@@ -22,7 +22,7 @@ The tty argument will typically be that of a serial port with a KISS or 6PACK
 TNC attached, although it could be a pseudo tty or a KISS port emulator such as
 an SCC card. Kissattach supports BSD-style pseudo-terminals as well as
 the Unix98 pty's. If the tty argument is "/dev/ptmx", then Unix98 behaviour
-will automaticaly take effekt. With Unix98 pty's, the slave tty name
+will automatically take effect. With Unix98 pty's, the slave tty name
 could not be forseen. That's why kissattach will print the corresponding slave
 pty name as a separate line on stdout.
 .LP
@@ -37,7 +37,7 @@ a need for the interface to have an IP address assigned to.
 .TP 16
 .BI "\-6"
 Use the 6PACK line discipline instead of KISS. This is the default if
-the program is called as spattach.
+the program is called as spattach so the option is a no-op for spattach.
 .TP 16
 .BI "\-i inetaddr"
 Set the internet address of the interface. This address may either be a

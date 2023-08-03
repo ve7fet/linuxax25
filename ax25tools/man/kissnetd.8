@@ -1,4 +1,4 @@
-.TH KISSNETD 8 "13 October 1996" Linux "Linux System Managers Manual"
+.TH KISSNETD 8 "31 March 2010" Linux "Linux System Managers Manual"
 .SH NAME
 kissnetd \- Create a virtual network.
 .SH SYNOPSIS
@@ -13,9 +13,9 @@ systems to share the same packets.
 .SH OPTIONS
 .TP 10
 .BI "\-p num"
-Automaticaly allocate num Unix98 slave pty's via /dev/ptmx.
+Automatically allocate num Unix98 slave pty's via /dev/ptmx.
 These are written to stdout and could be parsed by your startup scripts.
-"kissnetd -p 3" is an comfortable alternative to "kissnetd /dev/ptmx /dev/ptmx /dev/ptmx".
+"kissnetd -p 3" is a comfortable alternative to "kissnetd /dev/ptmx /dev/ptmx /dev/ptmx".
 .TP 10
 .BI "\-f size"
 This sets the maximum KISS frame size that the program will handle. The
