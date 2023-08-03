@@ -62,7 +62,7 @@ fi
 
 dnl Checks for header files.
 AC_INCLUDES_DEFAULT # Checks for sys/types.h, sys/stat.h, stdlib.h, string.h, memory.h, strings.h, inttypes.h, stdint.h and unistd.h
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h paths.h \
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h paths.h netpacket/packet.h \
 		  pty.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h sys/types.h \
 		  syslog.h termios.h utime.h utmp.h zlib.h],,AC_MSG_ERROR([Required headers missing; aborting]))
 

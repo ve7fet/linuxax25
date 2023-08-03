@@ -14,6 +14,7 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netpacket/packet.h>
 
 #include <net/if.h>
 
@@ -21,7 +22,6 @@
 
 #include <netax25/ax25.h>
 #include <netrom/netrom.h>
-#include <netrose/rose.h>
 
 #include <netax25/axlib.h>
 #include <netax25/axconfig.h>
@@ -36,7 +36,7 @@ struct port_struct port_list[20];
 int port_count = FALSE;
 int compliant  = FALSE;
 int logging    = FALSE;
-int debug;
+int sock, debug;
 
 ax25_address my_call;
 ax25_address node_call;
@@ -54,6 +54,7 @@ static void terminate(int sig)
 static int bcast_config_load_ports(void)
 {
 	char buffer[255], port[32], *s;
+	struct ifreq ifr;
 	FILE *fp;
 
 	fp = fopen(CONF_NETROMD_FILE, "r");
@@ -87,6 +88,13 @@ static int bcast_config_load_ports(void)
 
 		port_list[port_count].port   = strdup(port);
 		port_list[port_count].device = strdup(ax25_config_get_dev(port_list[port_count].port));
+
+		strncpy(ifr.ifr_name, port_list[port_count].device, sizeof(ifr.ifr_name));
+		if (ioctl(sock, SIOCGIFINDEX, &ifr)) {
+			fprintf(stderr, "netromd: SIOCGIFINDEX failed for device %s.\n", port_list[port_count].device);
+			return -1;
+		}
+		port_list[port_count].index = ifr.ifr_ifindex;
 
 		if (port_list[port_count].minimum_obs < 0 || port_list[port_count].minimum_obs > 6) {
 			fprintf(stderr, "netromd: invalid minimum obsolescence\n");
@@ -122,8 +130,8 @@ static int bcast_config_load_ports(void)
 int main(int argc, char **argv)
 {
 	unsigned char buffer[512];
-	int size, s, i;
-	struct sockaddr sa;
+	int size, i;
+	struct sockaddr_ll sa;
 	socklen_t asize;
 	struct timeval timeout;
 	time_t timenow, timelast;
@@ -181,6 +189,12 @@ int main(int argc, char **argv)
 
 	signal(SIGTERM, terminate);
 
+	sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_AX25));
+	if (sock == -1) {
+		perror("netromd: socket");
+		return 1;
+	}
+
 	if (ax25_config_load_ports() == 0) {
 		fprintf(stderr, "netromd: no AX.25 ports defined\n");
 		return 1;
@@ -199,12 +213,6 @@ int main(int argc, char **argv)
 	ax25_aton_entry(nr_config_get_addr(NULL), (char *)&my_call);
 	ax25_aton_entry("NODES", (char *)&node_call);
 
-	s = socket(PF_PACKET, SOCK_PACKET, htons(ETH_P_AX25));
-	if (s == -1) {
-		perror("netromd: socket");
-		return 1;
-	}
-
 	if (!daemon_start(TRUE)) {
 		fprintf(stderr, "netromd: cannot become a daemon\n");
 		return 1;
@@ -217,19 +225,18 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		FD_ZERO(&fdset);
-		FD_SET(s, &fdset);
+		FD_SET(sock, &fdset);
 
 		timeout.tv_sec  = 30;
 		timeout.tv_usec = 0;
 
-		if (select(s + 1, &fdset, NULL, NULL, &timeout) == -1)
+		if (select(sock + 1, &fdset, NULL, NULL, &timeout) == -1)
 			continue;		/* Signal received ? */
 
-		if (FD_ISSET(s, &fdset)) {
+		if (FD_ISSET(sock, &fdset)) {
 			asize = sizeof(sa);
 
-			size = recvfrom(s, buffer, sizeof(buffer), 0, &sa,
-					&asize);
+			size = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *) &sa, &asize);
 			if (size == -1) {
 				if (logging) {
 					syslog(LOG_ERR, "recvfrom: %m");
@@ -242,7 +249,7 @@ int main(int argc, char **argv)
 			    ax25_cmp((ax25_address *)(buffer + 8), &my_call)   != 0 &&
 			    buffer[16] == NETROM_PID && buffer[17] == NODES_SIG) {
 				for (i = 0; i < port_count; i++) {
-					if (strcmp(port_list[i].device, sa.sa_data) == 0) {
+					if (port_list[i].index == sa.sll_ifindex) {
 						if (debug && logging)
 							syslog(LOG_DEBUG, "receiving NODES broadcast on port %s from %s\n", port_list[i].port, ax25_ntoa((ax25_address *)(buffer + 8)));
 						receive_nodes(buffer + 18, size - 18, (ax25_address *)(buffer + 8), i);

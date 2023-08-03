@@ -19,6 +19,7 @@
 struct port_struct {
 	char *device;
 	char *port;
+	int  index;
 	int  minimum_obs;
 	int  default_qual;
 	int  worst_qual;
