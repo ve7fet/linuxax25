@@ -1,9 +1,17 @@
+libax25 1.2.1
+
+  * Bump the revision of the libax25 library to 1:1:0, since 
+  additional baud rates were added, and the source was changed, 
+  per GNU versioning guidelines.
+
+-- Lee Woldanski <ve7fet@tparc.org>  Tue, 08 Aug 2023 07:15:00 -0700
+
 libax25 1.2.0
 
   * Update code with upstream patches and bug fixes from 2019 to 
-  2023-01-04.
+  2023-05-13.
 
--- Lee Woldanski <ve7fet@tparc.org>  Mon, 01 Aug 2023 21:45:00 -0700
+-- Lee Woldanski <ve7fet@tparc.org>  Tue, 01 Aug 2023 21:45:00 -0700
 
 libax25 1.1.3
 
