@@ -1,3 +1,27 @@
+libax25 (1.2.1) unstable; urgency=low
+
+  * Bump the revision of the libax25 library to 1:1:0, since
+  additional baud rates were added, and the source was changed,
+  per GNU versioning guidelines.
+  * Update Debian compatibility to version 13, changing some of the
+  /debian files.
+  * Fix some of the resulting Lintian warnings and errors.
+  * Moved the installed location of the man pages.
+  * Remove INSTALL file from being packaged, it isn't necessary for
+  binary packages.
+  * NOTE: This update moves the shared library files into their own
+  /ax25 subfolder in /usr/lib (or equivalent), so that they don't
+  pollute the root /usr/lib folder and longer.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Tue, 08 Aug 2023 07:15:00 -0700
+
+libax25 (1.2.0) unstable; urgency=low
+
+  * Update code with upstream patches and bug fixes from 2019 to
+  2023-05-13.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Tue, 01 Aug 2023 21:45:00 -0700
+
 libax25 (1.1.3) unstable; urgency=low
 
   * Update the Debian packaging files to compatibility level 10. Also

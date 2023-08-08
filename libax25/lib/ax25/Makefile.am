@@ -1,4 +1,6 @@
-lib_LTLIBRARIES = libax25.la
+ax25libdir = $(libdir)/ax25
+
+ax25lib_LTLIBRARIES = libax25.la
 
 libax25_la_SOURCES = \
 	axconfig.c \

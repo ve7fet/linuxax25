@@ -1,4 +1,6 @@
-lib_LTLIBRARIES = libax25io.la
+ax25libdir = $(libdir)/ax25
+
+ax25lib_LTLIBRARIES = libax25io.la
 
 libax25io_la_SOURCES = ax25io.c
 

@@ -1,14 +1,14 @@
 The Debian Package libax25
 ----------------------------
 
-This version is a modified version of the January 2011 CVS source
-from http://www.linux-ax25.org/wiki/Main_Page
+This version is a modified version of the May 2023 GIT source
+from https://linux-ax25.in-berlin.de/wiki/Main_Page 
 
 It re-arranges the source code in to proper directorys, updates to
 current autotools, corrects build dependencies, and removes the
 conf files from this package (moved to ax25-tools).
 
-Until the modified source makes it into CVS, it will be available
+Until the modified source makes it into GIT, it will be available
 from https://github.com/ve7fet/linuxax25 
 
 ***Building a Debian Package***
@@ -39,4 +39,4 @@ Note, this source is multi-arch aware... you can build a package on a Pi
 if you want to make armhf packages instead (or do it in a cross-compiler, if
 you like).
 
- -- Lee Woldanski <ve7fet@tparc.org>  Fri, 18 Jan 2019 16:15:00 -0800
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 03 Aug 2023 15:15:00 -0700

@@ -3,7 +3,7 @@ AX25 Library
 
 This library is consistent with the official source, available at:
 http://git.linux-ax25.org/cgit/libax25.git/ 
-Master/head, up to patches applied on 2017-09-08. Verified 2018-08-11.
+Master/head, up to patches applied on 2023-05-13. Verified 2023-08-01.
 
 This library set is still really under test but is now released for
 general use. 
@@ -65,7 +65,7 @@ Note, this source is multi-arch aware... you can build a package on a Pi
 if you want to make armhf packages instead (or do it in a cross-compiler, if 
 you like).
 
- -- Lee Woldanski <ve7fet@tparc.org>  Fri, 18 Jan 2019 16:15:00 -0800
+ -- Lee Woldanski <ve7fet@tparc.org>  Thu, 03 Aug 2023 15:15:00 -0700
 
 
 This library is copyright by the respective authors (see AUTHORS for a list)
