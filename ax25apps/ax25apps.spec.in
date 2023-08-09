@@ -64,6 +64,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/ax25/ax25rtd/*
 
 %changelog
+* Wed Aug 09 2023 Lee Woldanski <ve7fet@tparc.org> 2.1.1-1
+- Update Debian packaging files to current compatibility
+
+* Tue Aug 01 2023 Lee Woldanski <ve7fet@tparc.org> 2.1.0-1
+- Update source with upstream patches and fixes current to 2023-05-13
+
 * Thu Jan 31 2019 Lee Woldanski <ve7fet@tparc.org> 2.0.1-1
 - Fix default conf installation filename and variable substitution
 
