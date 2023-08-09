@@ -62,6 +62,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/*.so
 
 %changelog
+* Wed Aug 09 2023 Lee Woldanski <ve7fet@tparc.org> 1.2.2-1
+- Revert some Debian packaging changes.
+
 * Tue Aug 08 2023 Lee Woldanski <ve7fet@tparc.org> 1.2.1-1
 - Bump revision of libax25 libraries to 1:1:0 per GNU guidelines
 

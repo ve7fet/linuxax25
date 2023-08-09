@@ -1,3 +1,12 @@
+libax25 (1.2.2) unstable; urgency=low
+
+  * Revert the Debian packaging changes putting libraries into their
+  own subfolder. Ldconfig isn't smart enough to find them, so the
+  package is broken if we can't fidn the libraries after they are
+  installed.
+
+ -- Lee Woldanski <ve7fet@tparc.org>  Wed, 09 Aug 2023 10:15:00 -0700
+
 libax25 (1.2.1) unstable; urgency=low
 
   * Bump the revision of the libax25 library to 1:1:0, since

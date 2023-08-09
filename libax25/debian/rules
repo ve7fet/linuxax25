@@ -17,6 +17,6 @@ export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
 # Empty the dependency_libs field in the .la files per Debian Policy.
 execute_after_dh_auto_install::
-		find debian/tmp/usr/lib/*/ax25  -name "*.la" -exec \
+		find debian/tmp/usr/lib/*  -name "*.la" -exec \
 			sed -i -e "s,^dependency_libs=.*,dependency_libs=''," {} +
 		
