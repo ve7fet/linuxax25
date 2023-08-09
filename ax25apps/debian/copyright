@@ -10,7 +10,7 @@ Files: debian/*
 Copyright: 2018 Lee Woldanski <ve7fet@tparc.org>
 License: LGPL-3.0+
 
-Files: ax25ipd
+Files: ax25ipd/*
 Copyright: 1999-2018 Michael Westerhof
            1999-2018 Michael Durrant VE3PNX <mdurrant@arcturusnetworks.com>
            1999-2018 D. Jeff Dionne VE3DJF <Jeff@lnx_rpi.ee.ryerson.ca>
@@ -18,12 +18,12 @@ Copyright: 1999-2018 Michael Westerhof
            1999-2018 Terry Dawson VK2KTJ <terry@animats.net>
 License: LGPL-3.0+
 
-Files: ax25rtd
+Files: ax25rtd/*
 Copyright: 1999-2018 Joerg Reuter <jreuter@poboxes.com>
            1999-2018 Llaus Kudielka OE1KIB
 License: LGPL-3.0+
 
-Files: listen
+Files: listen/*
 Copyright: 1999-2018 Phil Karn KA9Q <karn@qualcomm.com>
            1999-2018 Jeff White N0POY
            1999-2018 Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>
@@ -33,7 +33,7 @@ Copyright: 1999-2018 Phil Karn KA9Q <karn@qualcomm.com>
            1999-2018 Jeroen Vreeken 
 License: LGPL-3.0+
 
-Files: call
+Files: call/*
 Copyright: 1999-2018 Alexander Tietzel DG6XA <TIETZE_A@etech.fh-hamburg.de>
            1999-2018 Alan Cox GW4PTS <alan@cymru.net>
            1999-2018 Jonathan Naylor G4KLX <g4klx@g4klx.demon.co.uk>

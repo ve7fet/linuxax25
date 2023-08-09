@@ -1,0 +1,4 @@
+# These files are supposed to be there
+ax25apps binary: non-standard-dir-in-var var/ax25/
+ax25apps binary: file-in-unusual-dir var/ax25/ax25rtd/ax25_route
+ax25apps binary: file-in-unusual-dir var/ax25/ax25rtd/ip_route
