@@ -29,9 +29,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/ioctl.h>
-#ifdef TIME_WITH_SYS_TIME
 #include <time.h>
-#endif
 #include <sys/time.h>
 #include <netinet/in.h>
 #include <net/route.h>
