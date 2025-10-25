@@ -9,8 +9,14 @@
 #include <netax25/procutils.h>
 
 #include "pathnames.h"
+#include <ctype.h>
 
+#define PROC_AX25_FILE "/proc/net/ax25"
+#define LINE_MAX_LEN 2048
+#define MAX_FIELDS 32
 #define min(a,b) ((a) < (b) ? (a) : (b))
+
+int has_header = 0; 
 
 static char *space    = " \t\n\r";
 
@@ -70,76 +76,129 @@ static char *token(char **ptr, const char *delim)
 	return buf;
 }
 
-struct proc_ax25 *read_proc_ax25(void)
-{
-	FILE *fp;
-	char buffer[256], *cp;
-	struct proc_ax25 *p;
-	struct proc_ax25 *list = NULL;
+typedef struct proc_ax25 proc_ax25_t;
 
-	errno = 0;
 
-	if ((fp = fopen(PROC_AX25_FILE, "r")) == NULL)
-		return NULL;
-
-	while (fgets(buffer, 256, fp) != NULL) {
-		if ((p = calloc(1, sizeof(struct proc_ax25))) == NULL)
-			break;
-
-		cp = buffer;
-
-		p->magic = safe_atox(token(&cp, space));
-
-		safe_strncpy(p->dev,       token(&cp, space), 13);
-		safe_strncpy(p->src_addr,  token(&cp, space), 9);
-
-		safe_strncpy(p->dest_addr, token(&cp, ", \t\r\n"), 9);
-
-		p->ndigi = 0;
-		while (*cp == ',' && p->ndigi < 9) {
-			safe_strncpy(p->digi_addr[p->ndigi],
-				     token(&cp, ", \t\r\n"), 10);
-			p->ndigi++;
-		}
-
-		p->st = safe_atoi(token(&cp, space));
-
-		p->vs = safe_atoi(token(&cp, space));
-		p->vr = safe_atoi(token(&cp, space));
-		p->va = safe_atoi(token(&cp, space));
-
-		p->t1timer = safe_atox(token(&cp, space));
-		p->t1      = safe_atox(token(&cp, space));
-
-		p->t2timer = safe_atox(token(&cp, space));
-		p->t2      = safe_atox(token(&cp, space));
-
-		p->t3timer = safe_atox(token(&cp, space));
-		p->t3      = safe_atox(token(&cp, space));
-
-		p->idletimer = safe_atox(token(&cp, space));
-		p->idle      = safe_atox(token(&cp, space));
-
-		p->n2count = safe_atoi(token(&cp, space));
-		p->n2      = safe_atoi(token(&cp, space));
-
-		p->rtt    = safe_atox(token(&cp, space));
-
-		p->window = safe_atoi(token(&cp, space));
-
-		p->paclen = safe_atoi(token(&cp, space));
-
-		p->sndq   = safe_atoi(token(&cp, space));
-		p->rcvq   = safe_atoi(token(&cp, space));
-
-		p->inode  = safe_atox(token(&cp, space));
-
-		p->next = list;
-		list = p;
-	}
-	fclose(fp);
-	return list;
+// --- Fonctions d'aide à l'extraction (omises pour la concision) ---
+void extract_current_max(const char *field, unsigned long *current, unsigned long *max) {
+    if (!field || !current || !max) return;
+    char *slash = strchr(field, '/');
+    if (slash) {
+        *current = strtoul(field, NULL, 10); 
+        *max = strtoul(slash + 1, NULL, 10);
+    } else {
+        *current = strtoul(field, NULL, 10);
+        *max = 0; 
+    }
 }
+
+proc_ax25_t *parse_ax25_line(char *line) {
+    char *fields[MAX_FIELDS];
+    char *saveptr;
+    int field_count = 0;
+    char *line_copy = strdup(line);
+    if (!line_copy) { perror("strdup"); return NULL; }
+
+    char *token = strtok_r(line_copy, " \t", &saveptr);
+    while (token != NULL && field_count < MAX_FIELDS) {
+        fields[field_count] = token;
+        field_count++;
+        token = strtok_r(NULL, " \t", &saveptr);
+    }
+    
+    int min_fields = has_header ? 21 : 24;
+    if (field_count < min_fields) { free(line_copy); return NULL; }
+
+    proc_ax25_t *new_conn = (proc_ax25_t *)malloc(sizeof(proc_ax25_t));
+    if (!new_conn) { perror("malloc"); free(line_copy); return NULL; }
+    memset(new_conn, 0, sizeof(proc_ax25_t));
+
+    // Détermination des indices (Dynamique)
+    int st_idx = has_header ? 6 : 4;
+    int vs_idx = has_header ? 7 : 5;
+    int vr_idx = has_header ? 8 : 6;
+    int va_idx = has_header ? 9 : 7;
+    int t1_idx = has_header ? 10 : 8;
+    int t2_idx = has_header ? 11 : 9;
+    int t3_idx = has_header ? 12 : 10;
+    int idle_idx = has_header ? 13 : 11;
+    int n2_idx = has_header ? 14 : 12;
+    int rtt_idx = has_header ? 15 : 13;
+    int win_idx = has_header ? 16 : 14;
+    int paclen_idx = has_header ? 17 : 15;
+    int send_q_idx = has_header ? 18 : 21;
+    int recv_q_idx = has_header ? 19 : 22;
+    int inode_idx = has_header ? 20 : 23; 
+    
+    // Extraction des données (inchangé)
+    new_conn->magic = strtoul(fields[0], NULL, 16); 
+    strncpy(new_conn->dev, fields[1], 13); new_conn->dev[13] = '\0';
+    strncpy(new_conn->src_addr, fields[2], 9); new_conn->src_addr[9] = '\0';
+    strncpy(new_conn->dest_addr, fields[3], 9); new_conn->dest_addr[9] = '\0';
+    strncpy(new_conn->digi_addr[0], fields[4], 10); new_conn->digi_addr[0][10] = '\0';
+    strncpy(new_conn->digi_addr[1], fields[5], 10); new_conn->digi_addr[1][10] = '\0';
+    new_conn->ndigi = 0;
+    if (strcmp(fields[4], "*") != 0) new_conn->ndigi = 1;
+    if (strcmp(fields[5], "*") != 0) new_conn->ndigi = 2;
+    new_conn->st = (unsigned char)atoi(fields[st_idx]);
+    new_conn->vs = (unsigned short)atoi(fields[vs_idx]);
+    new_conn->vr = (unsigned short)atoi(fields[vr_idx]);
+    new_conn->va = (unsigned short)atoi(fields[va_idx]);
+    if (has_header) {
+        extract_current_max(fields[t1_idx], &new_conn->t1timer, &new_conn->t1);
+        extract_current_max(fields[t2_idx], &new_conn->t2timer, &new_conn->t2);
+        extract_current_max(fields[t3_idx], &new_conn->t3timer, &new_conn->t3);
+        extract_current_max(fields[idle_idx], &new_conn->idletimer, &new_conn->idle);
+        unsigned long n2_current, n2_max;
+        extract_current_max(fields[n2_idx], &n2_current, &n2_max);
+        new_conn->n2count = (unsigned char)n2_current; new_conn->n2 = (unsigned char)n2_max;
+    } else {
+        new_conn->t1timer = strtoul(fields[t1_idx], NULL, 10); new_conn->t1 = 0;
+        new_conn->t2timer = strtoul(fields[t2_idx], NULL, 10); new_conn->t2 = 0;
+        new_conn->t3timer = strtoul(fields[t3_idx], NULL, 10); new_conn->t3 = 0;
+        new_conn->idletimer = strtoul(fields[idle_idx], NULL, 10); new_conn->idle = 0;
+        new_conn->n2count = (unsigned char)atoi(fields[n2_idx]); new_conn->n2 = 0;
+    }
+    new_conn->rtt = strtoul(fields[rtt_idx], NULL, 10);
+    new_conn->window = (unsigned char)atoi(fields[win_idx]);
+    new_conn->paclen = (unsigned short)atoi(fields[paclen_idx]);
+    new_conn->sndq = (unsigned short)atoi(fields[send_q_idx]);
+    new_conn->rcvq = (unsigned short)atoi(fields[recv_q_idx]);
+    new_conn->inode = strtoul(fields[inode_idx], NULL, 10);
+    new_conn->next = NULL;
+    free(line_copy);
+    return new_conn;
+}
+
+proc_ax25_t *read_proc_ax25(void) {
+    FILE *pipe_fp = NULL; char line[LINE_MAX_LEN]; int line_count = 0;
+    proc_ax25_t *head = NULL; proc_ax25_t *current = NULL;
+    char command[sizeof("/bin/cat ") + sizeof(PROC_AX25_FILE)];
+    sprintf(command, "/bin/cat %s", PROC_AX25_FILE);
+
+    if ((pipe_fp = popen(command, "r")) == NULL) { fprintf(stderr, "Error: Cannot open pipe for command '%s'.\n", command); return NULL; }
+    if (fgets(line, sizeof(line), pipe_fp) != NULL) {
+        char *p = line; while(isspace(*p)) p++; has_header = (!isdigit(*p)); line_count = 1;
+        while (fgets(line, sizeof(line), pipe_fp) != NULL) line_count++;
+    }
+    pclose(pipe_fp); 
+    if (line_count <= (has_header ? 1 : 0)) return NULL;
+
+    if ((pipe_fp = popen(command, "r")) == NULL) { fprintf(stderr, "Error: Cannot reopen pipe for command '%s': %s\n", command, strerror(errno)); return NULL; }
+    if (has_header) { if (fgets(line, sizeof(line), pipe_fp) == NULL) { pclose(pipe_fp); return NULL; } }
+
+    while (fgets(line, sizeof(line), pipe_fp) != NULL) {
+        line[strcspn(line, "\n")] = 0; if (strlen(line) == 0) continue;
+        proc_ax25_t *new_conn = parse_ax25_line(line);
+        if (new_conn) {
+            if (head == NULL) { head = new_conn; current = new_conn; } 
+            else { current->next = new_conn; current = new_conn; }
+        }
+    }
+    pclose(pipe_fp);
+    return head;
+}
+
 
 void free_proc_ax25(struct proc_ax25 *ap)
 {
