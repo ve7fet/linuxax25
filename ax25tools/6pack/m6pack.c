@@ -383,7 +383,7 @@ static void sigusr1_handler(int sig)
 static void report(struct iface *tty, struct iface **pty, int numptys)
 {
 	int i;
-	long t;
+	time_t t;
 
 	time(&t);
 	syslog(LOG_INFO, "version %s.", VERSION);
