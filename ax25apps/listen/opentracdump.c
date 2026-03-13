@@ -148,7 +148,7 @@ static int decode_position(unsigned char *element, int element_len)
 static int decode_timestamp(unsigned char *element, int element_len)
 {
 	/* 0x11 Timestamp - Unix format time (unsigned)  */
-	long rawtime = 0;
+	time_t rawtime = 0;
 
 	rawtime = get32(element);
 	lprintf(T_OPENTRAC, "Time: %s", ctime(&rawtime));
