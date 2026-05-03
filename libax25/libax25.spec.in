@@ -81,7 +81,7 @@ rm -rf $RPM_BUILD_ROOT
 * Mon Aug 06 2018 Lee Woldanski <ve7fet@tparc.org> 1.1.1-1
 - Packaging for Debian
 
-* Sat Oct 21 2017 Bernard Pidoux <f6bvp@amsat.org> 1.1.0-1
+* Sat Oct 21 2017 Bernard Pidoux <bernard.f6bvp@gmail.com> 1.1.0-1
 - Sync with upstream sources
 
 * Tue Nov 04 2014 Lee Woldanski <ve7fet@tparc.org> 1.0.5-1
