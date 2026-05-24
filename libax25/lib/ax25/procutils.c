@@ -130,16 +130,45 @@ proc_ax25_t *parse_ax25_line(char *line) {
     int recv_q_idx = has_header ? 19 : 22;
     int inode_idx = has_header ? 20 : 23; 
     
-    // Extraction des données (inchangé)
-    new_conn->magic = strtoul(fields[0], NULL, 16); 
+    // Extraction des données
+    new_conn->magic = strtoul(fields[0], NULL, 16);
     strncpy(new_conn->dev, fields[1], 13); new_conn->dev[13] = '\0';
     strncpy(new_conn->src_addr, fields[2], 9); new_conn->src_addr[9] = '\0';
-    strncpy(new_conn->dest_addr, fields[3], 9); new_conn->dest_addr[9] = '\0';
-    strncpy(new_conn->digi_addr[0], fields[4], 10); new_conn->digi_addr[0][10] = '\0';
-    strncpy(new_conn->digi_addr[1], fields[5], 10); new_conn->digi_addr[1][10] = '\0';
     new_conn->ndigi = 0;
-    if (strcmp(fields[4], "*") != 0) new_conn->ndigi = 1;
-    if (strcmp(fields[5], "*") != 0) new_conn->ndigi = 2;
+    memset(new_conn->digi_addr[0], 0, sizeof(new_conn->digi_addr[0]));
+    memset(new_conn->digi_addr[1], 0, sizeof(new_conn->digi_addr[1]));
+    if (!has_header) {
+        /* Old kernel format: destination and digipeaters are grouped in a
+         * single space-delimited field, comma-separated.
+         * e.g. "OK0NAG-8,F3KT-0,OK0NAG-0" */
+        char dest_field[256];
+        strncpy(dest_field, fields[3], sizeof(dest_field) - 1);
+        dest_field[sizeof(dest_field) - 1] = '\0';
+        char *saveptr2;
+        char *part = strtok_r(dest_field, ",", &saveptr2);
+        strncpy(new_conn->dest_addr, part ? part : "*", 9);
+        new_conn->dest_addr[9] = '\0';
+        part = strtok_r(NULL, ",", &saveptr2);
+        if (part) {
+            strncpy(new_conn->digi_addr[0], part, 10);
+            new_conn->digi_addr[0][10] = '\0';
+            new_conn->ndigi = 1;
+            part = strtok_r(NULL, ",", &saveptr2);
+            if (part) {
+                strncpy(new_conn->digi_addr[1], part, 10);
+                new_conn->digi_addr[1][10] = '\0';
+                new_conn->ndigi = 2;
+            }
+        }
+    } else {
+        /* New kernel format (with header line): dest and digipeaters are
+         * in separate space-delimited fields */
+        strncpy(new_conn->dest_addr, fields[3], 9); new_conn->dest_addr[9] = '\0';
+        strncpy(new_conn->digi_addr[0], fields[4], 10); new_conn->digi_addr[0][10] = '\0';
+        strncpy(new_conn->digi_addr[1], fields[5], 10); new_conn->digi_addr[1][10] = '\0';
+        if (strcmp(fields[4], "*") != 0) new_conn->ndigi = 1;
+        if (strcmp(fields[5], "*") != 0) new_conn->ndigi = 2;
+    }
     new_conn->st = (unsigned char)atoi(fields[st_idx]);
     new_conn->vs = (unsigned short)atoi(fields[vs_idx]);
     new_conn->vr = (unsigned short)atoi(fields[vr_idx]);
