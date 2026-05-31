@@ -207,7 +207,20 @@ proc_ax25_t *read_proc_ax25(void) {
 
     if ((pipe_fp = popen(command, "r")) == NULL) { fprintf(stderr, "Error: Cannot open pipe for command '%s'.\n", command); return NULL; }
     if (fgets(line, sizeof(line), pipe_fp) != NULL) {
-        char *p = line; while(isspace(*p)) p++; has_header = (!isdigit(*p)); line_count = 1;
+        char *p = line; while(isspace(*p)) p++;
+        /* Detect format: old/no-header format starts with an 8-char (32-bit
+         * kernel) or 16-char (64-bit kernel) hex magic number (socket
+         * address), followed by whitespace.  A header line starts with
+         * non-hex text (e.g. "addr").
+         * We count consecutive hex digits up to 17 to distinguish:
+         *   hex_count == 8  + space at p[8]  → old 32-bit no-header format
+         *   hex_count == 16 + space at p[16] → modern 64-bit no-header format
+         * Anything else (too few or too many hex chars) → has header line. */
+        int hex_count = 0;
+        while (hex_count < 17 && isxdigit((unsigned char)p[hex_count])) hex_count++;
+        has_header = !((hex_count == 8  && isspace((unsigned char)p[8])) ||
+                       (hex_count == 16 && isspace((unsigned char)p[16])));
+        line_count = 1;
         while (fgets(line, sizeof(line), pipe_fp) != NULL) line_count++;
     }
     pclose(pipe_fp); 
