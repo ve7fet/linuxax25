@@ -8,11 +8,12 @@
  * This is also the key dispatching module, so it knows about a lot more
  * than just I/O stuff.
  */
-#define _XOPEN_SOURCE
-#define _XOPEN_SOURCE_EXTENDED
+/* ptsname(), unlockpt(), pselect() */
+#define _GNU_SOURCE
 
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <memory.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -29,6 +30,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 
 #include "ax25ipd.h"
@@ -60,6 +62,14 @@ int ttyfd_bpq = 0;
 #ifndef FNDELAY
 #define FNDELAY O_NDELAY
 #endif
+
+/*
+ * A send that cannot go through is tried again every 100 ms. It used to
+ * be tried for ever: with a tty that nobody reads any more, ax25ipd then
+ * stopped reading the network and could not even be stopped by SIGTERM.
+ * After SEND_RETRIES tries the frame is dropped.
+ */
+#define SEND_RETRIES	50
 
 /*
  * process an I/O error; return true if a retry is needed
@@ -509,11 +519,35 @@ void io_start(void) {
 	int n, nb, hdr_len;
 	fd_set readfds;
 	unsigned char buf[MAX_FRAME];
-	struct timeval wait;
+	struct timespec wait;
 	struct iphdr *ipptr;
 	time_t now;
+	sigset_t block, orig;
+
+	/*
+	 * The signals are blocked except while waiting in pselect(): none is
+	 * missed between the check below and the wait, and the handlers never
+	 * interrupt the code that moves the frames.
+	 */
+	sigemptyset(&block);
+	sigaddset(&block, SIGHUP);
+	sigaddset(&block, SIGUSR1);
+	sigaddset(&block, SIGINT);
+	sigaddset(&block, SIGTERM);
+	sigprocmask(SIG_BLOCK, &block, &orig);
 
 	for (;;) {
+
+		/*
+		 * When a descriptor is ready the pselect() below returns at
+		 * once and delivers no signal: on a busy link they would wait
+		 * for ever. This empty pselect() lets the pending ones in.
+		 */
+		wait.tv_sec = 0;
+		wait.tv_nsec = 0;
+		pselect(0, NULL, NULL, NULL, &wait, &orig);
+
+		check_signals();
 
 		if ((bc_interval > 0) && digi) {
 			now = time(NULL);
@@ -525,7 +559,7 @@ void io_start(void) {
 		}
 
 		wait.tv_sec = 10;	/* lets us keep the beacon going */
-		wait.tv_usec = 0;
+		wait.tv_nsec = 0;
 
 		FD_ZERO(&readfds);
 
@@ -539,7 +573,7 @@ void io_start(void) {
 			FD_SET(udpsock, &readfds);
 		}
 
-		nb = select(FD_SETSIZE, &readfds, (fd_set *) 0, (fd_set *) 0, &wait);
+		nb = pselect(FD_SETSIZE, &readfds, (fd_set *) 0, (fd_set *) 0, &wait, &orig);
 
 		if (nb < 0) {
 			if (errno == EINTR)
@@ -623,6 +657,7 @@ out_ttyfd:
 void send_ip(unsigned char *buf, int l, unsigned char *targetip)
 {
 	int n;
+	int retries = 0;
 
 	if (l <= 0)
 		return;
@@ -639,7 +674,8 @@ void send_ip(unsigned char *buf, int l, unsigned char *targetip)
 			do {
 				n = sendto(udpsock, buf, l, 0, (struct sockaddr *) &to, sizeof to);
 			}
-			while (io_error(n, buf, l, SEND_MSG, UDP_MODE, __LINE__));
+			while (io_error(n, buf, l, SEND_MSG, UDP_MODE, __LINE__)
+			       && ++retries <= SEND_RETRIES);
 		}
 	} else {
 		if (ip_mode) {
@@ -647,7 +683,8 @@ void send_ip(unsigned char *buf, int l, unsigned char *targetip)
 			do {
 				n = sendto(sock, buf, l, 0, (struct sockaddr *) &to, sizeof to);
 			}
-			while (io_error(n, buf, l, SEND_MSG, IP_MODE, __LINE__));
+			while (io_error(n, buf, l, SEND_MSG, IP_MODE, __LINE__)
+			       && ++retries <= SEND_RETRIES);
 		}
 	}
 }
@@ -659,6 +696,7 @@ void send_tty(unsigned char *buf, int l)
 	int n;
 	unsigned char *p;
 	int nc;
+	int retries = 0;
 
 	if (l <= 0)
 		return;
@@ -679,19 +717,25 @@ void send_tty(unsigned char *buf, int l)
  * compile-time options) by having io_error barf when it detects an EAGAIN
  * error code.
  */
-	do {
-		if ((n > 0) && (n < nc)) {	/* did we put only write a bit? */
-			p += n;	/* point to the new data */
-			nc -= n;	/* drop the length */
-		}
+	for (;;) {
 		n = write(ttyfd, p, nc);
 		if (n > 0) {
-			if (n != nc) {
-				LOGL4("%d ", n);	/* no-one said loglevel 4 */
-			} else {
+			if (n >= nc) {
 				LOGL4("%d\n", n);	/* was efficient!!! */
+				break;
 			}
+			LOGL4("%d ", n);	/* no-one said loglevel 4 */
+			p += n;		/* point to the new data */
+			nc -= n;	/* drop the length */
+			retries = 0;
+			continue;
+		}
+		if (!io_error(n, p, nc, SEND_MSG, TTY_MODE, __LINE__))
+			break;
+		if (++retries > SEND_RETRIES) {
+			LOGL1("send_tty: tty still busy after %d tries, frame dropped\n",
+			      SEND_RETRIES);
+			break;
 		}
 	}
-	while (((n > 0) && (n < nc)) || (io_error(n, p, nc, SEND_MSG, TTY_MODE, __LINE__)));
 }
