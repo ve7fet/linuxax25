@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
-#include <termio.h>
+#include <termios.h>
 #include <time.h>
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -27,12 +27,13 @@
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 
 #include "ax25ipd.h"
 
-static struct termio nterm;
+static struct termios nterm;
 
 int ttyfd = -1;
 static int udpsock = -1;
@@ -339,7 +340,8 @@ void io_open(void)
 		set_bpq_dev_call_and_up(ttydevice);
 		goto behind_normal_tty;
 	}
-	if (ioctl(ttyfd, TCGETA, &nterm) < 0) {
+	/* termios: <termio.h> and struct termio are gone from glibc 2.42 */
+	if (tcgetattr(ttyfd, &nterm) < 0) {
 		perror("fetching tty device parameters");
 		exit(1);
 	}
@@ -471,12 +473,15 @@ void io_open(void)
 
 	nterm.c_iflag = 0;
 	nterm.c_oflag = 0;
-	nterm.c_cflag = baudrate | CS8 | CREAD | CLOCAL;
+	nterm.c_cflag = CS8 | CREAD | CLOCAL;
 	nterm.c_lflag = 0;
 	nterm.c_cc[VMIN] = 0;
 	nterm.c_cc[VTIME] = 0;
 
-	if (ioctl(ttyfd, TCSETA, &nterm) < 0) {
+	cfsetispeed(&nterm, baudrate);
+	cfsetospeed(&nterm, baudrate);
+
+	if (tcsetattr(ttyfd, TCSANOW, &nterm) < 0) {
 		perror("setting tty device parameters");
 		exit(1);
 	}
