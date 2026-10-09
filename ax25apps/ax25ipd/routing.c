@@ -503,7 +503,12 @@ void update_dns(unsigned wait)
 	if (rc){
 		LOGL1("    Thread err%d\n", rc); // Should we exit here?
 		threadrunning = 0;
-	}	
+	} else {
+		/* Nobody joins this thread: detach it, otherwise its stack
+		 * (8 MB of address space) stays allocated after it ends,
+		 * one more every hour. */
+		pthread_detach(dnspthread);
+	}
 		
 }
 
