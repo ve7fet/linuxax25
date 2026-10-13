@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
 
 #include "config.h"
 #include "user_io.h"
@@ -60,16 +62,67 @@ void end_compress(void)
 #endif
 }
 
+static void alarm_handler(int sig)
+{
+}
+
+/*
+ * Arms the timeout of connect(). The handler is installed without
+ * SA_RESTART: with signal(), glibc restarts the interrupted connect(), which
+ * on an AX.25, NET/ROM or ROSE socket starts a new connection attempt instead
+ * of returning EINTR, so the timeout never ended anything.
+ */
+void connect_timeout(unsigned int seconds)
+{
+	struct sigaction sa;
+
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = alarm_handler;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGALRM, &sa, NULL);
+
+	alarm(seconds);
+}
+
+/*
+ * Both ends are non blocking (see select_loop()). When the far side is slow
+ * - a 1200 baud radio link fed by a BBS listing - the send buffer of the
+ * socket fills and write() fails with EAGAIN: wait until there is room and
+ * try again, instead of dropping the data.
+ */
+static int write_frame(int fd, const unsigned char *byte, int len)
+{
+	struct pollfd pfd;
+
+	for (;;) {
+		if (write(fd, byte, len) >= 0)
+			return 0;
+		if (errno == EINTR)
+			continue;
+		if (errno != EAGAIN && errno != EWOULDBLOCK)
+			return -1;
+
+		pfd.fd = fd;
+		pfd.events = POLLOUT;
+		pfd.revents = 0;
+		if (poll(&pfd, 1, -1) < 0 && errno != EINTR)
+			return -1;
+	}
+}
+
 static int flush_output(int fd, const void *buf, size_t count)
 {
 	const unsigned char *byte = buf;
 	int cnt = count;
+	/* -i is the frame length of the incoming connection (our stdout),
+	 * -o the one of the connection we made */
+	int paclen = (fd == STDOUT_FILENO) ? paclen_in : paclen_out;
 
 	while (cnt > 0) {
-		if (write(fd, byte, min(paclen_out, cnt)) < 0)
+		if (write_frame(fd, byte, min(paclen, cnt)) < 0)
 			return -1;
-		byte += paclen_out;
-		cnt -= paclen_out;
+		byte += paclen;
+		cnt -= paclen;
 	}
 
 	return count;
@@ -196,11 +249,20 @@ int select_loop(int s)
 		FD_SET(STDIN_FILENO, &read_fd);
 		FD_SET(s, &read_fd);
 
-		select(s + 1, &read_fd, NULL, NULL, NULL);
+		if (select(s + 1, &read_fd, NULL, NULL, NULL) < 0) {
+			if (errno == EINTR)
+				continue;
+			close(s);
+			break;
+		}
 
 		if (FD_ISSET(s, &read_fd)) {
-			while ((n = user_read(s, buf, BUFLEN)) > 0)
-				user_write(STDOUT_FILENO, buf, n);
+			while ((n = user_read(s, buf, BUFLEN)) > 0) {
+				if (user_write(STDOUT_FILENO, buf, n) < 0) {
+					close(s);
+					return -1;
+				}
+			}
 			if (n == 0 || (n < 0 && errno != EAGAIN)) {
 				close(s);
 				break;
@@ -208,8 +270,12 @@ int select_loop(int s)
 		}
 
 		if (FD_ISSET(STDIN_FILENO, &read_fd)) {
-			while ((n = user_read(STDIN_FILENO, buf, BUFLEN)) > 0)
-				user_write(s, buf, n);
+			while ((n = user_read(STDIN_FILENO, buf, BUFLEN)) > 0) {
+				if (user_write(s, buf, n) < 0) {
+					close(s);
+					return -1;
+				}
+			}
 			if (n == 0 || (n < 0 && errno != EAGAIN)) {
 				close(s);
 				break;

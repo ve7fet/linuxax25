@@ -21,10 +21,6 @@
 
 #include "user_io.h"
 
-static void alarm_handler(int sig)
-{
-}
-
 int main(int argc, char **argv)
 {
 	char buffer[256], *addr;
@@ -80,17 +76,17 @@ int main(int argc, char **argv)
 
 	addr = nr_config_get_addr(argv[optind]);
 	if (addr == NULL) {
-		sprintf(buffer, "ERROR: invalid NET/ROM port name - %s\r", argv[optind]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid NET/ROM port name - %s\r", argv[optind]);
 		err(buffer);
 	}
 
 	if (ax25_aton_entry(addr, nrbind.fsa_ax25.sax25_call.ax25_call) == -1) {
-		sprintf(buffer, "ERROR: invalid NET/ROM port callsign - %s\r", argv[optind]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid NET/ROM port callsign - %s\r", argv[optind]);
 		err(buffer);
 	}
 
 	if (ax25_aton_entry(argv[optind + 1], nrbind.fsa_digipeater[0].ax25_call) == -1) {
-		sprintf(buffer, "ERROR: invalid callsign - %s\r", argv[optind + 1]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid callsign - %s\r", argv[optind + 1]);
 		err(buffer);
 	}
 
@@ -100,7 +96,7 @@ int main(int argc, char **argv)
 		addr++;
 
 	if (ax25_aton_entry(addr, nrconnect.fsa_ax25.sax25_call.ax25_call) == -1) {
-		sprintf(buffer, "ERROR: invalid callsign - %s\r", argv[optind + 2]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid callsign - %s\r", argv[optind + 2]);
 		err(buffer);
 	}
 
@@ -109,7 +105,7 @@ int main(int argc, char **argv)
 	 */
 	s = socket(AF_NETROM, SOCK_SEQPACKET, 0);
 	if (s < 0) {
-		sprintf(buffer, "ERROR: cannot open NET/ROM socket, %s\r", strerror(errno));
+		snprintf(buffer, sizeof(buffer), "ERROR: cannot open NET/ROM socket, %s\r", strerror(errno));
 		err(buffer);
 	}
 
@@ -117,19 +113,17 @@ int main(int argc, char **argv)
 	 * Set our AX.25 callsign and NET/ROM callsign accordingly.
 	 */
 	if (bind(s, (struct sockaddr *)&nrbind, addrlen) != 0) {
-		sprintf(buffer, "ERROR: cannot bind NET/ROM socket, %s\r", strerror(errno));
+		snprintf(buffer, sizeof(buffer), "ERROR: cannot bind NET/ROM socket, %s\r", strerror(errno));
 		err(buffer);
 	}
 
-	sprintf(buffer, "Connecting to %s ...\r", argv[optind + 2]);
+	snprintf(buffer, sizeof(buffer), "Connecting to %s ...\r", argv[optind + 2]);
 	user_write(STDOUT_FILENO, buffer, strlen(buffer));
 
 	/*
 	 * If no response in 30 seconds, go away.
 	 */
-	alarm(30);
-
-	signal(SIGALRM, alarm_handler);
+	connect_timeout(30);
 
 	/*
 	 * Lets try and connect to the far end.
@@ -146,7 +140,7 @@ int main(int argc, char **argv)
 			strcpy(buffer, "*** Connection timed out - aborting\r");
 			break;
 		default:
-			sprintf(buffer, "ERROR: cannot connect to NET/ROM node, %s\r", strerror(errno));
+			snprintf(buffer, sizeof(buffer), "ERROR: cannot connect to NET/ROM node, %s\r", strerror(errno));
 			break;
 		}
 

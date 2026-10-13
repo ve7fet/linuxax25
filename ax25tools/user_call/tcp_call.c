@@ -14,10 +14,6 @@
 
 #include "user_io.h"
 
-static void alarm_handler(int sig)
-{
-}
-
 int main(int argc, char **argv)
 {
 	char buffer[256];
@@ -70,7 +66,7 @@ int main(int argc, char **argv)
 	 */
 	s = socket(AF_INET, SOCK_STREAM, 0);
 	if (s < 0) {
-		sprintf(buffer, "ERROR: can't open socket: %s\n", strerror(errno));
+		snprintf(buffer, sizeof(buffer), "ERROR: can't open socket: %s\n", strerror(errno));
 		err(buffer);
 	}
 
@@ -97,22 +93,20 @@ int main(int argc, char **argv)
 	}
 
 	if (verbose) {
-		sprintf(buffer, "*** Connecting to %s ...\n", hp->h_name);
+		snprintf(buffer, sizeof(buffer), "*** Connecting to %s ...\n", hp->h_name);
 		user_write(STDOUT_FILENO, buffer, strlen(buffer));
 	}
 
 	/*
 	 * If no response in 30 seconds, go away.
 	 */
-	alarm(30);
-
-	signal(SIGALRM, alarm_handler);
+	connect_timeout(30);
 
 	/*
 	 * Lets try and connect to the far end.
 	 */
 	if (connect(s, (struct sockaddr *)&addr, addrlen) != 0) {
-		sprintf(buffer, "ERROR: can't connect: %s\n", strerror(errno));
+		snprintf(buffer, sizeof(buffer), "ERROR: can't connect: %s\n", strerror(errno));
 		err(buffer);
 	}
 

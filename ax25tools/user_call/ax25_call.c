@@ -19,10 +19,6 @@
 
 #include "user_io.h"
 
-static void alarm_handler(int sig)
-{
-}
-
 int main(int argc, char **argv)
 {
 	char buffer[256], *addr;
@@ -74,22 +70,22 @@ int main(int argc, char **argv)
 
 	addr = ax25_config_get_addr(argv[optind]);
 	if (addr == NULL) {
-		sprintf(buffer, "ERROR: invalid AX.25 port name - %s\r", argv[optind]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid AX.25 port name - %s\r", argv[optind]);
 		err(buffer);
 	}
 
 	if (ax25_aton_entry(addr, axbind.fsa_digipeater[0].ax25_call) == -1) {
-		sprintf(buffer, "ERROR: invalid AX.25 port callsign - %s\r", argv[optind]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid AX.25 port callsign - %s\r", argv[optind]);
 		err(buffer);
 	}
 
 	if (ax25_aton_entry(argv[optind + 1], axbind.fsa_ax25.sax25_call.ax25_call) == -1) {
-		sprintf(buffer, "ERROR: invalid callsign - %s\r", argv[optind + 1]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid callsign - %s\r", argv[optind + 1]);
 		err(buffer);
 	}
 
 	if (ax25_aton_arglist((const char**)(&argv[optind + 2]), &axconnect) == -1) {
-		sprintf(buffer, "ERROR: invalid destination callsign or digipeater\r");
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid destination callsign or digipeater\r");
 		err(buffer);
 	}
 
@@ -98,7 +94,7 @@ int main(int argc, char **argv)
 	 */
 	s = socket(AF_AX25, SOCK_SEQPACKET, 0);
 	if (s < 0) {
-		sprintf(buffer, "ERROR: cannot open AX.25 socket, %s\r", strerror(errno));
+		snprintf(buffer, sizeof(buffer), "ERROR: cannot open AX.25 socket, %s\r", strerror(errno));
 		err(buffer);
 	}
 
@@ -106,19 +102,17 @@ int main(int argc, char **argv)
 	 * Set our AX.25 callsign and AX.25 port callsign accordingly.
 	 */
 	if (bind(s, (struct sockaddr *)&axbind, addrlen) != 0) {
-		sprintf(buffer, "ERROR: cannot bind AX.25 socket, %s\r", strerror(errno));
+		snprintf(buffer, sizeof(buffer), "ERROR: cannot bind AX.25 socket, %s\r", strerror(errno));
 		err(buffer);
 	}
 
-	sprintf(buffer, "Connecting to %s ...\r", argv[optind + 2]);
+	snprintf(buffer, sizeof(buffer), "Connecting to %s ...\r", argv[optind + 2]);
 	user_write(STDOUT_FILENO, buffer, strlen(buffer));
 
 	/*
 	 * If no response in 30 seconds, go away.
 	 */
-	alarm(30);
-
-	signal(SIGALRM, alarm_handler);
+	connect_timeout(30);
 
 	/*
 	 * Lets try and connect to the far end.
@@ -135,7 +129,7 @@ int main(int argc, char **argv)
 			strcpy(buffer, "*** Connection timed out - aborting\r");
 			break;
 		default:
-			sprintf(buffer, "ERROR: cannot connect to AX.25 callsign, %s\r", strerror(errno));
+			snprintf(buffer, sizeof(buffer), "ERROR: cannot connect to AX.25 callsign, %s\r", strerror(errno));
 			break;
 		}
 
