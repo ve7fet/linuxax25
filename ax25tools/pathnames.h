@@ -12,6 +12,8 @@
 
 #define	DATA_MHEARD_FILE	AX25_LOCALSTATEDIR"mheard/mheard.dat"
 
+#define	PID_AX25D_FILE		AX25_LOCALSTATEDIR"ax25d.pid"
+
 #define	LOCK_AXSPAWN_FILE	"/var/lock/axspawn"
 #define	LOCK_SERIAL_DIR		"/var/lock"
 

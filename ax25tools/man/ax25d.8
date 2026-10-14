@@ -20,6 +20,15 @@ system log file. By default no logging is done. When
 is running, and a change in the configuration file is made,
 .B ax25d
 can be forced to re-read its configuration file by sending it a SIGHUP.
+.sp 1
+Only one
+.B ax25d
+may run at a time. It holds a lock on its pid file for as long as it runs,
+and a second
+.B ax25d
+started meanwhile writes "another ax25d is already running (pid N): not
+started" and exits with status 1. The pid file holds the process id of the
+running daemon.
 .SH OPTIONS
 .TP 15
 .BI "\-c altconffile"
@@ -34,6 +43,8 @@ Display the version.
 .SH FILES
 .LP
 /etc/ax25/ax25d.conf
+.br
+/var/ax25/ax25d.pid
 .SH "SEE ALSO"
 .BR kill (1),
 .BR ax25 (4),

@@ -195,6 +195,10 @@ static int ReadConfig(void);
 static fd_set fdread;
 static int maxfd = -1;
 
+/* Set by the signal handlers, acted upon in the main loop */
+static volatile sig_atomic_t ReloadPending;
+static volatile sig_atomic_t TermPending;
+
 /*--------------------------------------------------------------------------*/
 
 static void update_maxfd(void)
@@ -203,7 +207,11 @@ static void update_maxfd(void)
 
 	FD_ZERO(&fdread);
 
-	for (maxfd = -1, paxl = AXL; paxl != NULL && paxl->fd >= 0; paxl = paxl->next) {
+	for (maxfd = -1, paxl = AXL; paxl != NULL; paxl = paxl->next) {
+		/* A port whose socket was closed after an error: skip it, keep the others */
+		if (paxl->fd < 0)
+			continue;
+
 		FD_SET(paxl->fd, &fdread);
 
 		if (paxl->fd > maxfd)
@@ -227,9 +235,21 @@ static void err_config(void)
 
 /*--------------------------------------------------------------------------*/
 
-static void _ReadConfig(int dummy)
+/*
+ * SIGHUP and the retry timer (SIGALRM) only ask for a reload: the
+ * configuration is read again from the main loop. Reading it inside the
+ * signal handler called malloc(), fopen() and syslog(), none of which is
+ * async-signal-safe, and freed the port list while the main loop could be
+ * walking it.
+ */
+static void SignalReload(int code)
 {
-	ReadConfig();
+	ReloadPending = 1;
+}
+
+static void SignalTERM(int code)
+{
+	TermPending = 1;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -243,25 +263,59 @@ static void reload_timer(int sec)
 	itv.it_interval.tv_sec = 0;
 	itv.it_interval.tv_usec = 0;
 	setitimer(ITIMER_REAL, &itv, NULL);
-	signal(SIGALRM, _ReadConfig);
 }
 
 /*--------------------------------------------------------------------------*/
 
-static void SignalHUP(int code)
+/*
+ * Only one ax25d may run: a second one listens on the same callsigns and
+ * the kernel hands the calls to either of them. The lock is held on the
+ * pid file for the life of the daemon and released by the kernel even
+ * after kill -9. Returns the descriptor, or -1 if another ax25d holds the
+ * lock (the caller exits). When the file cannot be opened at all, ax25d
+ * warns and starts without the protection, as before.
+ */
+static int single_instance(const char *file)
 {
-	ReadConfig();
-}
+	char buf[32];
+	ssize_t n;
+	int fd;
 
-static void SignalTERM(int code)
-{
-	if (Logging) {
-		syslog(LOG_INFO, "terminating on SIGTERM\n");
-		closelog();
+	fd = open(file, O_RDWR | O_CREAT | O_CLOEXEC, 0644);
+	if (fd < 0) {
+		fprintf(stderr, "ax25d: cannot open %s: %s, starting without the single instance lock\n",
+			file, strerror(errno));
+		return -2;
 	}
 
-	exit(0);
+	if (flock(fd, LOCK_EX | LOCK_NB) < 0) {
+		n = read(fd, buf, sizeof(buf) - 1);
+		buf[n > 0 ? n : 0] = '\0';
+		buf[strcspn(buf, "\n")] = '\0';
+		fprintf(stderr, "ax25d: another ax25d is already running (pid %s): not started\n",
+			buf[0] != '\0' ? buf : "?");
+		close(fd);
+		return -1;
+	}
+
+	return fd;
 }
+
+static void write_pid(int fd)
+{
+	char buf[32];
+	int len;
+
+	if (fd < 0)
+		return;
+
+	len = snprintf(buf, sizeof(buf), "%ld\n", (long)getpid());
+	if (ftruncate(fd, 0) < 0 || pwrite(fd, buf, len, 0) != len)
+		fprintf(stderr, "ax25d: cannot write the pid file: %s\n", strerror(errno));
+}
+
+/* Append one character to the argument being built, never beyond the buffer */
+#define ADDCH(c)	do { if (cnt < (int)sizeof(buffer) - 1) buffer[cnt++] = (c); } while (0)
 
 static void WorkoutArgs(int af_type, char *shell, int *argc, char **argv)
 {
@@ -292,73 +346,79 @@ static void WorkoutArgs(int af_type, char *shell, int *argc, char **argv)
 			switch (*cp) {
 			case 'd':	/* portname */
 				for (sp = Port; *sp != '\0' && *sp != '-'; sp++)
-					buffer[cnt++] = *sp;
+					ADDCH(*sp);
 				break;
 
 			case 'U':	/* username in UPPER */
 				for (sp = User; *sp != '\0' && *sp != '-'; sp++)
-					buffer[cnt++] = toupper(*sp);
+					ADDCH(toupper(*sp));
 				break;
 
 			case 'u':	/* USERNAME IN lower */
 				for (sp = User; *sp != '\0' && *sp != '-'; sp++)
-					buffer[cnt++] = tolower(*sp);
+					ADDCH(tolower(*sp));
 				break;
 
 			case 'S':	/* username in UPPER (with SSID) */
 				for (sp = User; *sp != '\0'; sp++)
-					buffer[cnt++] = toupper(*sp);
+					ADDCH(toupper(*sp));
 				break;
 
 			case 's':	/* USERNAME IN lower (with SSID) */
 				for (sp = User; *sp != '\0'; sp++)
-					buffer[cnt++] = tolower(*sp);
+					ADDCH(tolower(*sp));
 				break;
 
 			case 'P':	/* nodename in UPPER */
 				if (af_type == AF_NETROM) {
 					for (sp = Node; *sp != '\0' && *sp != '-'; sp++)
-						buffer[cnt++] = toupper(*sp);
+						ADDCH(toupper(*sp));
 				} else {
-					buffer[cnt++] = '%';
+					ADDCH('%');
 				}
 				break;
 
 			case 'p':	/* NODENAME IN lower */
 				if (af_type == AF_NETROM) {
 					for (sp = Node; *sp != '\0' && *sp != '-'; sp++)
-						buffer[cnt++] = tolower(*sp);
+						ADDCH(tolower(*sp));
 				} else {
-					buffer[cnt++] = '%';
+					ADDCH('%');
 				}
 				break;
 
 			case 'R':	/* nodename in UPPER (with SSID) */
 				if (af_type == AF_NETROM) {
 					for (sp = Node; *sp != '\0'; sp++)
-						buffer[cnt++] = toupper(*sp);
+						ADDCH(toupper(*sp));
 				} else {
-					buffer[cnt++] = '%';
+					ADDCH('%');
 				}
 				break;
 
 			case 'r':	/* NODENAME IN lower (with SSID) */
 				if (af_type == AF_NETROM) {
 					for (sp = Node; *sp != '\0'; sp++)
-						buffer[cnt++] = tolower(*sp);
+						ADDCH(tolower(*sp));
 				} else {
-					buffer[cnt++] = '%';
+					ADDCH('%');
 				}
 				break;
 
 			case '\0':
+				/* '%' at the end of the line: step back so that the
+				 * loop stops on the terminating '\0' */
+				ADDCH('%');
+				cp--;
+				break;
+
 			case '%':
 			default:
-				buffer[cnt++] = '%';
+				ADDCH('%');
 				break;
 			}
 		} else {
-			buffer[cnt++] = *cp;
+			ADDCH(*cp);
 		}
 	}
 
@@ -370,6 +430,8 @@ static void WorkoutArgs(int af_type, char *shell, int *argc, char **argv)
 	argv[args] = NULL;
 	*argc      = args;
 }
+
+#undef ADDCH
 
 static void SetupOptions(int new, struct axlist *axl)
 {
@@ -514,7 +576,7 @@ static int ReadConfig(void)
 	int hunt = TRUE, error = FALSE;
 	int parameters = 0;
 
-	signal(SIGALRM, SIG_IGN);
+	reload_timer(0);	/* cancel a pending retry, this is the reload */
 	memset(&axl_defaults, 0, sizeof(axl_defaults));
 
 	fp = fopen(ConfigFile, "r");
@@ -981,6 +1043,8 @@ BadLine:
 BadUID:
 		if (axl_ent->call != NULL)
 			free(axl_ent->call);
+		if (axl_ent->node != NULL)
+			free(axl_ent->node);
 		free(axl_ent);
 		continue;
 
@@ -990,6 +1054,8 @@ BadArgsFree2:
 BadArgsFree:
 		if (axl_ent->call != NULL)
 			free(axl_ent->call);
+		if (axl_ent->node != NULL)
+			free(axl_ent->node);
 		free(axl_ent);
 
 		/* BadArgs: */
@@ -1037,7 +1103,10 @@ int main(int argc, char *argv[])
 		struct sockaddr_rose rose;
 	} sockaddr;
 	struct sigaction act, oact;
+	sigset_t blocked, origmask;
+	struct timespec ten_sec = { 10, 0 };
 	socklen_t addrlen;
+	int lockfd;
 	int cnt;
 	char buf[1024];
 	char *p;
@@ -1072,20 +1141,40 @@ int main(int argc, char *argv[])
 
 	rs_config_load_ports();
 
+	/* Before daemon_start(), so that a refusal is seen by whoever started us */
+	lockfd = single_instance(PID_AX25D_FILE);
+	if (lockfd == -1)
+		return 1;
+
 	if (!daemon_start(TRUE)) {
 		fprintf(stderr, "ax25d: cannot become a daemon\n");
 		return 1;
 	}
+
+	/* The lock went over to the daemon with the descriptor: record its pid */
+	write_pid(lockfd);
 
 	if (Logging) {
 		openlog("ax25d", LOG_PID, LOG_DAEMON);
 		syslog(LOG_INFO, "starting");
 	}
 
-	act.sa_handler = SignalHUP;
+	/*
+	 * The signals are blocked except while waiting in pselect(), so that
+	 * a SIGHUP arriving just before the wait is not left pending until
+	 * the next connection. The children get the original mask back.
+	 */
+	sigemptyset(&blocked);
+	sigaddset(&blocked, SIGHUP);
+	sigaddset(&blocked, SIGALRM);
+	sigaddset(&blocked, SIGTERM);
+	sigprocmask(SIG_BLOCK, &blocked, &origmask);
+
+	act.sa_handler = SignalReload;
 	sigemptyset(&act.sa_mask);
 	act.sa_flags = 0;
 	sigaction(SIGHUP, &act, &oact);
+	sigaction(SIGALRM, &act, &oact);
 
 	act.sa_handler = SignalTERM;
 	sigemptyset(&act.sa_mask);
@@ -1096,17 +1185,30 @@ int main(int argc, char *argv[])
 
 	for (;;) {
 
+		if (TermPending) {
+			if (Logging) {
+				syslog(LOG_INFO, "terminating on SIGTERM");
+				closelog();
+			}
+			exit(0);
+		}
+
+		if (ReloadPending) {
+			ReloadPending = 0;
+			ReadConfig();
+		}
+
 		update_maxfd();
 		if (maxfd < 0) {
-			sleep(10);
+			pselect(0, NULL, NULL, NULL, &ten_sec, &origmask);
 			continue;
 		}
 
-		if (select(maxfd + 1, &fdread, NULL, NULL, NULL) <= 0)
+		if (pselect(maxfd + 1, &fdread, NULL, NULL, NULL, &origmask) <= 0)
 			continue;
 
 		for (paxl = AXL; paxl != NULL; paxl = paxl->next) {
-			if (paxl->fd > 0 && FD_ISSET(paxl->fd, &fdread)) {
+			if (paxl->fd >= 0 && FD_ISSET(paxl->fd, &fdread)) {
 				pid_t pid;
 				gid_t grps[2];
 				char *argv[MAX_ARGS];
@@ -1205,8 +1307,8 @@ int main(int argc, char *argv[])
 				}
 
 				if (raxl == NULL) {
-					/* No default */
-					if (Logging && !(paxl->flags & FLAG_NOLOGGING)) {
+					/* No default: no entry, hence no "q" flag to honour */
+					if (Logging) {
 						switch (paxl->af_type) {
 						case AF_AX25:
 							syslog(LOG_INFO, "AX.25 %s (%s) rejected - no default", User, Port);
@@ -1225,7 +1327,7 @@ int main(int argc, char *argv[])
 
 				if (raxl->flags & FLAG_LOCKOUT) {
 					/* Not allowed to connect */
-					if (Logging && !(paxl->flags & FLAG_NOLOGGING)) {
+					if (Logging && !(raxl->flags & FLAG_NOLOGGING)) {
 						switch (raxl->af_type) {
 						case AF_AX25:
 							syslog(LOG_INFO, "AX.25 %s (%s) rejected - port locked", User, Port);
@@ -1244,7 +1346,7 @@ int main(int argc, char *argv[])
 
 				if (raxl->af_type == AF_AX25 && (raxl->flags & FLAG_NODIGIS) && sockaddr.ax25.fsa_ax25.sax25_ndigis != 0) {
 					/* Not allowed to uplink via digi's */
-					if (Logging && !(paxl->flags & FLAG_NOLOGGING))
+					if (Logging && !(raxl->flags & FLAG_NOLOGGING))
 						syslog(LOG_INFO, "AX.25 %s (%s) rejected - digipeaters", User, Port);
 					close(new);
 					continue;
@@ -1271,6 +1373,19 @@ int main(int argc, char *argv[])
 						getsockname(new, (struct sockaddr *)&sockaddr, &addrlen);
 						strcpy(myAX25Name, ax25_ntoa(&sockaddr.ax25.fsa_ax25.sax25_call));
 
+						/*
+						 * The callsign goes into a shell command line: the kernel
+						 * does not check its characters, so a forged callsign
+						 * could run a command as root. Only letters, digits and
+						 * the SSID dash are let through; anything else is not
+						 * looked up.
+						 */
+						if (User[strspn(User, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-")] != '\0') {
+							if (Logging)
+								syslog(LOG_NOTICE, "AX.25 %s (%s) invalid callsign characters, AX25.IP-VC check skipped", User, Port);
+							goto login;
+						}
+
 						sprintf(buf, "/usr/sbin/ax25rtctl -l ip | grep -i ' %s ' | /bin/grep 'v ' >/dev/null", User);
 
 						/* he's not a VC user? */
@@ -1292,13 +1407,13 @@ int main(int argc, char *argv[])
 						}
 
 						if (raxl->checkVC > 1) {
-							if (Logging && (!(paxl->flags & FLAG_NOLOGGING) || raxl->LoggingVC))
+							if (Logging && (!(raxl->flags & FLAG_NOLOGGING) || raxl->LoggingVC))
 								syslog((raxl->LoggingVC ? LOG_NOTICE : LOG_INFO), "AX.25 %s (%s:%s) rejected - AX25.IP-VC entry found", User, Port, myAX25Name);
 							goto close_link;
 						}
 
 						/* checkVC == 1: wait for data */
-						if (Logging && (!(paxl->flags & FLAG_NOLOGGING) || raxl->LoggingVC)) {
+						if (Logging && (!(raxl->flags & FLAG_NOLOGGING) || raxl->LoggingVC)) {
 							syslog((raxl->LoggingVC ? LOG_NOTICE : LOG_INFO), "AX.25 %s (%s:%s) AX25.IP-VC host connected. %s",
 								User, Port, myAX25Name,
 								(raxl->VCloginEnable ? "waiting for first PID=text packet for triggered login" : "discarding PID=text packets"));
@@ -1338,7 +1453,7 @@ int main(int argc, char *argv[])
 								goto login;
 						}
 
-						if (Logging && (!(paxl->flags & FLAG_NOLOGGING) || raxl->LoggingVC)) {
+						if (Logging && (!(raxl->flags & FLAG_NOLOGGING) || raxl->LoggingVC)) {
 							syslog((raxl->LoggingVC ? LOG_NOTICE : LOG_INFO),
 									"AX.25 %s (%s:%s) AX25.IP-VC host disconnected%s%s",
 									User,
@@ -1360,7 +1475,7 @@ login:
 					SetupOptions(new, raxl);
 					WorkoutArgs(raxl->af_type, raxl->shell, &argc, argv);
 
-					if (Logging && !(paxl->flags & FLAG_NOLOGGING)) {
+					if (Logging && !(raxl->flags & FLAG_NOLOGGING)) {
 						switch (paxl->af_type) {
 						case AF_AX25:
 						syslog(LOG_INFO, "AX.25 %s (%s) %s", User, Port, argv[0]);
@@ -1387,6 +1502,9 @@ login:
 
 					if (Logging)
 						closelog();
+
+					/* The program must get SIGHUP and SIGTERM again */
+					sigprocmask(SIG_SETMASK, &origmask, NULL);
 
 					/* Make root secure, before we exec() */
 					/* Strip any supplementary gid's */
