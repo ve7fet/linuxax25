@@ -16,6 +16,8 @@
 int compression;
 int paclen_in		= 256;
 int paclen_out		= 256;
+/* -T: seconds allowed to connect(), 0 leaves it to the protocol timers */
+int connect_seconds;
 
 /* This is for select_loop() */
 static unsigned char buf[BUFLEN];
@@ -67,14 +69,18 @@ static void alarm_handler(int sig)
 }
 
 /*
- * Arms the timeout of connect(). The handler is installed without
- * SA_RESTART: with signal(), glibc restarts the interrupted connect(), which
- * on an AX.25, NET/ROM or ROSE socket starts a new connection attempt instead
- * of returning EINTR, so the timeout never ended anything.
+ * Arms the timeout of connect(), if -T was given. The handler is installed
+ * without SA_RESTART: with signal(), glibc restarts the interrupted
+ * connect(), which on an AX.25, NET/ROM or ROSE socket starts a new
+ * connection attempt instead of returning EINTR, so the timeout never ended
+ * anything. With no -T, the timers of the protocol decide alone.
  */
 void connect_timeout(unsigned int seconds)
 {
 	struct sigaction sa;
+
+	if (seconds == 0)
+		return;
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = alarm_handler;
@@ -88,15 +94,21 @@ void connect_timeout(unsigned int seconds)
  * Both ends are non blocking (see select_loop()). When the far side is slow
  * - a 1200 baud radio link fed by a BBS listing - the send buffer of the
  * socket fills and write() fails with EAGAIN: wait until there is room and
- * try again, instead of dropping the data.
+ * try again, instead of dropping the data. A stream (TCP, pipe, pty) may
+ * also take only part of the buffer: write the rest.
  */
 static int write_frame(int fd, const unsigned char *byte, int len)
 {
 	struct pollfd pfd;
+	int written = 0;
+	int n;
 
-	for (;;) {
-		if (write(fd, byte, len) >= 0)
-			return 0;
+	while (written < len) {
+		n = write(fd, byte + written, len - written);
+		if (n >= 0) {
+			written += n;
+			continue;
+		}
 		if (errno == EINTR)
 			continue;
 		if (errno != EAGAIN && errno != EWOULDBLOCK)
@@ -108,6 +120,8 @@ static int write_frame(int fd, const unsigned char *byte, int len)
 		if (poll(&pfd, 1, -1) < 0 && errno != EINTR)
 			return -1;
 	}
+
+	return 0;
 }
 
 static int flush_output(int fd, const void *buf, size_t count)

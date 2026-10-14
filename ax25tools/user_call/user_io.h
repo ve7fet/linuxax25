@@ -11,3 +11,4 @@ extern void end_compress(void);
 extern int compression;
 extern int paclen_in;
 extern int paclen_out;
+extern int connect_seconds;

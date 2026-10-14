@@ -17,7 +17,7 @@
 int main(int argc, char **argv)
 {
 	char buffer[256];
-	int s, addrlen = sizeof(struct sockaddr_in);
+	int s, ret, addrlen = sizeof(struct sockaddr_in);
 	struct sockaddr_in addr;
 	struct hostent *hp;
 	struct servent *sp;
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 	paclen_in = 1024;
 	paclen_out = 1024;
 
-	while ((s = getopt(argc, argv, "ci:o:q")) != -1) {
+	while ((s = getopt(argc, argv, "ci:o:T:q")) != -1) {
 		switch (s) {
 		case 'c':
 			init_compress();
@@ -37,6 +37,9 @@ int main(int argc, char **argv)
 			break;
 		case 'o':
 			paclen_out = atoi(optarg);
+			break;
+		case 'T':
+			connect_seconds = atoi(optarg);
 			break;
 		case 'q':
 			verbose = 0;
@@ -50,6 +53,11 @@ int main(int argc, char **argv)
 
 	if (paclen_in < 1 || paclen_out < 1) {
 		err("ERROR: invalid paclen\n");
+		return 1;
+	}
+
+	if (connect_seconds < 0) {
+		err("ERROR: invalid connect timeout\n");
 		return 1;
 	}
 
@@ -98,14 +106,16 @@ int main(int argc, char **argv)
 	}
 
 	/*
-	 * If no response in 30 seconds, go away.
+	 * With -T, give up if there is no response in time.
 	 */
-	connect_timeout(30);
+	connect_timeout(connect_seconds);
 
 	/*
 	 * Lets try and connect to the far end.
 	 */
-	if (connect(s, (struct sockaddr *)&addr, addrlen) != 0) {
+	ret = connect(s, (struct sockaddr *)&addr, addrlen);
+	alarm(0);
+	if (ret != 0) {
 		snprintf(buffer, sizeof(buffer), "ERROR: can't connect: %s\n", strerror(errno));
 		err(buffer);
 	}
@@ -113,8 +123,6 @@ int main(int argc, char **argv)
 	/*
 	 * We got there.
 	 */
-	alarm(0);
-
 	if (verbose) {
 		strcpy(buffer, "*** Connected\n");
 		user_write(STDOUT_FILENO, buffer, strlen(buffer));

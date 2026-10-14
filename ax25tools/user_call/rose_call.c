@@ -23,10 +23,10 @@
 int main(int argc, char **argv)
 {
 	char buffer[256], *addr;
-	int s, addrlen = sizeof(struct sockaddr_rose);
+	int s, ret, addrlen = sizeof(struct sockaddr_rose);
 	struct sockaddr_rose rosebind, roseconnect;
 
-	while ((s = getopt(argc, argv, "ci:o:")) != -1) {
+	while ((s = getopt(argc, argv, "ci:o:T:")) != -1) {
 		switch (s) {
 		case 'c':
 			init_compress();
@@ -38,6 +38,9 @@ int main(int argc, char **argv)
 		case 'o':
 			paclen_out = atoi(optarg);
 			break;
+		case 'T':
+			connect_seconds = atoi(optarg);
+			break;
 		case ':':
 		case '?':
 			err("ERROR: invalid option usage\r");
@@ -47,6 +50,11 @@ int main(int argc, char **argv)
 
 	if (paclen_in < 1 || paclen_out < 1) {
 		err("ERROR: invalid paclen\r");
+		return 1;
+	}
+
+	if (connect_seconds < 0) {
+		err("ERROR: invalid connect timeout\r");
 		return 1;
 	}
 
@@ -118,14 +126,16 @@ int main(int argc, char **argv)
 	user_write(STDOUT_FILENO, buffer, strlen(buffer));
 
 	/*
-	 * If no response in 30 seconds, go away.
+	 * With -T, give up if there is no response in time.
 	 */
-	connect_timeout(30);
+	connect_timeout(connect_seconds);
 
 	/*
 	 * Lets try and connect to the far end.
 	 */
-	if (connect(s, (struct sockaddr *)&roseconnect, addrlen) != 0) {
+	ret = connect(s, (struct sockaddr *)&roseconnect, addrlen);
+	alarm(0);
+	if (ret != 0) {
 		switch (errno) {
 		case ECONNREFUSED:
 			strcpy(buffer, "*** Connection refused - aborting\r");
@@ -147,8 +157,6 @@ int main(int argc, char **argv)
 	/*
 	 * We got there.
 	 */
-	alarm(0);
-
 	strcpy(buffer, "*** Connected\r");
 	user_write(STDOUT_FILENO, buffer, strlen(buffer));
 
