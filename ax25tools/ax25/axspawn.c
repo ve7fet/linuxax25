@@ -561,7 +561,7 @@ static int encstathuf(char *src, int srclen, void *dptr, int *destlen)
 */
 
 
-static int decstathuf(char *src, char *dest, int srclen, int *destlen)
+static int decstathuf(char *src, char *dest, int srclen, int *destlen, int destsize)
 {
 	char *srcptr;
 	char *destptr;
@@ -574,7 +574,12 @@ static int decstathuf(char *src, char *dest, int srclen, int *destlen)
 
 	srcptr = src;
 	destptr = dest;
-	*destlen = (int)((*srcptr)+1);
+	/* The length marker is the first byte. Read it as unsigned so the
+	 * "no compression" marker (255 -> 256) works the same on every
+	 * architecture; on platforms where char is signed it was never
+	 * reached, and on platforms where it is unsigned (e.g. ARM) the
+	 * copy below ran with an unbounded, peer-controlled srclen. */
+	*destlen = (int)((unsigned char)(*srcptr)) + 1;
 	srcptr++;
 	if (--srclen == 0) {
 		return 1;
@@ -585,6 +590,8 @@ static int decstathuf(char *src, char *dest, int srclen, int *destlen)
 
 	if (*destlen == 256) {
 		/* no compression, only copy */
+		if (srclen > destsize)
+			srclen = destsize;
 		memcpy(dest,src+1,srclen);
 		*destlen = (unsigned char)(srclen);
 		return 0;
@@ -600,7 +607,8 @@ static int decstathuf(char *src, char *dest, int srclen, int *destlen)
 					*destptr = (char)huffdecodtab[decod].node1;
 					destptr++;
 					wrklen++;
-					if (wrklen >= *destlen) break; /* decoding finished */
+					/* never write past dest[destsize] */
+					if (wrklen >= *destlen || wrklen >= destsize) break;
 					decod = 0;
 				}
 				else decod = newnode;
@@ -611,19 +619,20 @@ static int decstathuf(char *src, char *dest, int srclen, int *destlen)
 					*destptr = (char)huffdecodtab[decod].node1;
 					destptr++;
 					wrklen++;
-					if (wrklen >= *destlen) break; /* decoding finished */
+					if (wrklen >= *destlen || wrklen >= destsize) break;
 					decod = 0;
 				}
 				else decod = newnode;
 			}
 			if (decod) bitmask = bitmask >> 1;
 		}
-		if (wrklen >= *destlen) break;
+		if (wrklen >= *destlen || wrklen >= destsize) break;
 		bitmask = 0x80;
 		srcptr++;
 		if (srclen == 0) return 1;
 		srclen--;
 	}
+	*destlen = wrklen;
 	return 0;
 }
 
@@ -653,7 +662,8 @@ static int read_ax25(char *s, int size)
 		return len;
 
 	if (huffman) {
-		if (!decstathuf(s, decomp, len, &declen))  {
+		/* leave room for the terminating NUL at decomp[declen] */
+		if (!decstathuf(s, decomp, len, &declen, sizeof(decomp) - 1))  {
 			*(decomp+declen) = 0;
 			strcpy(s, decomp);
 			len = declen;
