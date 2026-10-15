@@ -98,8 +98,8 @@ static struct sockaddr *build_sockaddr(const char *name, int *addrlen)
 
 	if (!strcmp(host_name, "local") || !strcmp(host_name, "unix")) {
 		addr.su.sun_family = AF_UNIX;
-		*addr.su.sun_path = 0;
-		strcat(addr.su.sun_path, serv_name);
+		snprintf(addr.su.sun_path, sizeof(addr.su.sun_path), "%s",
+			 serv_name);
 		*addrlen = sizeof(struct sockaddr_un);
 		return &addr.sa;
 	}
@@ -142,7 +142,7 @@ static void add_socket(char *sockname, char monmode)
 	struct sockaddr *saddr;
 	int saddrlen;
 
-	if (sock_num == MAX_SOCKETS - 1) {
+	if (sock_num >= MAX_SOCKETS) {
 		fprintf(stderr,
 			"WARNING: Too many sockets defined - only %d are "
 			"allowed\n", MAX_SOCKETS);
@@ -155,9 +155,10 @@ static void add_socket(char *sockname, char monmode)
 		return;
 	}
 
-	if (saddr->sa_family == AF_UNIX)
-		strcpy(sock_filename[sock_num], strchr(sockname, ':') + 1);
-	else
+	if (saddr->sa_family == AF_UNIX) {
+		snprintf(sock_filename[sock_num], sizeof(sock_filename[0]),
+			 "%s", strchr(sockname, ':') + 1);
+	} else
 		sock_filename[sock_num][0] = 0;
 
 	sock_list[sock_num] = socket(saddr->sa_family, SOCK_STREAM, 0);
@@ -257,10 +258,16 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	while (fgets(confline, 100, conffile)) {
+		size_t len;
+
 		if (confline[0] == '#')	/* Comment  */
 			continue;
 
-		confline[strlen(confline) - 1] = 0;	/* Cut the LF  */
+		len = strlen(confline);
+		if (len == 0)
+			continue;
+		if (confline[len - 1] == '\n')
+			confline[len - 1] = 0;	/* Cut the LF  */
 
 		if (!(sockname = strchr(confline, ' '))) {
 			fprintf(stderr,
@@ -330,11 +337,22 @@ int main(int argc, char *argv[])
 		select(highest_sock_fd + 1, &conn_request, NULL, NULL, &tv);
 		for (i = 0; i < sock_num; i++)
 			if (FD_ISSET(sock_list[i], &conn_request)) {
-				conn_list[conn_num] = accept(sock_list[i],
-							     &conn_addr
-							     [conn_num],
-							     &conn_addrlen
-							     [conn_num]);
+				int new_fd;
+
+				conn_addrlen[conn_num] =
+				    sizeof(conn_addr[conn_num]);
+				new_fd = accept(sock_list[i],
+						&conn_addr[conn_num],
+						&conn_addrlen[conn_num]);
+				if (new_fd < 0)
+					continue;
+				/* Refuse the connection rather than write
+				 * past the end of the conn_* arrays. */
+				if (conn_num >= MAX_CONNECTS) {
+					close(new_fd);
+					continue;
+				}
+				conn_list[conn_num] = new_fd;
 				conn_monmode[conn_num] = sock_monmode[i];
 				conn_num++;
 			}
@@ -381,7 +399,9 @@ int main(int argc, char *argv[])
 			    recvfrom(monrxtx_fd, buf, sizeof(buf), 0,
 				     &monfrom, &monfromlen);
 			/* Check, if we have received a AX.25-packet  */
-			strcpy(ifr.ifr_name, monfrom.sa_data);
+			snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "%.*s",
+				 (int) sizeof(monfrom.sa_data),
+				 monfrom.sa_data);
 			ioctl(monrxtx_fd, SIOCGIFHWADDR, &ifr);
 			if (ifr.ifr_hwaddr.sa_family == AF_AX25)
 				/* Send the packet to all connected sockets  */
