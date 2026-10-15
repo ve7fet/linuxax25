@@ -276,6 +276,12 @@ int main(int argc, char **argv)
 		size -= (AXLEN + AXLEN);
 
 		while (!end) {
+			/* A received frame controls the address field; stop
+			 * before overrunning entry.digis[AX25_MAX_DIGIS] or
+			 * reading past the end of the frame. */
+			if (mheard->entry.ndigis >= AX25_MAX_DIGIS || size < AXLEN)
+				break;
+
 			memcpy(&mheard->entry.digis[mheard->entry.ndigis], data, sizeof(ax25_address));
 			mheard->entry.ndigis++;
 
