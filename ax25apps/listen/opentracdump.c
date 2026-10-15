@@ -357,28 +357,28 @@ static int decode_units(unsigned int unitnum, unsigned char *element,
 	 * 0x0500 to 0x05ff Generic Measurement Elements
 	 * Values may be 8-bit int, 16-bit int, single float, or double float
 	 */
-	union measurement {
-		char c;
-		float f;
-		double d;
-	} *mval;
+	/* The value sits at any offset in the packet: copy it out instead
+	 * of reading a float or double through an unaligned pointer. */
+	float f;
+	double d;
 	int ival; /* too much variation in byte order and size for union */
 
 	if (unitnum > MAX_UNIT_INDEX) return -2; /* Invalid unit name  */
-	mval = (void *)element;
 	switch (element_len) {
 	case 1:
-		lprintf(T_OPENTRAC, "%d %s\r\n", mval->c, units[unitnum]);
+		lprintf(T_OPENTRAC, "%d %s\r\n", (char)element[0], units[unitnum]);
 		break;
 	case 2:
 		ival = get16(element);
 		lprintf(T_OPENTRAC, "%d %s\r\n", ival, units[unitnum]);
 		break;
 	case 4:
-		lprintf(T_OPENTRAC, "%f %s\r\n", mval->f, units[unitnum]);
+		memcpy(&f, element, sizeof(f));
+		lprintf(T_OPENTRAC, "%f %s\r\n", f, units[unitnum]);
 		break;
 	case 8:
-		lprintf(T_OPENTRAC, "%f %s\r\n", mval->d, units[unitnum]);
+		memcpy(&d, element, sizeof(d));
+		lprintf(T_OPENTRAC, "%f %s\r\n", d, units[unitnum]);
 		break;
 	default:
 		return -1;
@@ -473,6 +473,13 @@ void opentrac_dump(unsigned char *data, int length, int hexdump)
 	entity_sequence = 0;
 	while (decoded < length) {
 		elen = (int)*data;
+		/* The element (length byte included) must fit in what is left
+		 * of the packet and hold its 1-byte or 2-byte type. */
+		if (decoded + (elen & 0x7f) + 1 > length ||
+		    (elen & 0x7f) < ((elen & 0x80) ? 2 : 1)) {
+			lprintf(T_OPENTRAC, "Invalid element length\r\n");
+			break;
+		}
 		decoded += (elen & 0x7f)+1;
 		if (elen & 0x80) {  /* See if it's got a 16-bit ID  */
 			elen = (elen & 0x7f) - 2; /* Strip the extid flag  */

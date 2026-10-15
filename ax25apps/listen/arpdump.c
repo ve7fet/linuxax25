@@ -78,6 +78,15 @@ void arp_dump(unsigned char *data, int length)
 		break;
 	}
 
+	/* hwlen and pralen come from the packet: the four addresses must fit
+	 * in it, and they are only decoded when long enough for the AX.25
+	 * callsign (pax25 reads AXALEN bytes) and the IPv4 address. */
+	if (8 + 2 * (hwlen + pralen) > length || hwlen < AXALEN ||
+	    (is_ip && pralen < 4)) {
+		lprintf(T_ERROR, " bad address lengths\n");
+		return;
+	}
+
 	shwaddr = data + 8;
 	sprotaddr = shwaddr + hwlen;
 

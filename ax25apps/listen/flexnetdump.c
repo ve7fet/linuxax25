@@ -143,7 +143,8 @@ void flexnet_dump(unsigned char *data, int length, int hexdump)
 		length--;
 		lprintf(T_FLEXNET, " - hop count: %d QSO number: %d\n",
 			hopcnt, qsonr);
-		cp = memchr(data, '\r', length);
+		/* length is negative when the QSO number ends the packet */
+		cp = length > 0 ? memchr(data, '\r', length) : NULL;
 		if (cp)
 			*cp = 0;
 		lprintf(T_FLEXNET, "  data\n");

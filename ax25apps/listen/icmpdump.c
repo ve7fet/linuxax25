@@ -27,6 +27,11 @@ void icmp_dump(unsigned char *data, int length, int hexdump)
 	unsigned char *address;
 	int id, seq;
 
+	if (length < ICMPLEN) {
+		lprintf(T_ERROR, "ICMP: bad header\n");
+		return;
+	}
+
 	type = data[0];
 	code = data[1];
 	pointer = data[4];

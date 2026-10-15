@@ -15,6 +15,11 @@ void udp_dump(unsigned char *data, int length, int hexdump)
 	int source;
 	int dest;
 
+	if (length < UDPHDR) {
+		lprintf(T_ERROR, "UDP: bad header\n");
+		return;
+	}
+
 	hdr_length = get16(data + 4);
 	source = get16(data + 0);
 	dest = get16(data + 2);

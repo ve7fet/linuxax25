@@ -54,7 +54,7 @@ static void netrom_inp_dump(unsigned char *data, int length)
 			tt+=data[i++];
 			alias[0]=0;
 			while (i<length-data[i] && data[i]) {
-				if (data[i+1]==0x00) {
+				if (data[i+1]==0x00 && data[i]>=2) {
 					alen=data[i]-2;
 					alen=alen < 7 ? alen : 6;
 					memcpy(alias, data+i+2, alen);
@@ -74,11 +74,20 @@ void netrom_dump(unsigned char *data, int length, int hexdump, int type)
 	char tmp[15];
 	int i;
 
+	if (length < 1) {
+		lprintf(T_ERROR, "NET/ROM: bad packet\n");
+		return;
+	}
+
 	/* See if it is a routing broadcast */
 	if (data[0] == NR3NODESIG) {
 		/* Filter out INP routing frames */
 		if (type!=UI) {
 			netrom_inp_dump(data, length);
+			return;
+		}
+		if (length < ALEN + 1) {
+			lprintf(T_ERROR, "NET/ROM Routing: bad packet\n");
 			return;
 		}
 		memcpy(tmp, data + 1, ALEN);
@@ -89,7 +98,7 @@ void netrom_dump(unsigned char *data, int length, int hexdump, int type)
 		length -= (ALEN + 1);
 
 		for (i = 0; i < NRDESTPERPACK; i++) {
-			if (length < AXLEN)
+			if (length < AXLEN + ALEN + AXLEN + 1)
 				break;
 			lprintf(T_DATA, "        %12s", pax25(tmp, data));
 
@@ -111,9 +120,20 @@ void netrom_dump(unsigned char *data, int length, int hexdump, int type)
 
 	/* See if it is a JNOS style node poll */
 	if (data[0] == NR3POLLSIG) {
+		if (length < ALEN + 1) {
+			lprintf(T_ERROR, "NET/ROM Poll: bad packet\n");
+			return;
+		}
 		memcpy(tmp, data + 1, ALEN);
 		tmp[ALEN] = '\0';
 		lprintf(T_AXHDR, "NET/ROM Poll: %s\n", tmp);
+		return;
+	}
+
+	/* Network header: two callsigns and the TTL; then the 5 bytes of
+	 * the transport header. */
+	if (length < AXLEN + AXLEN + 1 + 5) {
+		lprintf(T_ERROR, "NET/ROM: bad packet\n");
 		return;
 	}
 
@@ -139,6 +159,10 @@ void netrom_dump(unsigned char *data, int length, int hexdump, int type)
 		break;
 
 	case NR4OPCONRQ:	/* Connect request */
+		if (length < 6 + AXLEN + AXLEN) {
+			lprintf(T_ERROR, "         conn rqst: bad packet\n");
+			break;
+		}
 		lprintf(T_AXHDR, "         conn rqst: my ckt %02X/%02X",
 			data[0], data[1]);
 		lprintf(T_AXHDR, " wnd %d", data[5]);
@@ -146,13 +170,17 @@ void netrom_dump(unsigned char *data, int length, int hexdump, int type)
 		lprintf(T_ADDR, "@%s", pax25(tmp, data + 6 + AXLEN));
 		data += AXLEN + AXLEN + 6;
 		length -= AXLEN + AXLEN + 6;
-		if (length > 0)
+		if (length > 1)
 			lprintf(T_AXHDR, " timeout %d",
 				data[1] * 256 + data[0]);
 		lprintf(T_AXHDR, "\n");
 		break;
 
 	case NR4OPCONAK:	/* Connect acknowledgement */
+		if (length < 6) {
+			lprintf(T_ERROR, "         conn ack: bad packet\n");
+			break;
+		}
 		lprintf(T_AXHDR,
 			"         conn ack: ur ckt %02X/%02X my ckt %02X/%02X",
 			data[0], data[1], data[2], data[3]);
