@@ -201,23 +201,40 @@ static void Send_HD(char *filename, long length)
 	int len;
 	struct stat sb;
 
+	int have_time;
+	int max_fn;
+
 	sprintf(size_buffer, "%ld", length);
 
 	len_filename = strlen(filename) + 1;	/* Include the NUL */
 	len_size = strlen(size_buffer) + 1;	/* Include the NUL */
 
+	have_time = (stat(filename, &sb) == 0);
+
+	/* buffer[1] holds the header length in a single byte and, with a
+	 * timestamp, unix2yapp() appends 9 more bytes; the whole header
+	 * must fit in buffer[257]. Clamp the filename instead of writing
+	 * past the end of buffer[]. */
+	max_fn = 255 - len_size - (have_time ? 9 : 0);
+	if (max_fn < 1)
+		return;
+	if (len_filename > max_fn)
+		len_filename = max_fn;
+
 	len = len_filename + len_size;
 
-	if (!stat(filename, &sb)) {
+	buffer[0] = SOH;
+
+	memcpy(buffer + 2, filename, len_filename - 1);
+	buffer[len_filename + 1] = '\0';	/* terminate (even if clamped) */
+	memcpy(buffer + len_filename + 2, size_buffer, len_size);
+
+	if (have_time) {
 		unix2yapp(sb.st_mtime, buffer + len + 2);
 		len += 9;
 	}
 
-	buffer[0] = SOH;
 	buffer[1] = len;
-
-	memcpy(buffer + 2, filename, len_filename);
-	memcpy(buffer + len_filename + 2, size_buffer, len_size);
 
 	write(fd, buffer, len + 2);
 }
@@ -293,19 +310,33 @@ static int yapp_download_data(int *filefd, unsigned char *buffer)
 		if (buffer[0] == SOH) {
 			/* Parse header: 3 fields == YAPP C */
 			unsigned char *hptr, *hfield[3];
+			int nfield = 0;
 			length = buffer[1];
 			if (length == 0)
 				length = 256;
 			hptr = buffer + 2;
-			while (length > 0) {
-				int hlen;
-				hlen = strlen((char *)hptr) + 1;
-				hfield[(int) yappc++] = hptr;
+			/* A remote peer controls the number of NUL-terminated
+			 * fields; stop at 3 so we never write past hfield[].
+			 * Only accept a field whose terminating NUL lies
+			 * within the announced header length. */
+			while (length > 0 && nfield < 3) {
+				int hlen = strnlen((char *)hptr, length);
+				if (hlen == length)	/* unterminated field */
+					break;
+				hlen += 1;		/* include the NUL */
+				hfield[nfield++] = hptr;
 				hptr += hlen;
 				length -= hlen;
 			}
 
-			if (yappc < 3) {
+			/* We need at least a filename and a size field. */
+			if (nfield < 2) {
+				Send_NR("Invalid header");
+				Write_Status("SndABORT");
+				return FALSE;
+			}
+
+			if (nfield < 3) {
 				yappc = 0;
 			} else {
 				file_time = yapp2unix((char *)hfield[2]);
