@@ -90,7 +90,14 @@ int update_ip_route(config * config, unsigned long ip, int ipmode,
 		if (bp_prev == NULL)	/* error */
 			return 0;
 
-		bp_prev->prev->next = NULL;
+		/* bp_prev is the list tail. When it is also the head
+		 * (single entry, e.g. ip-maxroutes 1) bp_prev->prev is
+		 * NULL: unlinking via bp_prev->prev would crash, and the
+		 * freed entry would stay reachable through ip_routes. */
+		if (bp_prev->prev != NULL)
+			bp_prev->prev->next = NULL;
+		else
+			ip_routes = NULL;
 		free(bp_prev);
 		ip_routes_cnt--;
 	}
@@ -181,7 +188,12 @@ ax25_rt_entry *update_ax25_route(config * config, ax25_address * call,
 		if (bp_prev == NULL)	/* error */
 			return NULL;
 
-		bp_prev->prev->next = NULL;
+		/* See update_ip_route(): bp_prev is the tail and may also
+		 * be the head (ax25-maxroutes 1). */
+		if (bp_prev->prev != NULL)
+			bp_prev->prev->next = NULL;
+		else
+			ax25_routes = NULL;
 		free(bp_prev);
 		ax25_routes_cnt--;
 	}

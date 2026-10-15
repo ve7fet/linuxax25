@@ -69,8 +69,8 @@ ax25_rt_entry *ax25_routes;
 int ax25_routes_cnt;
 int ax25_maxroutes = AX25_MAXROUTES;
 
-char ip_encaps_dev[32] = "";
-char iproute2_table[32] = "";
+char ip_encaps_dev[RTD_DEVNAME_LEN] = "";
+char iproute2_table[RTD_DEVNAME_LEN] = "";
 
 config *dev_get_config(char *dev)
 {
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 			if (errno == EINTR)	/* woops! */
 				continue;
 
-			if (!FD_ISSET(cntrl_fd, &write_fds)) {
+			if (cntrl_fd < 0 || !FD_ISSET(cntrl_fd, &write_fds)) {
 				perror("select");
 				save_cache();
 				daemon_shutdown(1);
