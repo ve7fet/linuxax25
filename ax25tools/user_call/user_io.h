@@ -1,5 +1,5 @@
 extern void err(char *message);
-extern void connect_timeout(unsigned int seconds);
+extern void connect_timeout_handler_init(unsigned int seconds, const char *message);
 
 extern int user_write(int fd, const void *buf, size_t count);
 extern int user_read(int fd, void *buf, size_t count);

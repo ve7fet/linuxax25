@@ -64,23 +64,47 @@ void end_compress(void)
 #endif
 }
 
+static const char *timeout_message;
+static size_t timeout_message_len;
+
+/*
+ * The timeout ends the connection attempt itself. Whether the interrupted
+ * connect() comes back with EINTR or is restarted depends on the platform
+ * and on what serves the socket: Linux restarts an interrupted connect()
+ * when SA_RESTART is set, and the userspace AX.25 daemon wrappers (WAMPES,
+ * AGWPE) retry a restarted wait on their own. So instead of waiting for
+ * EINTR, the handler writes the message and leaves: _exit() ends the
+ * process no matter what the interrupted call would have done.
+ * (Thomas Osterried DL9SAU, unix-ax25-stack/ax25-tools fed61b8.)
+ */
 static void alarm_handler(int sig)
 {
+	ssize_t n;
+
+	(void) sig;
+	n = write(STDOUT_FILENO, timeout_message, timeout_message_len);
+	(void) n;
+	_exit(1);
 }
 
 /*
  * Arms the timeout of connect(), if -T was given. The handler is installed
  * without SA_RESTART: with signal(), glibc restarts the interrupted
  * connect(), which on an AX.25, NET/ROM or ROSE socket starts a new
- * connection attempt instead of returning EINTR, so the timeout never ended
- * anything. With no -T, the timers of the protocol decide alone.
+ * connection attempt. The message is written from the signal handler, so
+ * it is put in place before the alarm is armed; its length is taken here
+ * because strlen() is not signal safe. With no -T, the timers of the
+ * protocol decide alone.
  */
-void connect_timeout(unsigned int seconds)
+void connect_timeout_handler_init(unsigned int seconds, const char *message)
 {
 	struct sigaction sa;
 
 	if (seconds == 0)
 		return;
+
+	timeout_message = message;
+	timeout_message_len = strlen(message);
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = alarm_handler;

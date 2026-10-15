@@ -120,7 +120,8 @@ int main(int argc, char **argv)
 	/*
 	 * With -T, give up if there is no response in time.
 	 */
-	connect_timeout(connect_seconds);
+	connect_timeout_handler_init(connect_seconds,
+		"*** Connection timed out - aborting\r");
 
 	/*
 	 * Lets try and connect to the far end.

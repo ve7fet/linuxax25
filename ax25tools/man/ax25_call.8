@@ -57,9 +57,11 @@ default is 256 for ax25_call and rose_call, 236 for netrom_call and
 .TP 12
 .BI "\-T seconds"
 Gives up if the connection is not established within the given number of
-seconds. The default is 0: no timeout of its own, the timers of the
+seconds: the program prints "*** Connection timed out - aborting" and
+exits. The default is 0: no timeout of its own, the timers of the
 protocol decide (AX.25, NET/ROM and ROSE kernel timers, about two minutes
-for TCP).
+for TCP). The timeout is enforced by the program itself, so it applies to
+AX.25 served by the kernel as well as from userspace (WAMPES, AGWPE).
 .SH FILES
 .br
 /etc/ax25/axports
