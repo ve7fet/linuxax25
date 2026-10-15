@@ -102,7 +102,7 @@ int bput(void)
 	for (;;) {
 		len = my_read(fdin, buf, sizeof(buf), &is_eof, "\r\n");
 		if (is_eof || len < 1) {
-			sprintf(err_msg, "error: read failed (%s)\n", strerror(errno));
+			snprintf(err_msg, sizeof(err_msg), "error: read failed (%s)\n", strerror(errno));
 			return 1;
 		}
 		if (buf[len-1] == '\n') {
@@ -110,18 +110,18 @@ int bput(void)
 			p = "warning: <LF> received. not 8bit clean?\r";
 			secure_write(fdout, p, strlen(p));
 #endif
-			sprintf(err_msg, "bad EOL: <LF>\n");
+			snprintf(err_msg, sizeof(err_msg), "bad EOL: <LF>\n");
 			return 1;
 		}
 		if (IS_BIN_ABORT(buf, len)) {
-			sprintf(err_msg, "Aborted by user request\n");
+			snprintf(err_msg, sizeof(err_msg), "Aborted by user request\n");
 			return 1;
 		}
 		if (buf[len-1] == '\r' && len > 5 && !memcmp(buf, "#BIN#", 5)) {
 			break;
 		}
 		if (len == sizeof(buf)) {
-			sprintf(err_msg, "line to long\n");
+			snprintf(err_msg, sizeof(err_msg), "line to long\n");
 			return 1;
 		}
 	}
@@ -164,13 +164,13 @@ int bput(void)
 		if (!stat(filename, &statbuf)) {
 			/* file exist  */
 			if (unlink(filename)) {
-				sprintf(err_msg, "error: cannot unlink %s (%s)\n", filename, strerror(errno));
+				snprintf(err_msg, sizeof(err_msg), "error: cannot unlink %s (%s)\n", filename, strerror(errno));
 				goto abort;
 			}
 		}
 		fddata = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0640);
 		if (fddata < 0) {
-			sprintf(err_msg, "error: cannot open %s (%s)\n", filename, strerror(errno));
+			snprintf(err_msg, sizeof(err_msg), "error: cannot open %s (%s)\n", filename, strerror(errno));
 			write(fderr, "\r#NO#\r", 6);
 			return 1;
 		}
@@ -197,13 +197,13 @@ int bput(void)
 			      &is_eof, "\r");
 		if (len < 1) {
 			save_close(fddata);
-			sprintf(err_msg, "error: read failed (%s)\n", strerror(errno));
+			snprintf(err_msg, sizeof(err_msg), "error: read failed (%s)\n", strerror(errno));
 			goto abort;
 		}
 		if (!len) {
 			save_close(fddata);
 			if (!term_line) {
-				sprintf(err_msg, "error: unexpected end of file during read: %s\n", strerror(errno));
+				snprintf(err_msg, sizeof(err_msg), "error: unexpected end of file during read: %s\n", strerror(errno));
 				return 1;
 			}
 			return 0;
@@ -237,7 +237,7 @@ int bput(void)
 
 		if (secure_write(fddata, buf, len) == -1) {
 			save_close(fddata);
-			sprintf(err_msg, "error: write failed (%s)\n", strerror(errno));
+			snprintf(err_msg, sizeof(err_msg), "error: write failed (%s)\n", strerror(errno));
 			goto abort;
 		}
 
@@ -253,7 +253,7 @@ int bput(void)
 		}
 	}
 	if (crc != msg_crc) {
-		sprintf(err_msg, "Invalid crc: computed %d, expected %d.\n", crc, msg_crc);
+		snprintf(err_msg, sizeof(err_msg), "Invalid crc: computed %d, expected %d.\n", crc, msg_crc);
 		/* don't unlink  */
 		save_close(fddata);
 		return 1;
@@ -331,7 +331,7 @@ int bget(void) {
 	if (!fdin_is_pipe && *filename) {
 		fddata = open(filename, O_RDONLY);
 		if (fddata == -1) {
-			sprintf(err_msg, "error: cannot open %s (%s)\n", filename, strerror(errno));
+			snprintf(err_msg, sizeof(err_msg), "error: cannot open %s (%s)\n", filename, strerror(errno));
 			return 1;
 		}
 		if (!fstat(fddata, &statbuf))
@@ -345,13 +345,13 @@ int bget(void) {
 			file_size += len;
 		}
 		if (len < 0) {
-			sprintf(err_msg, "error: read failed (%s)\n", strerror(errno));
+			snprintf(err_msg, sizeof(err_msg), "error: read failed (%s)\n", strerror(errno));
 			close(fddata);
 			return 1;
 		}
 		/* rewind  */
 		if (lseek(fddata, 0L, SEEK_SET) != 0L) {
-			sprintf(err_msg, "error: file io failed on lseek() (%s)\n", strerror(errno));
+			snprintf(err_msg, sizeof(err_msg), "error: file io failed on lseek() (%s)\n", strerror(errno));
 			close(fddata);
 			return 1;
 		}
@@ -359,7 +359,7 @@ int bget(void) {
 	} else {
 		file_time = time(NULL);
 		if (!is_stream || do_crc_only) {
-			sprintf(err_msg, "error: not enough memory\n");
+			snprintf(err_msg, sizeof(err_msg), "error: not enough memory\n");
 			while ((len = read(fddata, buf, sizeof(buf))) > 0) {
 				crc = calc_crc(buf, len, crc);
 				file_size += len;
@@ -367,7 +367,7 @@ int bget(void) {
 					store_line(buf, len);
 			}
 			if (len < 0) {
-				sprintf(err_msg, "error: read failed (%s)\n", strerror(errno));
+				snprintf(err_msg, sizeof(err_msg), "error: read failed (%s)\n", strerror(errno));
 				close(fddata);
 				return 1;
 			}
@@ -392,7 +392,7 @@ int bget(void) {
 
 	send_on_signal = bin_send_abort_on_sig;
 	if (secure_write(fdout, buf, strlen(buf)) == -1) {
-		sprintf(err_msg, "error: write failed (%s)\n", strerror(errno));
+		snprintf(err_msg, sizeof(err_msg), "error: write failed (%s)\n", strerror(errno));
 		save_close(fddata);
 		return 1;
 	}
@@ -405,7 +405,7 @@ int bget(void) {
 		 */
 		len = my_read(fdout, buf, sizeof(buf), &is_eof, "\r\n");
 		if (is_eof || len < 1) {
-			sprintf(err_msg, "error: read failed (%s)\n", strerror(errno));
+			snprintf(err_msg, sizeof(err_msg), "error: read failed (%s)\n", strerror(errno));
 			save_close(fddata);
 			return 1;
 		}
@@ -414,10 +414,10 @@ int bget(void) {
 			char *p = "warning: <LF> received. not 8bit clean?\r";
 			secure_write(fdout, p, strlen(p));
 #endif
-			sprintf(err_msg, "bad EOL: <LF>\n");
+			snprintf(err_msg, sizeof(err_msg), "bad EOL: <LF>\n");
 			goto abort;
 		} else if (buf[len-1] != '\r') {
-			sprintf(err_msg, "line to long\n");
+			snprintf(err_msg, sizeof(err_msg), "line to long\n");
 			continue;
 		}
 		if (IS_BIN_OK(buf, len))
@@ -427,7 +427,7 @@ int bget(void) {
 			return 0;
 		}
 		if (IS_BIN_ABORT(buf, len)) {
-			sprintf(err_msg, "Aborted by user request\n");
+			snprintf(err_msg, sizeof(err_msg), "Aborted by user request\n");
 			save_close(fddata);
 			return 1;
 		}
@@ -447,12 +447,12 @@ int bget(void) {
 		    FD_ISSET(fdin, &readfds)) {
 			len = read(fdin, buf, sizeof(buf));
 			if (len < 0) {
-				sprintf(err_msg, "read from tty failed (%s)\n", strerror(errno));
+				snprintf(err_msg, sizeof(err_msg), "read from tty failed (%s)\n", strerror(errno));
 				save_close(fddata);
 				goto abort;
 			}
 			if (IS_BIN_ABORT(buf, len)) {
-				sprintf(err_msg, "Aborted by user request\n");
+				snprintf(err_msg, sizeof(err_msg), "Aborted by user request\n");
 				save_close(fddata);
 				return 1;
 			}
@@ -466,7 +466,7 @@ int bget(void) {
 			if (len < 1) {
 				save_close(fddata);
 				if (len < 0) {
-					sprintf(err_msg, "error: read failed (%s)\n", strerror(errno));
+					snprintf(err_msg, sizeof(err_msg), "error: read failed (%s)\n", strerror(errno));
 					goto abort;
 				}
 				break;
@@ -478,7 +478,7 @@ int bget(void) {
 		}
 		/* write to client  */
 		if (secure_write(fdout, p_buf, len) == -1) {
-			sprintf(err_msg, "error: write failed (%s)\n", strerror(errno));
+			snprintf(err_msg, sizeof(err_msg), "error: write failed (%s)\n", strerror(errno));
 			save_close(fddata);
 			goto abort;
 		}
@@ -491,7 +491,7 @@ int bget(void) {
 		}
 		if (!fdin_is_pipe && !len_remains) {
 			if (read(fddata, buf, 1) == 1) {
-				sprintf(err_msg, "Warning: file has grown in the meantime\n");
+				snprintf(err_msg, sizeof(err_msg), "Warning: file has grown in the meantime\n");
 			}
 			is_eof = 1;
 			break;

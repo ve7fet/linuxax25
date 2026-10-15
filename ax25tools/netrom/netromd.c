@@ -245,7 +245,8 @@ int main(int argc, char **argv)
 				return 1;
 			}
 
-			if (ax25_cmp((ax25_address *)(buffer + 1), &node_call) == 0 &&
+			if (size >= 18 &&
+			    ax25_cmp((ax25_address *)(buffer + 1), &node_call) == 0 &&
 			    ax25_cmp((ax25_address *)(buffer + 8), &my_call)   != 0 &&
 			    buffer[16] == NETROM_PID && buffer[17] == NODES_SIG) {
 				for (i = 0; i < port_count; i++) {
