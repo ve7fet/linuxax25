@@ -1,4 +1,5 @@
 extern void err(char *message);
+extern void connect_timeout_handler_init(unsigned int seconds, const char *message);
 
 extern int user_write(int fd, const void *buf, size_t count);
 extern int user_read(int fd, void *buf, size_t count);
@@ -10,3 +11,4 @@ extern void end_compress(void);
 extern int compression;
 extern int paclen_in;
 extern int paclen_out;
+extern int connect_seconds;

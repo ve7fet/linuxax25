@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
 
 #include "config.h"
 #include "user_io.h"
@@ -14,6 +16,8 @@
 int compression;
 int paclen_in		= 256;
 int paclen_out		= 256;
+/* -T: seconds allowed to connect(), 0 leaves it to the protocol timers */
+int connect_seconds;
 
 /* This is for select_loop() */
 static unsigned char buf[BUFLEN];
@@ -60,16 +64,103 @@ void end_compress(void)
 #endif
 }
 
+static const char *timeout_message;
+static size_t timeout_message_len;
+
+/*
+ * The timeout ends the connection attempt itself. Whether the interrupted
+ * connect() comes back with EINTR or is restarted depends on the platform
+ * and on what serves the socket: Linux restarts an interrupted connect()
+ * when SA_RESTART is set, and the userspace AX.25 daemon wrappers (WAMPES,
+ * AGWPE) retry a restarted wait on their own. So instead of waiting for
+ * EINTR, the handler writes the message and leaves: _exit() ends the
+ * process no matter what the interrupted call would have done.
+ * (Thomas Osterried DL9SAU, unix-ax25-stack/ax25-tools fed61b8.)
+ */
+static void alarm_handler(int sig)
+{
+	ssize_t n;
+
+	(void) sig;
+	n = write(STDOUT_FILENO, timeout_message, timeout_message_len);
+	(void) n;
+	_exit(1);
+}
+
+/*
+ * Arms the timeout of connect(), if -T was given. The handler is installed
+ * without SA_RESTART: with signal(), glibc restarts the interrupted
+ * connect(), which on an AX.25, NET/ROM or ROSE socket starts a new
+ * connection attempt. The message is written from the signal handler, so
+ * it is put in place before the alarm is armed; its length is taken here
+ * because strlen() is not signal safe. With no -T, the timers of the
+ * protocol decide alone.
+ */
+void connect_timeout_handler_init(unsigned int seconds, const char *message)
+{
+	struct sigaction sa;
+
+	if (seconds == 0)
+		return;
+
+	timeout_message = message;
+	timeout_message_len = strlen(message);
+
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = alarm_handler;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGALRM, &sa, NULL);
+
+	alarm(seconds);
+}
+
+/*
+ * Both ends are non blocking (see select_loop()). When the far side is slow
+ * - a 1200 baud radio link fed by a BBS listing - the send buffer of the
+ * socket fills and write() fails with EAGAIN: wait until there is room and
+ * try again, instead of dropping the data. A stream (TCP, pipe, pty) may
+ * also take only part of the buffer: write the rest.
+ */
+static int write_frame(int fd, const unsigned char *byte, int len)
+{
+	struct pollfd pfd;
+	int written = 0;
+	int n;
+
+	while (written < len) {
+		n = write(fd, byte + written, len - written);
+		if (n >= 0) {
+			written += n;
+			continue;
+		}
+		if (errno == EINTR)
+			continue;
+		if (errno != EAGAIN && errno != EWOULDBLOCK)
+			return -1;
+
+		pfd.fd = fd;
+		pfd.events = POLLOUT;
+		pfd.revents = 0;
+		if (poll(&pfd, 1, -1) < 0 && errno != EINTR)
+			return -1;
+	}
+
+	return 0;
+}
+
 static int flush_output(int fd, const void *buf, size_t count)
 {
 	const unsigned char *byte = buf;
 	int cnt = count;
+	/* -i is the frame length of the incoming connection (our stdout),
+	 * -o the one of the connection we made */
+	int paclen = (fd == STDOUT_FILENO) ? paclen_in : paclen_out;
 
 	while (cnt > 0) {
-		if (write(fd, byte, min(paclen_out, cnt)) < 0)
+		if (write_frame(fd, byte, min(paclen, cnt)) < 0)
 			return -1;
-		byte += paclen_out;
-		cnt -= paclen_out;
+		byte += paclen;
+		cnt -= paclen;
 	}
 
 	return count;
@@ -196,11 +287,20 @@ int select_loop(int s)
 		FD_SET(STDIN_FILENO, &read_fd);
 		FD_SET(s, &read_fd);
 
-		select(s + 1, &read_fd, NULL, NULL, NULL);
+		if (select(s + 1, &read_fd, NULL, NULL, NULL) < 0) {
+			if (errno == EINTR)
+				continue;
+			close(s);
+			break;
+		}
 
 		if (FD_ISSET(s, &read_fd)) {
-			while ((n = user_read(s, buf, BUFLEN)) > 0)
-				user_write(STDOUT_FILENO, buf, n);
+			while ((n = user_read(s, buf, BUFLEN)) > 0) {
+				if (user_write(STDOUT_FILENO, buf, n) < 0) {
+					close(s);
+					return -1;
+				}
+			}
 			if (n == 0 || (n < 0 && errno != EAGAIN)) {
 				close(s);
 				break;
@@ -208,8 +308,12 @@ int select_loop(int s)
 		}
 
 		if (FD_ISSET(STDIN_FILENO, &read_fd)) {
-			while ((n = user_read(STDIN_FILENO, buf, BUFLEN)) > 0)
-				user_write(s, buf, n);
+			while ((n = user_read(STDIN_FILENO, buf, BUFLEN)) > 0) {
+				if (user_write(s, buf, n) < 0) {
+					close(s);
+					return -1;
+				}
+			}
 			if (n == 0 || (n < 0 && errno != EAGAIN)) {
 				close(s);
 				break;

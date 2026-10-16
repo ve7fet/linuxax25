@@ -14,14 +14,10 @@
 
 #include "user_io.h"
 
-static void alarm_handler(int sig)
-{
-}
-
 int main(int argc, char **argv)
 {
 	char buffer[256];
-	int s, addrlen = sizeof(struct sockaddr_in);
+	int s, ret, addrlen = sizeof(struct sockaddr_in);
 	struct sockaddr_in addr;
 	struct hostent *hp;
 	struct servent *sp;
@@ -30,7 +26,7 @@ int main(int argc, char **argv)
 	paclen_in = 1024;
 	paclen_out = 1024;
 
-	while ((s = getopt(argc, argv, "ci:o:q")) != -1) {
+	while ((s = getopt(argc, argv, "ci:o:T:q")) != -1) {
 		switch (s) {
 		case 'c':
 			init_compress();
@@ -41,6 +37,9 @@ int main(int argc, char **argv)
 			break;
 		case 'o':
 			paclen_out = atoi(optarg);
+			break;
+		case 'T':
+			connect_seconds = atoi(optarg);
 			break;
 		case 'q':
 			verbose = 0;
@@ -57,6 +56,11 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	if (connect_seconds < 0) {
+		err("ERROR: invalid connect timeout\n");
+		return 1;
+	}
+
 	/*
 	 * Arguments should be "tcp_call remaddr remport"
 	 */
@@ -70,7 +74,7 @@ int main(int argc, char **argv)
 	 */
 	s = socket(AF_INET, SOCK_STREAM, 0);
 	if (s < 0) {
-		sprintf(buffer, "ERROR: can't open socket: %s\n", strerror(errno));
+		snprintf(buffer, sizeof(buffer), "ERROR: can't open socket: %s\n", strerror(errno));
 		err(buffer);
 	}
 
@@ -97,30 +101,32 @@ int main(int argc, char **argv)
 	}
 
 	if (verbose) {
-		sprintf(buffer, "*** Connecting to %s ...\n", hp->h_name);
+		snprintf(buffer, sizeof(buffer), "*** Connecting to %s ...\n", hp->h_name);
 		user_write(STDOUT_FILENO, buffer, strlen(buffer));
 	}
 
 	/*
-	 * If no response in 30 seconds, go away.
+	 * With -T, give up if there is no response in time.
 	 */
-	alarm(30);
-
-	signal(SIGALRM, alarm_handler);
+	connect_timeout_handler_init(connect_seconds,
+		"*** Connection timed out - aborting\n");
 
 	/*
 	 * Lets try and connect to the far end.
 	 */
-	if (connect(s, (struct sockaddr *)&addr, addrlen) != 0) {
-		sprintf(buffer, "ERROR: can't connect: %s\n", strerror(errno));
+	ret = connect(s, (struct sockaddr *)&addr, addrlen);
+	alarm(0);
+	if (ret != 0) {
+		if (errno == EINTR)
+			strcpy(buffer, "*** Connection timed out - aborting\n");
+		else
+			snprintf(buffer, sizeof(buffer), "ERROR: can't connect: %s\n", strerror(errno));
 		err(buffer);
 	}
 
 	/*
 	 * We got there.
 	 */
-	alarm(0);
-
 	if (verbose) {
 		strcpy(buffer, "*** Connected\n");
 		user_write(STDOUT_FILENO, buffer, strlen(buffer));

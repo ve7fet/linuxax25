@@ -21,20 +21,16 @@
 
 #include "user_io.h"
 
-static void alarm_handler(int sig)
-{
-}
-
 int main(int argc, char **argv)
 {
 	char buffer[256], *addr;
-	int s, addrlen = sizeof(struct full_sockaddr_ax25);
+	int s, ret, addrlen = sizeof(struct full_sockaddr_ax25);
 	struct full_sockaddr_ax25 nrbind, nrconnect;
 
 	paclen_in = 236;
 	paclen_out = 236;
 
-	while ((s = getopt(argc, argv, "ci:o:")) != -1) {
+	while ((s = getopt(argc, argv, "ci:o:T:")) != -1) {
 		switch (s) {
 		case 'c':
 			init_compress();
@@ -46,6 +42,9 @@ int main(int argc, char **argv)
 		case 'o':
 			paclen_out = atoi(optarg);
 			break;
+		case 'T':
+			connect_seconds = atoi(optarg);
+			break;
 		case ':':
 		case '?':
 			err("ERROR: invalid option usage\r");
@@ -55,6 +54,11 @@ int main(int argc, char **argv)
 
 	if (paclen_in < 1 || paclen_out < 1) {
 		err("ERROR: invalid paclen\r");
+		return 1;
+	}
+
+	if (connect_seconds < 0) {
+		err("ERROR: invalid connect timeout\r");
 		return 1;
 	}
 
@@ -80,17 +84,17 @@ int main(int argc, char **argv)
 
 	addr = nr_config_get_addr(argv[optind]);
 	if (addr == NULL) {
-		sprintf(buffer, "ERROR: invalid NET/ROM port name - %s\r", argv[optind]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid NET/ROM port name - %s\r", argv[optind]);
 		err(buffer);
 	}
 
 	if (ax25_aton_entry(addr, nrbind.fsa_ax25.sax25_call.ax25_call) == -1) {
-		sprintf(buffer, "ERROR: invalid NET/ROM port callsign - %s\r", argv[optind]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid NET/ROM port callsign - %s\r", argv[optind]);
 		err(buffer);
 	}
 
 	if (ax25_aton_entry(argv[optind + 1], nrbind.fsa_digipeater[0].ax25_call) == -1) {
-		sprintf(buffer, "ERROR: invalid callsign - %s\r", argv[optind + 1]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid callsign - %s\r", argv[optind + 1]);
 		err(buffer);
 	}
 
@@ -100,7 +104,7 @@ int main(int argc, char **argv)
 		addr++;
 
 	if (ax25_aton_entry(addr, nrconnect.fsa_ax25.sax25_call.ax25_call) == -1) {
-		sprintf(buffer, "ERROR: invalid callsign - %s\r", argv[optind + 2]);
+		snprintf(buffer, sizeof(buffer), "ERROR: invalid callsign - %s\r", argv[optind + 2]);
 		err(buffer);
 	}
 
@@ -109,7 +113,7 @@ int main(int argc, char **argv)
 	 */
 	s = socket(AF_NETROM, SOCK_SEQPACKET, 0);
 	if (s < 0) {
-		sprintf(buffer, "ERROR: cannot open NET/ROM socket, %s\r", strerror(errno));
+		snprintf(buffer, sizeof(buffer), "ERROR: cannot open NET/ROM socket, %s\r", strerror(errno));
 		err(buffer);
 	}
 
@@ -117,24 +121,25 @@ int main(int argc, char **argv)
 	 * Set our AX.25 callsign and NET/ROM callsign accordingly.
 	 */
 	if (bind(s, (struct sockaddr *)&nrbind, addrlen) != 0) {
-		sprintf(buffer, "ERROR: cannot bind NET/ROM socket, %s\r", strerror(errno));
+		snprintf(buffer, sizeof(buffer), "ERROR: cannot bind NET/ROM socket, %s\r", strerror(errno));
 		err(buffer);
 	}
 
-	sprintf(buffer, "Connecting to %s ...\r", argv[optind + 2]);
+	snprintf(buffer, sizeof(buffer), "Connecting to %s ...\r", argv[optind + 2]);
 	user_write(STDOUT_FILENO, buffer, strlen(buffer));
 
 	/*
-	 * If no response in 30 seconds, go away.
+	 * With -T, give up if there is no response in time.
 	 */
-	alarm(30);
-
-	signal(SIGALRM, alarm_handler);
+	connect_timeout_handler_init(connect_seconds,
+		"*** Connection timed out - aborting\r");
 
 	/*
 	 * Lets try and connect to the far end.
 	 */
-	if (connect(s, (struct sockaddr *)&nrconnect, addrlen) != 0) {
+	ret = connect(s, (struct sockaddr *)&nrconnect, addrlen);
+	alarm(0);
+	if (ret != 0) {
 		switch (errno) {
 		case ECONNREFUSED:
 			strcpy(buffer, "*** Connection refused - aborting\r");
@@ -146,7 +151,7 @@ int main(int argc, char **argv)
 			strcpy(buffer, "*** Connection timed out - aborting\r");
 			break;
 		default:
-			sprintf(buffer, "ERROR: cannot connect to NET/ROM node, %s\r", strerror(errno));
+			snprintf(buffer, sizeof(buffer), "ERROR: cannot connect to NET/ROM node, %s\r", strerror(errno));
 			break;
 		}
 
@@ -156,8 +161,6 @@ int main(int argc, char **argv)
 	/*
 	 * We got there.
 	 */
-	alarm(0);
-
 	strcpy(buffer, "*** Connected\r");
 	user_write(STDOUT_FILENO, buffer, strlen(buffer));
 

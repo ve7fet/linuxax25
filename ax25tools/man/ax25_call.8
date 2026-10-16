@@ -3,13 +3,13 @@
 ax25_call, netrom_call, rose_call, tcp_call \- make an AX.25, NET/ROM,
 ROSE or TCP connection
 .SH SYNOPSIS
-.B ax25_call [-c] [-i paclen] [-o paclen] port local_call remote_call [digipeaters ...]
+.B ax25_call [-c] [-i paclen] [-o paclen] [-T seconds] port local_call remote_call [digipeaters ...]
 .sp
-.B netrom_call [-c] [-i paclen] [-o paclen] port local_call remote_netrom_addr
+.B netrom_call [-c] [-i paclen] [-o paclen] [-T seconds] port local_call remote_netrom_addr
 .sp
-.B rose_call [-c] [-i paclen] [-o paclen] port local_call remote_call remote_rose_addr
+.B rose_call [-c] [-i paclen] [-o paclen] [-T seconds] port local_call remote_call remote_rose_addr
 .sp
-.B tcp_call [-c] [-i paclen] [-o paclen] remote_addr remote_port
+.B tcp_call [-c] [-i paclen] [-o paclen] [-T seconds] remote_addr remote_port
 .SH DESCRIPTION
 .LP
 .B ax25_call, netrom_call, rose_call and tcp_call
@@ -54,6 +54,14 @@ default is 256 for ax25_call and rose_call, 236 for netrom_call and
 The maximum frame length to be used on the outgoing connection. The
 default is 256 for ax25_call and rose_call, 236 for netrom_call and
 1024 for tcp_call.
+.TP 12
+.BI "\-T seconds"
+Gives up if the connection is not established within the given number of
+seconds: the program prints "*** Connection timed out - aborting" and
+exits. The default is 0: no timeout of its own, the timers of the
+protocol decide (AX.25, NET/ROM and ROSE kernel timers, about two minutes
+for TCP). The timeout is enforced by the program itself, so it applies to
+AX.25 served by the kernel as well as from userspace (WAMPES, AGWPE).
 .SH FILES
 .br
 /etc/ax25/axports
