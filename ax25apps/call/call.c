@@ -1887,6 +1887,16 @@ static int searche_key_words(char buf[], int *bytes, char *parms, int *parmsbyte
 	    || (command != -1 && cnt == *bytes - 1
 		&& !eol(buf[*bytes - 1]))) {
 		cmpstrbyte = *bytes - cmdstpos;
+		if (cmpstrbyte >= (int) sizeof(cmpstr)) {
+			/* The command line is longer than we can hold while
+			 * waiting for its end (a remote peer controls this):
+			 * stop treating it as a command and let the data
+			 * through as ordinary text rather than overflow. */
+			command = -1;
+			cmpstrbyte = 0;
+			*restbytes = 0;
+			return -1;
+		}
 		strncpy(cmpstr, &buf[cmdstpos], cmpstrbyte);
 		cmpstr[cmpstrbyte] = 0;
 		*bytes -= cmpstrbyte;
@@ -1943,7 +1953,7 @@ static int sevenplname(int mode, WINDOW ** swin, wint * wintab, int *f,
 			break;
 	}
 	orgn[cnt + 1] = 0;
-	if (orgn[cnt - 3] == '.') {
+	if (cnt >= 3 && orgn[cnt - 3] == '.') {
 		strncpy(prtn, orgn, cnt - 2);
 		if (nrparts == 1)
 			sprintf(prtn + cnt - 2, "7pl");
@@ -1961,7 +1971,7 @@ static int sevenplname(int mode, WINDOW ** swin, wint * wintab, int *f,
 	strcat(strn, prtn);
 
 	for (cnt = 0; cnt + 41 < parmsbytes && parms[cnt + 41] != ')'; cnt++) ;
-	if (parms[cnt + 41] != ')') {
+	if (cnt + 41 >= parmsbytes || parms[cnt + 41] != ')') {
 		return -1;
 	}
 	if (cnt > sizeof(v)-2)
@@ -1989,11 +1999,12 @@ static int sevenplname(int mode, WINDOW ** swin, wint * wintab, int *f,
 		*f = -1;
 	}
 	if ((*f = open(strn, O_RDWR | O_APPEND | O_CREAT, 0666)) == -1) {
-		sprintf(s, "Unable to open %s", strn);
+		snprintf(s, sizeof(s), "Unable to open %s", strn);
 		statline(mode, s);
 		return -1;
 	} else if (*logfile != -1) {
-		sprintf(s, "*** 7plus download into file: %s ***\n", strn);
+		snprintf(s, sizeof(s),
+			 "*** 7plus download into file: %s ***\n", strn);
 		write(*logfile, s, strlen(s));
 	}
 
@@ -2094,8 +2105,10 @@ static int cmd_call(char *call[], int mode, int encoding)
 
 	init_crc();
 
-	if (paclen > sizeof(buf))
-		paclen = sizeof(buf);
+	/* Leave room for the terminating NUL written at buf[bytes] when a
+	 * full paclen-sized line is read from stdin (see the '~' handling). */
+	if (paclen >= sizeof(buf))
+		paclen = sizeof(buf) - 1;
 
 	gp.dwn_cnt = 0;
 	wintab.next = NULL;
@@ -2189,7 +2202,10 @@ static int cmd_call(char *call[], int mode, int encoding)
 		}
 		if (FD_ISSET(fd, &sock_read)) {
 			/* bytes = read(fd, buf, 511); */
-			bytes = read(fd, buf, sizeof(buf));
+			/* Leave MAX_CMPSTRLEN headroom so searche_key_words()
+			 * can prepend a buffered partial command line without
+			 * overrunning buf[]. */
+			bytes = read(fd, buf, sizeof(buf) - MAX_CMPSTRLEN);
 			if (bytes == 0) {
 				/* read EOF on connection */
 				/* cause program to terminate */
@@ -2490,7 +2506,7 @@ static int cmd_call(char *call[], int mode, int encoding)
 					upldp = -1;
 					upllen = 0;
 					if (uplsize != -1) {
-						sprintf(s,
+						snprintf(s, sizeof(s),
 								"Uploading %ld bytes from %s",
 								uplsize, t);
 						swin =
@@ -2500,7 +2516,7 @@ static int cmd_call(char *call[], int mode, int encoding)
 								"bytes sent   : ",
 								TRUE);
 					} else {
-						sprintf(s,
+						snprintf(s, sizeof(s),
 								"Uploading from %s",
 								t);
 						swin =
@@ -2559,7 +2575,7 @@ static int cmd_call(char *call[], int mode, int encoding)
 							lseek(uploadfile,
 									0L,
 									SEEK_SET);
-							sprintf(s,
+							snprintf(s, sizeof(s),
 									"#BIN#%ld#|%u#$%s#%s\r",
 									uplsize,
 									crc,
@@ -2607,7 +2623,7 @@ static int cmd_call(char *call[], int mode, int encoding)
 								open(t,
 									O_RDWR | O_APPEND |
 									O_CREAT, 0666)) == -1) {
-						sprintf(s,
+						snprintf(s, sizeof(s),
 								"Unable to open %s",
 								buf + 2);
 						statline(mode, s);

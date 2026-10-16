@@ -115,8 +115,10 @@ extern ax25_rt_entry * ax25_routes;
 extern int ax25_routes_cnt;
 extern int ax25_maxroutes;
 
-extern char ip_encaps_dev[];
-extern char iproute2_table[];
+#define RTD_DEVNAME_LEN	32
+
+extern char ip_encaps_dev[RTD_DEVNAME_LEN];
+extern char iproute2_table[RTD_DEVNAME_LEN];
 
 /* config.c */
 

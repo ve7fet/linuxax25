@@ -242,7 +242,7 @@ static void load_listeners(void)
 				for (config = Config; config;
 				     config = config->next) {
 					if (call_is_mycall(config, axcall)
-					    || config->nmycalls >
+					    || config->nmycalls >=
 					    AX25_MAXCALLS)
 						continue;
 					memcpy(&config->
@@ -253,7 +253,7 @@ static void load_listeners(void)
 				config = dev_get_config(device);
 				if (config == NULL
 				    || call_is_mycall(config, axcall)
-				    || config->nmycalls > AX25_MAXCALLS)
+				    || config->nmycalls >= AX25_MAXCALLS)
 					continue;
 
 				memcpy(&config->
@@ -465,7 +465,8 @@ void load_config(void)
 				missing_arg(cmd);
 		} else if (!strcmp(cmd, "ip-encaps-dev")) {
 			if (arg)
-				strcpy(ip_encaps_dev, arg);
+				snprintf(ip_encaps_dev, sizeof(ip_encaps_dev),
+					 "%s", arg);
 			else
 				missing_arg(cmd);
 		} else if (!strcmp(cmd, "ax25-maxroutes")) {
@@ -480,7 +481,8 @@ void load_config(void)
 				missing_arg(cmd);
 		} else if (!strcmp(cmd, "iproute2-table")) {
 			if (arg)
-				strcpy(iproute2_table, arg);
+				snprintf(iproute2_table,
+					 sizeof(iproute2_table), "%s", arg);
 			else
 				missing_arg(cmd);
 		} else

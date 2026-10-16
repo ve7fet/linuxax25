@@ -155,7 +155,10 @@ static void list_ax25(void)
 
 			call = get_next_arg(&s);
 			dev = get_next_arg(&s);
-			t = strtol(get_next_arg(&s), NULL, 16);
+			ct = get_next_arg(&s);
+			if (call == NULL || dev == NULL || ct == NULL)
+				continue;
+			t = strtol(ct, NULL, 16);
 
 			if (t == 0) {
 				ct = "(permanent)";
@@ -220,9 +223,14 @@ static void list_ip(void)
 
 			ip = get_next_arg(&s);
 			dev = get_next_arg(&s);
-			t = strtol(get_next_arg(&s), NULL, 16);
+			ct = get_next_arg(&s);
+			if (ip == NULL || dev == NULL || ct == NULL)
+				continue;
+			t = strtol(ct, NULL, 16);
 			call = get_next_arg(&s);
 			mode = get_next_arg(&s);
+			if (call == NULL || mode == NULL)
+				continue;
 
 			if (t == 0) {
 				ct = "(permanent)";
