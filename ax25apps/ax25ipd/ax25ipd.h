@@ -120,6 +120,9 @@ void send_broadcast(unsigned char *, int);
 void dump_routes(void);
 void update_dns(unsigned);
 
+/* ax25ipd.c */
+void check_signals(void);
+
 /* config.c */
 void config_init(void);
 void config_read(char *);

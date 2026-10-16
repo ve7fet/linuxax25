@@ -12,7 +12,6 @@
  */
 
 #include <limits.h>
-#include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,7 +44,15 @@ struct ax25ipd_stats stats;     /* Usage statistics */
 
 int dual_port;                  /* addition for dual port flag */
 
-static jmp_buf restart_env;
+/*
+ * The signal handlers only note the signal. The work is done by
+ * check_signals(), called from the main loop: printf(), exit() and the
+ * routines that dump the tables must not be called from a handler, which
+ * may interrupt the main code in the middle of the same routines.
+ */
+static volatile sig_atomic_t got_hup;
+static volatile sig_atomic_t got_usr1;
+static volatile sig_atomic_t got_term;	/* SIGINT or SIGTERM */
 
 static int opt_version;
 static int opt_loglevel;
@@ -117,45 +124,60 @@ static void do_stats(void)
         loglevel = save_loglevel;
 }
 
-static void hupper(int i)
+static void sig_handler(int sig)
 {
-        printf("\nSIGHUP!\n");
-        longjmp(restart_env, 1);
+	if (sig == SIGHUP)
+		got_hup = 1;
+	else if (sig == SIGUSR1)
+		got_usr1 = 1;
+	else
+		got_term = sig;
 }
 
-static void usr1_handler(int i)
+void check_signals(void)
 {
-        printf("\nSIGUSR1!\n");
-        do_stats();
-}
+	if (got_hup) {
+		got_hup = 0;
+		/*
+		 * SIGHUP used to jump back to the start of main() and to run
+		 * the whole initialization again. That closed and reopened the
+		 * tty device: with /dev/ptmx ax25ipd got a new pty, and the
+		 * kissattach bound to the old one was left talking to nobody.
+		 */
+		printf("\nSIGHUP ignored: restart ax25ipd to read its configuration again\n");
+		fflush(stdout);
+		syslog(LOG_DAEMON | LOG_WARNING,
+		       "SIGHUP ignored: restart ax25ipd to read its configuration again\n");
+	}
 
-static void int_handler(int i)
-{
-        printf("\nSIGINT!\n");
-        do_stats();
-        exit(1);
-}
+	if (got_usr1) {
+		got_usr1 = 0;
+		printf("\nSIGUSR1!\n");
+		do_stats();
+	}
 
-static void term_handler(int i)
-{
-        printf("\nSIGTERM!\n");
-        do_stats();
-        exit(1);
+	if (got_term) {
+		printf("\n%s!\n", got_term == SIGINT ? "SIGINT" : "SIGTERM");
+		do_stats();
+		exit(1);
+	}
 }
 
 int main(int argc, char **argv)
 {
-	if (setjmp(restart_env) == 0) {
-		signal(SIGHUP, hupper);
-	}
+	struct sigaction sa;
 
 	*opt_configfile = 0;
 	*opt_ttydevice = 0;
 
-	/* set up the handler for statistics reporting */
-	signal(SIGUSR1, usr1_handler);
-	signal(SIGINT, int_handler);
-	signal(SIGTERM, term_handler);
+	/* set up the handlers: statistics reporting and termination */
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = sig_handler;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGHUP, &sa, NULL);
+	sigaction(SIGUSR1, &sa, NULL);
+	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGTERM, &sa, NULL);
 
 	while (1) {
 		int c;

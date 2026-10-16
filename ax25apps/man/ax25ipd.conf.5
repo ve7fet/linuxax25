@@ -174,7 +174,7 @@ broadcast QST-0 NODES-0
 .br
 #
 .br
-# route <destcall> <destaddr> [flags]
+# route <destcall> <destaddr> [udp [port]] [flags]
 .br
 #
 .br
@@ -183,6 +183,16 @@ broadcast QST-0 NODES-0
 #         b  - allow broadcasts to be transmitted via this route
 .br
 #         d  - this route is the default route
+.br
+#         p  - permanent: never look the host name up again
+.br
+#         l  - learn the address from the frames received
+.br
+#
+.br
+# The flags are written as one word, for example "bd". A # ends the
+.br
+# line. Any other word is reported at startup and ignored.
 .br
 #
 .br

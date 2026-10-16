@@ -33,6 +33,9 @@
 #define SETREPEATED(p)  (*(p+6))|=0x80
 #define SETLAST(p)      (*(p+6))|=0x01
 
+/* An AX.25 frame carries at most 8 digipeaters */
+#define MAX_DIGIS       8
+
 static unsigned char bcbuf[256];	/* Must be larger than bc_text!!! */
 static int bclen;			/* The size of bcbuf */
 
@@ -43,6 +46,27 @@ static int bclen;			/* The size of bcbuf */
 void process_init(void)
 {
 	bclen = -1;		/* flag that we need to rebuild the bctext */
+}
+
+/*
+ * Check the address field of a frame of l bytes (CRC not counted):
+ * destination, source and up to MAX_DIGIS digipeaters, the last address
+ * flagged with the E bit, all of them inside the frame and followed by
+ * at least the control byte. next_addr() and from_addr() walk the
+ * digipeaters until they find the E bit, without knowing the length of
+ * the frame: on a frame that carries none they ran past its end.
+ */
+static int addr_field_ok(unsigned char *buf, int l)
+{
+	int n;
+
+	for (n = 2; n <= 2 + MAX_DIGIS; n++) {
+		if (l < n * 7 + 1)
+			return 0;
+		if (IS_LAST(buf + (n - 1) * 7))
+			return 1;
+	}
+	return 0;
 }
 
 /*
@@ -75,6 +99,12 @@ void from_kiss(unsigned char *buf, int l)
 
 	if (l < 15) {
 		LOGL2("from_kiss: dumped - length wrong!\n");
+		stats.kiss_tooshort++;
+		return;
+	}
+
+	if (!addr_field_ok(buf, l)) {
+		LOGL2("from_kiss: dumped - bad address field!\n");
 		stats.kiss_tooshort++;
 		return;
 	}
@@ -166,6 +196,12 @@ void from_ip(unsigned char *buf, int l, struct sockaddr_in *ip_addr)
 	if (l < 15) {
 		stats.ip_tooshort++;
 		LOGL2("from_ip: dumped - length wrong!\n");
+		return;
+	}
+
+	if (!addr_field_ok(buf, l)) {
+		stats.ip_tooshort++;
+		LOGL2("from_ip: dumped - bad address field!\n");
 		return;
 	}
 

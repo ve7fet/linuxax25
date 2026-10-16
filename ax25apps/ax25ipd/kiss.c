@@ -155,6 +155,7 @@ void param_add(int p, int v)
 {
 	if (param_tbl_top >= PTABLE_SIZE) {
 		fprintf(stderr, "param table is full; entry ignored.\n");
+		return;
 	}
 	param_tbl[param_tbl_top].parameter = p & 0xff;
 	param_tbl[param_tbl_top].value = v & 0xff;

@@ -338,6 +338,9 @@ int parse_line(char *buf)
                 if (my_udp)
                         uport = ntohs(my_udp);
 		while ((q = strtok(NULL, " \t\n\r")) != NULL) {
+			/* A comment ends the line */
+			if (*q == '#')
+				break;
 			if (strcmp(q, "udp") == 0) {
                                 /* uport == 0 should never happen.
                                  * re-use setting. It costed me a long time
@@ -352,30 +355,47 @@ int parse_line(char *buf)
                                 if (uport == 0)
                                         uport = DEFAULT_UDP_PORT;
 				q = strtok(NULL, " \t\n\r");
-				if (q != NULL) {
+				if (q == NULL || *q == '#')
+					break;
+				if (strspn(q, "0123456789") == strlen(q)) {
 					i = atoi(q);
-					if (i > 0)
+					if (i > 0 && i <= 65535)
 						uport = i;
+					continue;
 				}
-			} else {
-				/* Test for broadcast flag */
-				if (strchr(q, 'b')) {
-					flags |= AXRT_BCAST;
-				}
+				/* Not a port number: "udp" is followed by the
+				 * flags, which used to be swallowed as a port.
+				 * Fall through and read them. */
+			}
+			/* The flags are a word made of the letters b, d, p, l
+			 * only. Any other word used to be searched for these
+			 * letters: a comment at the end of the line could
+			 * silently turn the route into a default or broadcast
+			 * route. */
+			if (strspn(q, "bdpl") != strlen(q)) {
+				fprintf(stderr,
+					"ax25ipd: route %s: unknown word '%s' ignored\n",
+					call_to_a(tcall), q);
+				continue;
+			}
 
-				/* Test for Default flag */
-				if (strchr(q, 'd')) {
-					flags |= AXRT_DEFAULT;
-				}
+			/* Test for broadcast flag */
+			if (strchr(q, 'b')) {
+				flags |= AXRT_BCAST;
+			}
 
-				/* Test for "permanent" flag */
-				if (strchr(q, 'p')) {
-					flags |= AXRT_PERMANENT;
-				}
-				/* Test for "learn" flag */
-				if (strchr(q, 'l')) {
-					flags |= AXRT_LEARN;
-				}
+			/* Test for Default flag */
+			if (strchr(q, 'd')) {
+				flags |= AXRT_DEFAULT;
+			}
+
+			/* Test for "permanent" flag */
+			if (strchr(q, 'p')) {
+				flags |= AXRT_PERMANENT;
+			}
+			/* Test for "learn" flag */
+			if (strchr(q, 'l')) {
+				flags |= AXRT_LEARN;
 			}
 		}
 		route_add(thost, tip, tcall, uport, flags);
@@ -426,7 +446,7 @@ int a_to_call(char *text, unsigned char *tcall)
 		c = text[i];
 		if (c == '-') {
 			ssid = atoi(&text[i + 1]);
-			if (ssid > 15)
+			if (ssid < 0 || ssid > 15)
 				return -1;
 			tcall[6] = (ssid << 1);
 			return 0;
