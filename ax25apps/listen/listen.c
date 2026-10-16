@@ -405,7 +405,10 @@ static void readable_dump(unsigned char *data, int length)
 	unsigned char c;
 	int i;
 	int cr = 1;
-	char buf[BUFSIZE];
+	char buf[BUFSIZE + 2];	/* room for the final '\n' and '\0' */
+
+	if (length > BUFSIZE)
+		length = BUFSIZE;
 
 	for (i = 0; length > 0; i++) {
 
@@ -448,12 +451,12 @@ static void hex_dump(unsigned char *data, int length)
 
 		hexd[0] = '\0';
 		for (j = 0; j < 16; j++) {
-			c = *data2++;
-			length2--;
-
-			if (length2 >= 0)
+			/* pad the last line without reading past the data */
+			if (length2 > 0) {
+				c = *data2++;
+				length2--;
 				sprintf(buf, "%2.2X ", c);
-			else
+			} else
 				strcpy(buf, "   ");
 			strcat(hexd, buf);
 		}
@@ -500,7 +503,7 @@ int get16(unsigned char *cp)
 
 int get32(unsigned char *cp)
 {
-	int x;
+	unsigned int x;		/* shifting a signed int into bit 31 is undefined */
 
 	x = *cp++;
 	x <<= 8;

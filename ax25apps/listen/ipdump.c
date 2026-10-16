@@ -33,10 +33,15 @@ void ip_dump(unsigned char *data, int length, int hexdump)
 
 	lprintf(T_PROTOCOL, "IP:");
 
+	if (length < IPLEN) {
+		lprintf(T_ERROR, " bad header\n");
+		return;
+	}
+
 	/* Sneak peek at IP header and find length */
 	hdr_length = (data[0] & 0xf) << 2;
 
-	if (hdr_length < IPLEN) {
+	if (hdr_length < IPLEN || hdr_length > length) {
 		lprintf(T_ERROR, " bad header\n");
 		return;
 	}
