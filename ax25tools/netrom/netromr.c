@@ -143,6 +143,13 @@ void receive_nodes(unsigned char *buffer, int length, ax25_address *neighbour, i
 		return;
 	}
 
+	/* The broadcast must at least hold the alias of the neighbour */
+	if (length < MNEMONIC_LEN) {
+		if (debug && logging)
+			syslog(LOG_DEBUG, "rejecting frame, too short (%d bytes) from %s\n", length, ax25_ntoa(neighbour));
+		return;
+	}
+
 	nr_node.type   = NETROM_NODE;
 	nr_node.ndigis = 0;
 
