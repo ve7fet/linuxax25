@@ -474,11 +474,15 @@ struct proc_nr_nodes *read_proc_nr_nodes(void)
 	while ((name = nr_config_get_next(name)) != NULL) {
 		if ((new = calloc(1, sizeof(struct proc_nr_nodes))) == NULL)
 			break;
-		if ((cp = nr_config_get_addr(name)) == NULL)
+		if ((cp = nr_config_get_addr(name)) == NULL) {
+			free(new);
 			break;
+		}
 		safe_strncpy(new->call, cp, 9);
-		if ((cp = nr_config_get_alias(name)) == NULL)
+		if ((cp = nr_config_get_alias(name)) == NULL) {
+			free(new);
 			break;
+		}
 		safe_strncpy(new->alias, cp, 6);
 		new->w = 1;             /* local node w */
 		new->qual1 = 255;       /* obviously, local node quality should be set to maximum value */

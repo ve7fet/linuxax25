@@ -23,19 +23,34 @@
 #include "../pathnames.h"
 #include "netromd.h"
 
+/*
+ * Put an alias in its 6-byte field of a NODES broadcast, padded with
+ * spaces. An alias longer than 6 characters (nrports does not limit it)
+ * is cut instead of overflowing the message.
+ */
+static void put_alias(char *field, const char *alias)
+{
+	size_t n = (alias != NULL) ? strlen(alias) : 0;
+
+	if (n > MNEMONIC_LEN)
+		n = MNEMONIC_LEN;
+	memset(field, ' ', MNEMONIC_LEN);
+	if (n > 0)
+		memcpy(field, alias, n);
+}
+
 static int build_header(char *message)
 {
 	message[0] = (char) NODES_SIG;
 
-	strcpy(message + 1, nr_config_get_alias(NULL));
-	strncat(message + 1, "       ", MNEMONIC_LEN - strlen(message + 1));
+	put_alias(message + 1, nr_config_get_alias(NULL));
 
 	return 7;
 }
 
 static void build_mine(int s, struct full_sockaddr_ax25 *dest, int dlen, int localval, int pause)
 {
-	char message[100];
+	char message[NODES_PACLEN];
 	char buffer[255], *port, *p;
 	FILE *fp;
 	int len;
@@ -65,6 +80,13 @@ static void build_mine(int s, struct full_sockaddr_ax25 *dest, int dlen, int loc
 		if (strcmp(nr_config_get_addr(port), nr_config_get_addr(NULL)) == 0)
 			continue;
 
+		/* One broadcast frame: no room for more local ports */
+		if (len + ROUTE_LEN > NODES_PACLEN) {
+			if (logging)
+				syslog(LOG_ERR, "netromt: too many ports in nrports, %s and the next ones not announced\n", port);
+			break;
+		}
+
 		if (ax25_aton_entry(nr_config_get_addr(port), message + len) == -1) {
 			if (logging)
 				syslog(LOG_ERR, "netromt: invalid callsign in nrports\n");
@@ -73,8 +95,7 @@ static void build_mine(int s, struct full_sockaddr_ax25 *dest, int dlen, int loc
 		}
 		len += CALLSIGN_LEN;
 
-		strcpy(message + len, nr_config_get_alias(port));
-		strncat(message + len, "       ", MNEMONIC_LEN - strlen(message + len));
+		put_alias(message + len, nr_config_get_alias(port));
 		len += MNEMONIC_LEN;
 
 		ax25_aton_entry(nr_config_get_addr(NULL), message + len);
@@ -164,8 +185,7 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 			}
 			len += CALLSIGN_LEN;
 
-			strcpy(message + len, mnemonic);
-			strncat(message + len, "       ", MNEMONIC_LEN - strlen(message + len));
+			put_alias(message + len, mnemonic);
 			len += MNEMONIC_LEN;
 
 			if (ax25_aton_entry(neighbour, message + len) == -1) {

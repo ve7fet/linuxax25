@@ -71,7 +71,13 @@ static int bcast_config_load_ports(void)
 		if (strlen(buffer) == 0 || buffer[0] == '#')
 			continue;
 
-		if (sscanf(buffer, "%s %d %d %d %d",
+		if (port_count >= (int)(sizeof(port_list) / sizeof(port_list[0]))) {
+			fprintf(stderr, "netromd: too many ports in config file\n");
+			fclose(fp);
+			return -1;
+		}
+
+		if (sscanf(buffer, "%31s %d %d %d %d",
 				port,
 				&port_list[port_count].minimum_obs,
 				&port_list[port_count].default_qual,
@@ -89,7 +95,8 @@ static int bcast_config_load_ports(void)
 		port_list[port_count].port   = strdup(port);
 		port_list[port_count].device = strdup(ax25_config_get_dev(port_list[port_count].port));
 
-		strncpy(ifr.ifr_name, port_list[port_count].device, sizeof(ifr.ifr_name));
+		memset(&ifr, 0, sizeof(ifr));
+		strncpy(ifr.ifr_name, port_list[port_count].device, sizeof(ifr.ifr_name) - 1);
 		if (ioctl(sock, SIOCGIFINDEX, &ifr)) {
 			fprintf(stderr, "netromd: SIOCGIFINDEX failed for device %s.\n", port_list[port_count].device);
 			return -1;

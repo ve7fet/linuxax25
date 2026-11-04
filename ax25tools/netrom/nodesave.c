@@ -17,8 +17,72 @@
 
 #include <netax25/procutils.h>
 
+#include "../pathnames.h"
+
 static char *Nrparms = "/usr/sbin/nrparms";
 static char *Usage   = "Usage: nodesave [-p <path>] [-v] [<file>]\n";
+
+/*
+ * The digipeaters of a neighbour are not in struct proc_nr_neigh: read
+ * them from its line of nr_neigh, after the 7 fixed fields.
+ */
+static void put_digis(FILE *fp, int addr)
+{
+	char line[256], *p;
+	FILE *fn;
+	int n;
+
+	fn = fopen(PROC_NR_NEIGH_FILE, "r");
+	if (fn == NULL)
+		return;
+
+	if (fgets(line, sizeof(line), fn) != NULL) {	/* header */
+		while (fgets(line, sizeof(line), fn) != NULL) {
+			p = strtok(line, " \n");
+			if (p == NULL || atoi(p) != addr)
+				continue;
+			for (n = 1; (p = strtok(NULL, " \n")) != NULL; n++)
+				if (n >= 7)
+					fprintf(fp, " %s", p);
+			break;
+		}
+	}
+
+	fclose(fn);
+}
+
+/*
+ * Write one route of a node. Routes that nrparms would refuse (quality 0
+ * for a node learnt from traffic, a locked or out of range count, a port
+ * missing from axports) are written as comments.
+ */
+static void save_route(FILE *fp, struct proc_nr_nodes *nop, int qual, int obs,
+		       int addr, struct proc_nr_neigh *neighs)
+{
+	struct proc_nr_neigh *nep;
+	char buf[256];
+	char *port;
+
+	nep = find_neigh(addr, neighs);
+	if (nep == NULL)
+		return;
+
+	port = ax25_config_get_name(nep->dev);
+
+	if (port == NULL || qual < 1 || qual > 255 || obs < 1 || obs > 6) {
+		fprintf(fp, "# not saved: node %s via %s on %s, quality %d, count %d\n",
+			nop->call, nep->call, nep->dev, qual, obs);
+		return;
+	}
+
+	fprintf(fp, "%s -nodes %-9s + ", Nrparms, nop->call);
+	snprintf(buf, sizeof(buf), "\"%s\"", nop->alias);
+	fprintf(fp, "%-8s %-3d %d ", buf, qual, obs);
+	snprintf(buf, sizeof(buf), "\"%s\"", port);
+	fprintf(fp, "%-8s %s", buf, nep->call);
+	put_digis(fp, nep->addr);
+	fprintf(fp, "\n");
+}
 
 int main(int argc, char **argv)
 {
@@ -41,7 +105,10 @@ int main(int argc, char **argv)
 	while ((s = getopt(argc, argv, "p:v")) != -1) {
 		switch (s) {
 		case 'p':
-			sprintf(buf, "%s/nrparms", optarg);
+			if (snprintf(buf, sizeof(buf), "%s/nrparms", optarg) >= (int)sizeof(buf)) {
+				fprintf(stderr, "nodesave: path too long\n");
+				return 1;
+			}
 			Nrparms = strdup(buf);
 			break;
 		case 'v':
@@ -83,66 +150,35 @@ int main(int argc, char **argv)
 	fprintf(fp, "#! /bin/sh\n#\n# Locked routes:\n#\n");
 
 	for (nep = neighs; nep != NULL; nep = nep->next) {
-		if (nep->lock) {
-			fprintf(fp, "%s -routes ", Nrparms);
-			sprintf(buf, "\"%s\"", ax25_config_get_name(nep->dev));
-			fprintf(fp, "%-8s %-9s + %d\n",
-				buf,
-				nep->call,
-				nep->qual);
+		char *port;
+
+		if (!nep->lock)
+			continue;
+
+		port = ax25_config_get_name(nep->dev);
+		if (port == NULL || nep->qual < 1 || nep->qual > 255) {
+			fprintf(fp, "# not saved: neighbour %s on %s, quality %d\n",
+				nep->call, nep->dev, nep->qual);
+			continue;
 		}
+
+		fprintf(fp, "%s -routes ", Nrparms);
+		snprintf(buf, sizeof(buf), "\"%s\"", port);
+		fprintf(fp, "%-8s %-9s", buf, nep->call);
+		put_digis(fp, nep->addr);
+		fprintf(fp, " + %d\n", nep->qual);
 	}
 
 	fprintf(fp, "#\n# Nodes:\n#\n");
 
+	/* nop->n == 0 indicates a local node with no routes. */
 	for (nop = nodes; nop != NULL; nop = nop->next) {
-		/*
-		 * nop->n == 0 indicates a local node with no routes.
-		 */
-		if (nop->n > 0 && (nep = find_neigh(nop->addr1, neighs)) != NULL) {
-			fprintf(fp, "%s -nodes %-9s + ",
-				Nrparms,
-				nop->call);
-			sprintf(buf, "\"%s\"", nop->alias);
-			fprintf(fp, "%-8s %-3d %d ",
-				buf,
-				nop->qual1,
-				nop->obs1);
-			sprintf(buf, "\"%s\"", ax25_config_get_name(nep->dev));
-			fprintf(fp, "%-8s %s\n",
-				buf,
-				nep->call);
-		}
-
-		if (nop->n > 1 && (nep = find_neigh(nop->addr2, neighs)) != NULL) {
-			fprintf(fp, "%s -nodes %-9s + ",
-				Nrparms,
-				nop->call);
-			sprintf(buf, "\"%s\"", nop->alias);
-			fprintf(fp, "%-8s %-3d %d ",
-				buf,
-				nop->qual2,
-				nop->obs2);
-			sprintf(buf, "\"%s\"", ax25_config_get_name(nep->dev));
-			fprintf(fp, "%-8s %s\n",
-				buf,
-				nep->call);
-		}
-
-		if (nop->n > 2 && (nep = find_neigh(nop->addr3, neighs)) != NULL) {
-			fprintf(fp, "%s -nodes %-9s + ",
-				Nrparms,
-				nop->call);
-			sprintf(buf, "\"%s\"", nop->alias);
-			fprintf(fp, "%-8s %-3d %d ",
-				buf,
-				nop->qual3,
-				nop->obs3);
-			sprintf(buf, "\"%s\"", ax25_config_get_name(nep->dev));
-			fprintf(fp, "%-8s %s\n",
-				buf,
-				nep->call);
-		}
+		if (nop->n > 0)
+			save_route(fp, nop, nop->qual1, nop->obs1, nop->addr1, neighs);
+		if (nop->n > 1)
+			save_route(fp, nop, nop->qual2, nop->obs2, nop->addr2, neighs);
+		if (nop->n > 2)
+			save_route(fp, nop, nop->qual3, nop->obs3, nop->addr3, neighs);
 	}
 
 	free_proc_nr_neigh(neighs);
