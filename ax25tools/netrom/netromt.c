@@ -98,9 +98,9 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 {
 	char message[300];
 	FILE *fpnodes, *fpneigh;
-	char nodes_buffer[90];
-	char neigh_buffer[90];
-	char *callsign, *mnemonic, *neighbour;
+	char nodes_buffer[256];
+	char neigh_buffer[256];
+	char *callsign, *mnemonic, *neighbour, *f_qual, *f_obs, *f_neigh, *p;
 	int  quality, neigh_no, obs_count;
 	int  olen, len;
 
@@ -119,19 +119,30 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 		return;
 	}
 
-	fgets(nodes_buffer, 90, fpnodes);
+	/*
+	 * Read whole lines, and skip any line of nr_nodes or nr_neigh that
+	 * does not have all the fields we need instead of passing NULL to
+	 * atoi() (a line of nr_neigh grows with the digipeaters).
+	 */
+	if (fgets(nodes_buffer, sizeof(nodes_buffer), fpnodes) == NULL)
+		nodes_buffer[0] = '\0';	/* header */
 
 	do {
 		len = olen = build_header(message);
 
-		while (fgets(nodes_buffer, 90, fpnodes) != NULL) {
+		while (fgets(nodes_buffer, sizeof(nodes_buffer), fpnodes) != NULL) {
 			callsign  = strtok(nodes_buffer, " ");
 			mnemonic  = strtok(NULL, " ");
 			strtok(NULL, " ");	/* skip which field */
 			strtok(NULL, " ");	/* skip number field */
-			quality   = atoi(strtok(NULL, " "));
-			obs_count = atoi(strtok(NULL, " "));
-			neigh_no  = atoi(strtok(NULL, " "));
+			f_qual    = strtok(NULL, " ");
+			f_obs     = strtok(NULL, " ");
+			f_neigh   = strtok(NULL, " ");
+			if (f_neigh == NULL)	/* also callsign ... f_obs */
+				continue;
+			quality   = atoi(f_qual);
+			obs_count = atoi(f_obs);
+			neigh_no  = atoi(f_neigh);
 			neighbour = NULL;
 
 			if (obs_count < min_obs || quality == 0) continue;
@@ -142,10 +153,12 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 
 			fseek(fpneigh, 0L, SEEK_SET);
 
-			fgets(neigh_buffer, 90, fpneigh);
+			if (fgets(neigh_buffer, sizeof(neigh_buffer), fpneigh) == NULL)
+				neigh_buffer[0] = '\0';	/* header */
 
-			while (fgets(neigh_buffer, 90, fpneigh) != NULL) {
-				if (atoi(strtok(neigh_buffer, " ")) == neigh_no) {
+			while (fgets(neigh_buffer, sizeof(neigh_buffer), fpneigh) != NULL) {
+				p = strtok(neigh_buffer, " ");
+				if (p != NULL && atoi(p) == neigh_no) {
 					neighbour = strtok(NULL, " ");
 					break;
 				}
