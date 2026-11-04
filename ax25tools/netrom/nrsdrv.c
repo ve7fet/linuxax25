@@ -125,9 +125,16 @@ static void unkey_rts(int fd)
 	}
 }
 
+/*
+ * Escaping can double every byte of a frame: the output buffers must hold
+ * twice the largest frame (512 bytes, see the receive buffers) plus the
+ * framing bytes.
+ */
+#define	ESC_BUFSIZE	(2 * 512 + 8)
+
 static void nrs_esc(unsigned char *s, int len)
 {
-	static unsigned char buffer[512];
+	static unsigned char buffer[ESC_BUFSIZE];
 	unsigned char *ptr = buffer;
 	unsigned char csum = 0;
 	unsigned char c;
@@ -161,7 +168,7 @@ static void nrs_esc(unsigned char *s, int len)
 
 static void kiss_esc(unsigned char *s, int len)
 {
-	static unsigned char buffer[512];
+	static unsigned char buffer[ESC_BUFSIZE];
 	unsigned char *ptr = buffer;
 	unsigned char c;
 
