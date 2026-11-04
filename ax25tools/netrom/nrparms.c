@@ -62,7 +62,7 @@ static void nodes(int s, char *nodecall, char *op, char *ident, int quality,
 		exit(1);
 	}
 
-	if (strlen(ident) > 7) {
+	if (strlen(ident) > 6) {	/* 6 characters + NUL in mnemonic[7] */
 		fprintf(stderr, "nrparms: nodes: invalid length of mnemonic %s\n", ident);
 		close(s);
 		exit(1);
@@ -138,13 +138,20 @@ static void routes(int s, char *port, char *nodecall, char *rest[])
 	nr_neigh.type   = NETROM_NEIGH;
 	nr_neigh.ndigis = 0;
 
-	for (i = 0; i < AX25_MAX_DIGIS && rest[i][0] != '-' && rest[i][0] != '+'; i++) {
+	for (i = 0; i < AX25_MAX_DIGIS && rest[i] != NULL && rest[i][0] != '-' && rest[i][0] != '+'; i++) {
 		if (ax25_aton_entry(rest[i], nr_neigh.digipeaters[i].ax25_call) != 0) {
 			fprintf(stderr, "nrparms: routes: invalid callsign %s\n", rest[i]);
 			close(s);
 			exit(1);
 		}
 		nr_neigh.ndigis++;
+	}
+
+	/* The operation and the quality must follow the digipeaters */
+	if (rest[i] == NULL || rest[i + 1] == NULL) {
+		fprintf(stderr, "%s", routes_usage);
+		close(s);
+		exit(1);
 	}
 
 	op      = rest[i + 0];
