@@ -131,11 +131,11 @@ static int add_node(int s, unsigned char *buffer, struct nr_route_struct *nr_nod
 void receive_nodes(unsigned char *buffer, int length, ax25_address *neighbour, int index)
 {
 	struct nr_route_struct nr_node;
-	char neigh_buffer[90], *portcall, *p;
+	char neigh_buffer[256], *portcall, *p;
 	FILE *fp;
 	int s;
-	int quality, obs_count, qual, lock;
-	char *callsign, *device;
+	int quality, obs_count;
+	char *callsign, *device, *qual, *lock;
 
 	if (!validcallsign(neighbour)) {
 		if (debug && logging)
@@ -155,7 +155,8 @@ void receive_nodes(unsigned char *buffer, int length, ax25_address *neighbour, i
 		return;
 	}
 
-	fgets(neigh_buffer, 90, fp);
+	if (fgets(neigh_buffer, sizeof(neigh_buffer), fp) == NULL)
+		neigh_buffer[0] = '\0';
 
 	obs_count = atoi(neigh_buffer);
 
@@ -176,23 +177,33 @@ void receive_nodes(unsigned char *buffer, int length, ax25_address *neighbour, i
 		return;
 	}
 
-	fgets(neigh_buffer, 90, fp);
+	/*
+	 * A line of nr_neigh grows with the digipeaters of the neighbour:
+	 * read whole lines, and skip any line that does not have all the
+	 * fields we need instead of passing NULL to strcmp()/atoi().
+	 */
+	if (fgets(neigh_buffer, sizeof(neigh_buffer), fp) == NULL)
+		neigh_buffer[0] = '\0';	/* header */
 
 	portcall = ax25_ntoa(neighbour);
 
 	quality = port_list[index].default_qual;
 
-	while (fgets(neigh_buffer, 90, fp) != NULL) {
-		strtok(neigh_buffer, " ");	/* skip addr field */
+	while (fgets(neigh_buffer, sizeof(neigh_buffer), fp) != NULL) {
+		if (strtok(neigh_buffer, " ") == NULL)	/* skip addr field */
+			continue;
 		callsign = strtok(NULL, " ");
 		device   = strtok(NULL, " ");
-		qual     = atoi(strtok(NULL, " "));
-		lock     = atoi(strtok(NULL, " "));
+		qual     = strtok(NULL, " ");
+		lock     = strtok(NULL, " ");
+
+		if (callsign == NULL || device == NULL || qual == NULL || lock == NULL)
+			continue;
 
 		if (strcmp(callsign, portcall) == 0 &&
 		    strcmp(device, port_list[index].device) == 0 &&
-		    lock == 1) {
-			quality = qual;
+		    atoi(lock) == 1) {
+			quality = atoi(qual);
 			break;
 		}
 	}
