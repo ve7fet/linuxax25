@@ -21,6 +21,7 @@
 #include <netrose/rose.h>
 
 #include <netax25/axlib.h>
+#include <netax25/nrconfig.h>
 #include "../pathnames.h"
 
 #include "netromd.h"
@@ -95,9 +96,21 @@ static int add_node(int s, unsigned char *buffer, struct nr_route_struct *nr_nod
 		return -1;
 	}
 
-	if (ax25_cmp(&my_call, &best_neighbour) == 0) {
+	if (ax25_cmp(&my_call, &best_neighbour) == 0 ||
+	    nr_config_get_port(&best_neighbour) != NULL) {
 		if (debug && logging)
 			syslog(LOG_DEBUG, "netromr: add_node: route to me");
+		return FALSE;
+	}
+
+	/*
+	 * The kernel refuses a route to one of our own NET/ROM callsigns
+	 * (EINVAL). my_call is only the first port of nrports, so check
+	 * them all.
+	 */
+	if (nr_config_get_port(&nr_node->callsign) != NULL) {
+		if (debug && logging)
+			syslog(LOG_DEBUG, "netromr: add_node: node is one of our own callsigns - %s", ax25_ntoa(&nr_node->callsign));
 		return FALSE;
 	}
 
@@ -232,10 +245,11 @@ void receive_nodes(unsigned char *buffer, int length, ax25_address *neighbour, i
 		strcpy(nr_node.device, port_list[index].device);
 		nr_node.obs_count   = obs_count;
 
-		if (add_node(s, buffer, &nr_node, quality, index) == -1) {
-			close(s);
-			return;
-		}
+		/*
+		 * A bad entry only spoils itself: go on with the rest of
+		 * the broadcast instead of dropping it.
+		 */
+		add_node(s, buffer, &nr_node, quality, index);
 
 		buffer += ROUTE_LEN;
 		length -= ROUTE_LEN;
