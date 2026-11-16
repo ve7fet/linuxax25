@@ -334,6 +334,22 @@ unsigned char *call_to_ip(unsigned char *call, unsigned char *ipstorage)
 
 	LOGL4("lookup call %s ", call_to_a(mycall));
 
+	/*
+	 * A route for this exact callsign and SSID comes first, wherever it
+	 * is in the file: a route with SSID 0 (all SSIDs) placed above it
+	 * must not hide it.
+	 */
+	rp = route_tbl;
+	while (rp) {
+		if (addrcompare(mycall, rp->callsign) == 0) {
+			LOGL4("found ip addr %s\n",
+			      inet_ntoa(rp->ip_addr_in));
+			return retrieveip(rp->ip_addr, ipstorage);
+		}
+		rp = rp->next;
+	}
+
+	/* Then the first route with SSID 0 for this callsign */
 	rp = route_tbl;
 	while (rp) {
 		if (addrmatch(mycall, rp->callsign)) {
