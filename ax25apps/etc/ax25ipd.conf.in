@@ -128,6 +128,15 @@ loglevel 3
 #
 broadcast QST-0 NODES-0 FBB-0
 #
+# learn yes - a frame from an address that no route knows, whose source
+# callsign has no route either, makes a route to that address and port for
+# this exact callsign and SSID. A learned route never replaces a route of
+# this file, is not moved while in use, and is forgotten after 24 hours
+# without a frame (at most 64). Default: learn no. Older ax25ipd versions
+# refuse this line: install the new ax25ipd before adding it.
+#
+#learn yes
+#
 # ax.25 route definition, define as many as you need.
 # format is route (call/wildcard) (ip host at destination)
 # ssid of 0 routes all ssid's; a route for the exact ssid

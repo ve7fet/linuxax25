@@ -166,6 +166,30 @@ broadcast QST-0 NODES-0
 .br
 #
 .br
+# learn yes - a frame received from an address that no route knows,
+.br
+# whose source callsign has no route either, makes a route to that
+.br
+# address and port for this exact callsign and SSID. Frames from other
+.br
+# callsigns at the same address then follow it, as for any route.
+.br
+# A learned route never replaces a route of this file, is not moved to
+.br
+# another address while it is in use, and is forgotten after 24 hours
+.br
+# without a frame. At most 64 are learned. The default is learn no.
+.br
+# Older ax25ipd versions refuse this line: install the new ax25ipd
+.br
+# before adding it.
+.br
+#
+.br
+# learn yes
+.br
+#
+.br
 # ax.25 route definition, define as many as you need.
 .br
 # format is route (call/wildcard) (ip host at destination)
