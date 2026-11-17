@@ -54,6 +54,7 @@ extern int bc_every;                   /* true=every, false=after */
 extern int digi;                       /* True if we are connected to a TNC */
 extern int loglevel;                   /* Verbosity level */
 extern int learn_mode;                 /* "learn yes": routes from unknown addresses */
+extern int learn_bcast;                /* "learn yes b": learned routes get broadcasts */
 /* addition for dual port flag */
 extern int dual_port;
 

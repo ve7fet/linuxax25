@@ -134,6 +134,10 @@ broadcast QST-0 NODES-0 FBB-0
 # this file, is not moved while in use, and is forgotten after 24 hours
 # without a frame (at most 64). Default: learn no. Older ax25ipd versions
 # refuse this line: install the new ax25ipd before adding it.
+# learn yes b - the learned routes also get the broadcasts, as a route
+# with the b flag (the NODES of netromd, for instance); a station whose
+# address and port already get them through a route above is sent each
+# broadcast only once.
 #
 #learn yes
 #

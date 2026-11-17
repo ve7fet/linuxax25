@@ -213,7 +213,7 @@ static void route_learn(struct sockaddr_in *ip_addr, unsigned char *mycall)
 	}
 	memcpy(rn->ip_addr, &ip_addr->sin_addr.s_addr, 4);
 	rn->udp_port = udp_mode ? ip_addr->sin_port : 0;
-	rn->flags = AXRT_LEARNED | AXRT_PERMANENT;
+	rn->flags = AXRT_LEARNED | AXRT_PERMANENT | (learn_bcast ? AXRT_BCAST : 0);
 	rn->last_heard = time(NULL);
 	rn->next = NULL;
 
@@ -228,9 +228,9 @@ static void route_learn(struct sockaddr_in *ip_addr, unsigned char *mycall)
 		route_tbl = rn;
 	}
 	learned_count++;
-	LOGL2("learned route: %s %s %s %d\n", call_to_a(rn->callsign),
+	LOGL2("learned route: %s %s %s %d%s\n", call_to_a(rn->callsign),
 	      inet_ntoa(rn->ip_addr_in), rn->udp_port ? "udp" : "ip",
-	      ntohs(rn->udp_port));
+	      ntohs(rn->udp_port), learn_bcast ? " b" : "");
 }
 
 /* For route rn, a different IP is being used.  Trigger a DNS check. 
@@ -566,6 +566,30 @@ int is_call_bcast(unsigned char *call)
 	return FALSE;
 }
 
+/*
+ * Does route rp get the broadcasts? A learned route ("learn yes b") is
+ * skipped once forgotten, and when a route above it in the table already
+ * sends them to the same address and port: two callsigns learned at one
+ * station must not make it receive every broadcast twice.
+ */
+static int route_gets_bcast(struct route_table_entry *rp)
+{
+	struct route_table_entry *rq;
+
+	if (!(rp->flags & AXRT_BCAST))
+		return FALSE;
+	if (!(rp->flags & AXRT_LEARNED))
+		return TRUE;
+	if (!route_alive(rp))
+		return FALSE;
+	for (rq = route_tbl; rq != rp; rq = rq->next)
+		if ((rq->flags & AXRT_BCAST) && route_alive(rq)
+		    && memcmp(rq->ip_addr, rp->ip_addr, 4) == 0
+		    && rq->udp_port == rp->udp_port)
+			return FALSE;
+	return TRUE;
+}
+
 /* Traverse the routing table, transmitting the packet to each bcast route */
 void send_broadcast(unsigned char *buf, int l)
 {
@@ -573,7 +597,7 @@ void send_broadcast(unsigned char *buf, int l)
 
 	rp = route_tbl;
 	while (rp) {
-		if (rp->flags & AXRT_BCAST) {
+		if (route_gets_bcast(rp)) {
 			unsigned char ipstorage[IPSTORAGESIZE];
 			send_ip(buf, l, retrieveip(rp->ip_addr, ipstorage));
 		}
@@ -595,11 +619,12 @@ void dump_routes(void)
 	rp = route_tbl;
 	while (rp) {
 		if (rp->flags & AXRT_LEARNED)
-			LOGL1("  %s %s %s %d learned, %s %lds ago\n",
+			LOGL1("  %s %s %s %d learned%s, %s %lds ago\n",
 			      call_to_a(rp->callsign),
 			      inet_ntoa(rp->ip_addr_in),
 			      rp->udp_port ? "udp" : "ip",
 			      ntohs(rp->udp_port),
+			      rp->flags & AXRT_BCAST ? " b" : "",
 			      route_alive(rp) ? "heard" : "forgotten, heard",
 			      (long)(time(NULL) - rp->last_heard));
 		else
