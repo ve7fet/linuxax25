@@ -46,6 +46,8 @@ void config_init(void)
 	digi = 1;
 	ttyspeed = 9600;
 	loglevel = 0;
+	learn_mode = 0;
+	learn_bcast = 0;
 	bc_interval = 0;
 	bc_text[0] = '\0';
 	bc_every = 0;
@@ -299,6 +301,26 @@ int parse_line(char *buf)
 		loglevel = atoi(q);
 		return 0;
 
+	} else if (strcmp(p, "learn") == 0) {
+		q = strtok(NULL, " \t\n\r");
+		if (q == NULL)
+			return -1;
+		if (strcmp(q, "yes") == 0)
+			learn_mode = 1;
+		else if (strcmp(q, "no") == 0)
+			learn_mode = 0;
+		else
+			return -1;
+		/* "learn yes b": learned routes get the broadcasts too */
+		learn_bcast = 0;
+		q = strtok(NULL, " \t\n\r");
+		if (q != NULL) {
+			if (!learn_mode || strcmp(q, "b") != 0)
+				return -1;
+			learn_bcast = 1;
+		}
+		return 0;
+
 	} else if (strcmp(p, "route") == 0) {
 		char *thost;
 	
@@ -513,5 +535,6 @@ void dump_config(void)
 		LOGL1("  btext      %s\n", bc_text);
 	}
 	LOGL1("  loglevel   %d\n", loglevel);
+	LOGL1("  learn      %s\n", !learn_mode ? "no" : learn_bcast ? "yes b" : "yes");
 	(void) fflush(stdout);
 }

@@ -12,6 +12,7 @@
 #include <syslog.h>
 #include <string.h>
 #include <pthread.h>
+#include <time.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -42,6 +43,7 @@ struct route_table_entry {
 	unsigned char pad2;
 	unsigned int flags;	/* route flags */
 	char *hostnm; /* host name */
+	time_t last_heard;	/* learned route: last frame received */
 	struct route_table_entry *next;
 };
 
@@ -64,6 +66,24 @@ struct callsign_lookup_entry {
 };
 
 struct callsign_lookup_entry *callsign_lookup;
+
+/*
+ * "learn yes": a frame from an address that no route knows, whose source
+ * callsign has no route, makes a learned route to that address. It is
+ * forgotten after LEARN_IDLE seconds without a frame, and never replaces
+ * a route of the configuration file. At most LEARN_MAX are made: entries
+ * are never freed (the return path cache points to them), a forgotten one
+ * is used again by the same callsign.
+ */
+#ifndef LEARN_MAX
+#define LEARN_MAX	64
+#endif
+#ifndef LEARN_IDLE
+#define LEARN_IDLE	(24 * 60 * 60)
+#endif
+
+static int learned_count;
+static int learned_full_logged;
 
 time_t last_dns_time;
 volatile int threadrunning;
@@ -115,6 +135,7 @@ void route_add(char *host, unsigned char *ip, unsigned char *call, int udpport,
 	rn->pad1 = 0;
 	rn->pad2 = 0;
 	rn->flags = flags;
+	rn->last_heard = 0;
 	rn->next = NULL;
 
 	/* Update the default_route pointer if this is a default route */
@@ -133,6 +154,83 @@ void route_add(char *host, unsigned char *ip, unsigned char *call, int udpport,
 	      rn->udp_port ? "udp" : "ip", ntohs(rn->udp_port), flags);
 
 	return;
+}
+
+/* A learned route is forgotten after LEARN_IDLE seconds without a frame */
+static int route_alive(struct route_table_entry *rp)
+{
+	if (!(rp->flags & AXRT_LEARNED))
+		return TRUE;
+	return time(NULL) - rp->last_heard < LEARN_IDLE;
+}
+
+/* Only letters, digits and trailing spaces: not a stray frame */
+static int call_valid(unsigned char *call)
+{
+	int i, end = 0;
+
+	for (i = 0; i < 6; i++) {
+		unsigned char c = call[i] >> 1;
+
+		if (c == ' ') {
+			end = 1;
+		} else if (end || !((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))) {
+			return FALSE;
+		}
+	}
+	return (call[0] >> 1) != ' ';
+}
+
+static int route_addrport_match(struct sockaddr_in *ip_addr,
+	struct route_table_entry *rp)
+{
+	return route_ipmatch(ip_addr, rp->ip_addr) &&
+	       (!udp_mode || ip_addr->sin_port == rp->udp_port);
+}
+
+/* Make a learned route for mycall to the address of this frame */
+static void route_learn(struct sockaddr_in *ip_addr, unsigned char *mycall)
+{
+	struct route_table_entry *rl, *rn;
+
+	if (learned_count >= LEARN_MAX) {
+		if (!learned_full_logged) {
+			LOGL2("learn: table full (%d), %s from %s not learned\n",
+			      LEARN_MAX, call_to_a(mycall),
+			      inet_ntoa(ip_addr->sin_addr));
+			learned_full_logged = 1;
+		}
+		return;
+	}
+	rn = calloc(1, sizeof(*rn));
+	if (rn == NULL)
+		return;
+	memcpy(rn->callsign, mycall, 7);
+	rn->hostnm = strdup("");
+	if (rn->hostnm == NULL) {
+		free(rn);
+		return;
+	}
+	memcpy(rn->ip_addr, &ip_addr->sin_addr.s_addr, 4);
+	rn->udp_port = udp_mode ? ip_addr->sin_port : 0;
+	rn->flags = AXRT_LEARNED | AXRT_PERMANENT | (learn_bcast ? AXRT_BCAST : 0);
+	rn->last_heard = time(NULL);
+	rn->next = NULL;
+
+	/* The DNS thread may be walking the list: link a complete entry */
+	__sync_synchronize();
+	rl = route_tbl;
+	if (rl) {
+		while (rl->next)
+			rl = rl->next;
+		rl->next = rn;
+	} else {
+		route_tbl = rn;
+	}
+	learned_count++;
+	LOGL2("learned route: %s %s %s %d%s\n", call_to_a(rn->callsign),
+	      inet_ntoa(rn->ip_addr_in), rn->udp_port ? "udp" : "ip",
+	      ntohs(rn->udp_port), learn_bcast ? " b" : "");
 }
 
 /* For route rn, a different IP is being used.  Trigger a DNS check. 
@@ -200,6 +298,35 @@ int route_ipmatch(struct sockaddr_in *ip_addr, unsigned char *routeip)
 }
 
 
+/*
+ * A frame from the callsign of learned route rp. From the same address,
+ * it keeps the route alive. From another address, the route moves there
+ * only if it was forgotten: a live route is not taken over.
+ */
+static void route_heard(struct sockaddr_in *ip_addr, struct route_table_entry *rp)
+{
+	if (route_addrport_match(ip_addr, rp)) {
+		rp->last_heard = time(NULL);
+		return;
+	}
+	if (route_alive(rp)) {
+		char from[INET_ADDRSTRLEN];
+
+		/* inet_ntoa() has one static buffer: copy the first one */
+		inet_ntop(AF_INET, &ip_addr->sin_addr, from, sizeof(from));
+		LOGL2("learn: %s heard from %s, kept at %s\n",
+		      call_to_a(rp->callsign), from, inet_ntoa(rp->ip_addr_in));
+		return;
+	}
+	pthread_mutex_lock(&dnsmutex);
+	memcpy(rp->ip_addr, &ip_addr->sin_addr.s_addr, 4);
+	rp->udp_port = udp_mode ? ip_addr->sin_port : 0;
+	pthread_mutex_unlock(&dnsmutex);
+	rp->last_heard = time(NULL);
+	LOGL2("learned route: %s moved to %s\n", call_to_a(rp->callsign),
+	      inet_ntoa(rp->ip_addr_in));
+}
+
 /* Process calls and ip addresses for routing.  The idea behind
  * this code that for the routes listed in the ax25ipd.conf file,
  * only DNS or the given IP's should be used.  But for calls
@@ -232,7 +359,12 @@ void route_process(struct sockaddr_in *ip_addr, unsigned char *call)
 	rp = route_tbl;
 	isroute = 0;
 	while (rp) {
-		if (addrmatch(mycall, rp->callsign)) {
+		if (rp->flags & AXRT_LEARNED) {
+			if (addrcompare(mycall, rp->callsign) == 0) {
+				route_heard(ip_addr, rp);
+				isroute = 1;
+			}
+		} else if (addrmatch(mycall, rp->callsign)) {
 			if (!route_ipmatch(ip_addr, rp->ip_addr)) {
 				route_updatedyndns(ip_addr, rp);
 				}
@@ -248,12 +380,15 @@ void route_process(struct sockaddr_in *ip_addr, unsigned char *call)
 		rp = route_tbl;
 		while (rp) {
 			// Only do this once. 
-			if (route_ipmatch(ip_addr, rp->ip_addr)) {
+			if (route_alive(rp) && route_ipmatch(ip_addr, rp->ip_addr)) {
 				route_updatereturnpath(mycall, rp);
 				break;
 			}
 			rp = rp->next;
 		}
+		/* An address that no route knows: learn it if asked to */
+		if (!rp && learn_mode && call_valid(mycall))
+			route_learn(ip_addr, mycall);
 	}
 
 }
@@ -334,9 +469,25 @@ unsigned char *call_to_ip(unsigned char *call, unsigned char *ipstorage)
 
 	LOGL4("lookup call %s ", call_to_a(mycall));
 
+	/*
+	 * A route for this exact callsign and SSID comes first, wherever it
+	 * is in the file: a route with SSID 0 (all SSIDs) placed above it
+	 * must not hide it.
+	 */
 	rp = route_tbl;
 	while (rp) {
-		if (addrmatch(mycall, rp->callsign)) {
+		if (addrcompare(mycall, rp->callsign) == 0 && route_alive(rp)) {
+			LOGL4("found ip addr %s\n",
+			      inet_ntoa(rp->ip_addr_in));
+			return retrieveip(rp->ip_addr, ipstorage);
+		}
+		rp = rp->next;
+	}
+
+	/* Then the first route with SSID 0 for this callsign */
+	rp = route_tbl;
+	while (rp) {
+		if (!(rp->flags & AXRT_LEARNED) && addrmatch(mycall, rp->callsign)) {
 			LOGL4("found ip addr %s\n",
 			      inet_ntoa(rp->ip_addr_in));
 			return retrieveip(rp->ip_addr, ipstorage);
@@ -359,6 +510,8 @@ unsigned char *call_to_ip(unsigned char *call, unsigned char *ipstorage)
 			clookup = clookup->prev;
 		}
 		else{
+			if (!route_alive(clookup->route))
+				break;
 			LOGL4("found cached ip addr %s\n",
 			      inet_ntoa(clookup->route->ip_addr_in));
 	
@@ -413,6 +566,30 @@ int is_call_bcast(unsigned char *call)
 	return FALSE;
 }
 
+/*
+ * Does route rp get the broadcasts? A learned route ("learn yes b") is
+ * skipped once forgotten, and when a route above it in the table already
+ * sends them to the same address and port: two callsigns learned at one
+ * station must not make it receive every broadcast twice.
+ */
+static int route_gets_bcast(struct route_table_entry *rp)
+{
+	struct route_table_entry *rq;
+
+	if (!(rp->flags & AXRT_BCAST))
+		return FALSE;
+	if (!(rp->flags & AXRT_LEARNED))
+		return TRUE;
+	if (!route_alive(rp))
+		return FALSE;
+	for (rq = route_tbl; rq != rp; rq = rq->next)
+		if ((rq->flags & AXRT_BCAST) && route_alive(rq)
+		    && memcmp(rq->ip_addr, rp->ip_addr, 4) == 0
+		    && rq->udp_port == rp->udp_port)
+			return FALSE;
+	return TRUE;
+}
+
 /* Traverse the routing table, transmitting the packet to each bcast route */
 void send_broadcast(unsigned char *buf, int l)
 {
@@ -420,7 +597,7 @@ void send_broadcast(unsigned char *buf, int l)
 
 	rp = route_tbl;
 	while (rp) {
-		if (rp->flags & AXRT_BCAST) {
+		if (route_gets_bcast(rp)) {
 			unsigned char ipstorage[IPSTORAGESIZE];
 			send_ip(buf, l, retrieveip(rp->ip_addr, ipstorage));
 		}
@@ -441,11 +618,21 @@ void dump_routes(void)
 
 	rp = route_tbl;
 	while (rp) {
-		LOGL1("  %s %s %s %d %d\n",
-		      call_to_a(rp->callsign),
-		      inet_ntoa(rp->ip_addr_in),
-		      rp->udp_port ? "udp" : "ip",
-		      ntohs(rp->udp_port), rp->flags);
+		if (rp->flags & AXRT_LEARNED)
+			LOGL1("  %s %s %s %d learned%s, %s %lds ago\n",
+			      call_to_a(rp->callsign),
+			      inet_ntoa(rp->ip_addr_in),
+			      rp->udp_port ? "udp" : "ip",
+			      ntohs(rp->udp_port),
+			      rp->flags & AXRT_BCAST ? " b" : "",
+			      route_alive(rp) ? "heard" : "forgotten, heard",
+			      (long)(time(NULL) - rp->last_heard));
+		else
+			LOGL1("  %s %s %s %d %d\n",
+			      call_to_a(rp->callsign),
+			      inet_ntoa(rp->ip_addr_in),
+			      rp->udp_port ? "udp" : "ip",
+			      ntohs(rp->udp_port), rp->flags);
 		rp = rp->next;
 	}
 	fflush(stdout);
