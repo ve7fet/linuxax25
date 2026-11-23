@@ -8,7 +8,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <ncursesw/curses.h>
+#include <config.h>
+#ifdef HAVE_NCURSESW_CURSES_H
+#include <ncursesw/curses.h>	/* Debian, Ubuntu, Fedora */
+#else
+#include <curses.h>		/* Arch, Slackware: wide ncurses in /usr/include */
+#endif
 #include <netdb.h>
 #include <netinet/in.h>
 #include <string.h>

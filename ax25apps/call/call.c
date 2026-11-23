@@ -42,7 +42,12 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <ncursesw/ncurses.h>
+#include <config.h>
+#ifdef HAVE_NCURSESW_CURSES_H
+#include <ncursesw/curses.h>	/* Debian, Ubuntu, Fedora */
+#else
+#include <curses.h>		/* Arch, Slackware: wide ncurses in /usr/include */
+#endif
 #include <locale.h>
 #include <iconv.h>
 #include <sys/ioctl.h>
