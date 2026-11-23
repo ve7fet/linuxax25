@@ -9,7 +9,12 @@
 #define _XOPEN_SOURCE
 #define _XOPEN_SOURCE_EXTENDED
 
-#include <ncursesw/curses.h>
+#include <config.h>
+#ifdef HAVE_NCURSESW_CURSES_H
+#include <ncursesw/curses.h>	/* Debian, Ubuntu, Fedora */
+#else
+#include <curses.h>		/* Arch, Slackware: wide ncurses in /usr/include */
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include "menu.h"
