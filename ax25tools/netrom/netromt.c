@@ -11,6 +11,7 @@
 #include <sys/ioctl.h>
 
 #include <sys/socket.h>
+#include <net/if.h>
 
 #include <netax25/ax25.h>
 #include <netrom/netrom.h>
@@ -31,6 +32,32 @@ static int build_header(char *message)
 	strncat(message + 1, "       ", MNEMONIC_LEN - strlen(message + 1));
 
 	return 7;
+}
+
+/*
+ * Largest NODES frame we may send on a port.  The kernel refuses an AX.25
+ * datagram bigger than the device MTU (EMSGSIZE), and kissattach sets the
+ * MTU from the axports paclen, so a port with a paclen below 238 would
+ * lose part of every broadcast.  Use the device MTU, or the axports paclen
+ * if the MTU cannot be read, and never more than NODES_PACLEN.
+ */
+static int nodes_paclen(int s, int port)
+{
+	struct ifreq ifr;
+	int paclen = 0;
+
+	memset(&ifr, 0, sizeof(ifr));
+	strncpy(ifr.ifr_name, port_list[port].device, sizeof(ifr.ifr_name) - 1);
+
+	if (ioctl(s, SIOCGIFMTU, &ifr) == 0)
+		paclen = ifr.ifr_mtu;
+	else
+		paclen = ax25_config_get_paclen(port_list[port].port);
+
+	if (paclen <= 0 || paclen > NODES_PACLEN)
+		paclen = NODES_PACLEN;
+
+	return paclen;
 }
 
 static void build_mine(int s, struct full_sockaddr_ax25 *dest, int dlen, int localval, int pause)
@@ -103,6 +130,14 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 	char *callsign, *mnemonic, *neighbour;
 	int  quality, neigh_no, obs_count;
 	int  olen, len;
+	int  paclen = nodes_paclen(s, port);
+
+	/* Not even room for one entry after the header */
+	if (paclen < 7 + ROUTE_LEN) {
+		if (logging)
+			syslog(LOG_ERR, "netromt: port %s: paclen %d too small for a NODES broadcast\n", port_list[port].port, paclen);
+		return;
+	}
 
 	fpnodes = fopen(PROC_NR_NODES_FILE, "r");
 	if (fpnodes == NULL) {
@@ -180,7 +215,7 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 			len += QUALITY_LEN;
 
 			/* No room for another entry? */
-			if (len + ROUTE_LEN > NODES_PACLEN)
+			if (len + ROUTE_LEN > paclen)
 				break;
 		}
 
@@ -195,7 +230,7 @@ static void build_others(int s, int min_obs, struct full_sockaddr_ax25 *dest, in
 		}
 
 	/* If the packet was not full then we are done */
-	} while (len + ROUTE_LEN > NODES_PACLEN);
+	} while (len + ROUTE_LEN > paclen);
 
 	fclose(fpnodes);
 	fclose(fpneigh);
