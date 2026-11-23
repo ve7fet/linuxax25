@@ -53,6 +53,8 @@ extern int bc_interval;                /* The interval, in seconds, between beac
 extern int bc_every;                   /* true=every, false=after */
 extern int digi;                       /* True if we are connected to a TNC */
 extern int loglevel;                   /* Verbosity level */
+extern int learn_mode;                 /* "learn yes": routes from unknown addresses */
+extern int learn_bcast;                /* "learn yes b": learned routes get broadcasts */
 /* addition for dual port flag */
 extern int dual_port;
 
@@ -91,6 +93,7 @@ extern void LOGLn(int level, const char *str, ...);
 #define	AXRT_DEFAULT	2
 #define	AXRT_PERMANENT	4
 #define	AXRT_LEARN	8	
+#define	AXRT_LEARNED	16	/* made by "learn yes", not by a route line */
 
 
 #define IPSTORAGESIZE 6 /* Bytes needed for call_to_ip */
