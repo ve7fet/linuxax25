@@ -44,3 +44,21 @@ Those files belong to libax25, and as such, this package is marked to replace
 them. Those files will be overwritten by the ones found in the libax25-dev
 package.
 
+- Build and Install on Debian 10:
+
+        # minimum required stuff
+        sudo apt-get install devscripts build-essential lintian
+
+        # clean out old debs (will prompt)
+        rm -vi *.deb
+
+        ## LIBAX25 build/install
+        # H/T: comment on https://unix.stackexchange.com/a/416517/36152
+        (cd libax25 && mk-build-deps --install --tool 'sudo apt-get --yes --no-install-recommends' --remove && debuild -us -uc)
+        # install these now, otherwise we'll get the upstream libax25 v0.0.0 as part of tools/apps req's
+        sudo apt-get install ./libax25_*.deb ./libax25-dev*.deb
+
+        ## AX25TOOLS and APPS
+        (cd ax25tools && mk-build-deps --install --tool 'sudo apt-get --yes --no-install-recommends' --remove && debuild -us -uc)
+        (cd ax25apps && mk-build-deps --install --tool 'sudo apt-get --yes --no-install-recommends' --remove && debuild -us -uc)
+        sudo apt-get install ./ax25tools_*.deb ./ax25apps_*.deb
