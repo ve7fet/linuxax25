@@ -127,6 +127,36 @@ static int bcast_config_load_ports(void)
 	return 0;
 }
 
+/*
+ * Find the broadcast port a frame came in on. The index of each device is
+ * read at start-up, but a device that is removed and created again (e.g.
+ * kissattach restarted) comes back under the same name with a new index:
+ * look it up by name then, and remember the new index.
+ */
+static int port_of_ifindex(int ifindex)
+{
+	char name[IF_NAMESIZE];
+	int i;
+
+	for (i = 0; i < port_count; i++)
+		if (port_list[i].index == ifindex)
+			return i;
+
+	if (if_indextoname(ifindex, name) == NULL)
+		return -1;
+
+	for (i = 0; i < port_count; i++) {
+		if (strcmp(port_list[i].device, name) == 0) {
+			if (logging)
+				syslog(LOG_INFO, "device %s has a new index (%d, was %d)\n", name, ifindex, port_list[i].index);
+			port_list[i].index = ifindex;
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 int main(int argc, char **argv)
 {
 	unsigned char buffer[512];
@@ -249,13 +279,11 @@ int main(int argc, char **argv)
 			    ax25_cmp((ax25_address *)(buffer + 1), &node_call) == 0 &&
 			    ax25_cmp((ax25_address *)(buffer + 8), &my_call)   != 0 &&
 			    buffer[16] == NETROM_PID && buffer[17] == NODES_SIG) {
-				for (i = 0; i < port_count; i++) {
-					if (port_list[i].index == sa.sll_ifindex) {
-						if (debug && logging)
-							syslog(LOG_DEBUG, "receiving NODES broadcast on port %s from %s\n", port_list[i].port, ax25_ntoa((ax25_address *)(buffer + 8)));
-						receive_nodes(buffer + 18, size - 18, (ax25_address *)(buffer + 8), i);
-						break;
-					}
+				i = port_of_ifindex(sa.sll_ifindex);
+				if (i >= 0) {
+					if (debug && logging)
+						syslog(LOG_DEBUG, "receiving NODES broadcast on port %s from %s\n", port_list[i].port, ax25_ntoa((ax25_address *)(buffer + 8)));
+					receive_nodes(buffer + 18, size - 18, (ax25_address *)(buffer + 8), i);
 				}
 			}
 		}
