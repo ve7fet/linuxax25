@@ -187,7 +187,7 @@ static int startiface(char *dev, struct hostent *hp)
 		return FALSE;
 	}
 
-	ifr.ifr_flags &= IFF_NOARP;
+	ifr.ifr_flags |= IFF_NOARP;
 	ifr.ifr_flags |= IFF_UP;
 	ifr.ifr_flags |= IFF_RUNNING;
 
